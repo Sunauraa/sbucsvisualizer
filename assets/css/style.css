@@ -328,6 +328,25 @@ input[type="range"] { accent-color: var(--accent); width: 100%; }
 .code-hide { padding: .18rem .55rem; font-size: .74rem; color: var(--muted); }
 .code-dock .code { border: 0; border-radius: 0 0 var(--radius-sm) var(--radius-sm); max-height: 260px; }
 .code-dock.collapsed .code-body { display: none; }
+.code-spec { padding: .5rem .75rem .55rem; border-bottom: 1px solid var(--line-soft); font-size: .8rem; display: grid; gap: .22rem; }
+.code-spec .spec-does { color: var(--txt); font-size: .84rem; }
+.code-spec .spec-row { display: grid; grid-template-columns: 4.2rem 1fr; gap: .5rem; align-items: baseline; }
+.code-spec .spec-k { color: var(--muted-2); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; }
+.code-spec .spec-v { color: var(--muted); }
+.code-spec .spec-call-code { font-family: var(--mono); font-size: .8rem; color: var(--txt); background: #ffffff08; border: 1px solid var(--line-soft); border-radius: 6px; padding: .12rem .45rem; overflow-wrap: anywhere; white-space: pre-wrap; justify-self: start; }
+
+/* ---------- LeetCode practice ---------- */
+.lc-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .5rem; }
+.lc-item { display: grid; gap: .2rem; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg-2); color: var(--txt); }
+.lc-item:hover { text-decoration: none; border-color: var(--accent-dim); background: #4f8cff0f; }
+.lc-top { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: .35rem; }
+.lc-num { font-family: var(--mono); color: var(--muted-2); font-size: .8rem; }
+.lc-title { font-weight: 600; font-size: .9rem; }
+.lc-diff { font-size: .68rem; padding: .08rem .45rem; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+.lc-diff.easy { color: #4ade80; border-color: #4ade8055; }
+.lc-diff.medium { color: #ffc14d; border-color: #ffc14d55; }
+.lc-diff.hard { color: #ff6b9d; border-color: #ff6b9d55; }
+.lc-why { color: var(--muted); font-size: .8rem; }
 .code-dock.collapsed .code-head { border-bottom: 0; }
 
 /* ---------- examples bar ---------- */

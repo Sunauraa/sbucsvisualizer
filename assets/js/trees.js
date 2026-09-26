@@ -454,6 +454,24 @@
     },
   };
 
+  /* ---------------- specs, shown above each listing ---------------- */
+  const M = (t) => "<span class='mono'>" + t + "</span>";
+  const travSpec = (when, use) => ({ does: "Visits every node of the subtree rooted at " + M("n") + ", reporting a node " + when + ".", params: M("n") + " — the subtree's root (null for an empty tree)", returns: "nothing (visits each node)", errors: "none — null simply returns", cost: "Θ(n) time, O(h) stack space for the recursion. Typical use: " + use, callVals: { n: "root" } });
+  D.specs(CODE, {
+    trav_pre: travSpec("<b>before</b> its subtrees", "copying a tree or printing its structure."),
+    trav_in: travSpec("<b>between</b> its left and right subtrees", "listing a BST's keys in sorted order."),
+    trav_post: travSpec("<b>after</b> both subtrees", "freeing a tree or evaluating an expression tree."),
+    trav_level: { does: "Visits the nodes level by level, left to right, using a queue.", params: M("root") + " — the tree's root", returns: "nothing (visits each node)", errors: "none", cost: "Θ(n) time, O(width) queue space" },
+    bst_search: { does: "Looks for key " + M("k") + " by going left or right at each node — the BST property discards the other side.", params: M("k") + " — the key", returns: "the node holding k, or null", errors: "none", cost: "O(h): O(log n) when balanced, O(n) when degenerate" },
+    bst_insert: { does: "Walks down as if searching for " + M("k") + " and hangs it as a new leaf where the search falls off.", params: M("k") + " — the key (keys are distinct)", returns: "nothing (a duplicate is ignored)", errors: "none", cost: "O(h)" },
+    bst_delete: { does: "Removes key " + M("k") + ". A node with two children is replaced by its in-order successor first, so only a node with ≤ 1 child is ever cut out.", params: M("k") + " — the key", returns: "nothing (a missing key is ignored)", errors: "none", cost: "O(h)" },
+    avl_insert: { does: "Does a BST insert, then walks back up fixing heights and rotating the first unbalanced node.", params: M("k") + " — the key", returns: "nothing", errors: "none", cost: "O(log n); at most one (single or double) rotation" },
+    avl_delete: { does: "Does a BST delete, then walks back up fixing heights and rotating wherever a node is unbalanced.", params: M("k") + " — the key", returns: "nothing", errors: "none", cost: "O(log n); may rotate at every level on the way up" },
+    m_search: { does: "Scans each node's sorted keys and follows the child whose range contains " + M("k") + ".", params: M("k") + " — the key", returns: "the node and index holding k, or null", errors: "none", cost: "O(log n) nodes visited, O(m) keys scanned per node" },
+    m_insert: { does: "Inserts " + M("k") + " into the right leaf; a node with too many keys splits and pushes its middle key up.", params: M("k") + " — the key", returns: "nothing (a duplicate is ignored)", errors: "none", cost: "O(log n); the tree only grows taller when the root splits" },
+    m_delete: { does: "Removes " + M("k") + " (from a leaf, swapping with its predecessor if needed) and fixes underflow by a transfer from a sibling or a fusion.", params: M("k") + " — the key", returns: "nothing (a missing key is ignored)", errors: "none", cost: "O(log n); fusions can cascade up to the root" },
+  });
+
   /* ============================================================
      recorder
      ============================================================ */
@@ -1058,8 +1076,173 @@
       "database index and filesystem in the world is a B-tree or B⁺-tree.",
   };
 
+  /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
+  const PRACTICE = {
+   "trav": {
+    "label": "Traversals",
+    "items": [
+     [
+      144,
+      "Binary Tree Preorder Traversal",
+      "binary-tree-preorder-traversal",
+      "Easy",
+      "Recursive, then with an explicit stack."
+     ],
+     [
+      94,
+      "Binary Tree Inorder Traversal",
+      "binary-tree-inorder-traversal",
+      "Easy",
+      "The sorted order of a BST."
+     ],
+     [
+      145,
+      "Binary Tree Postorder Traversal",
+      "binary-tree-postorder-traversal",
+      "Easy",
+      "Children before the parent."
+     ],
+     [
+      102,
+      "Binary Tree Level Order Traversal",
+      "binary-tree-level-order-traversal",
+      "Medium",
+      "The queue-based walk."
+     ],
+     [
+      104,
+      "Maximum Depth of Binary Tree",
+      "maximum-depth-of-binary-tree",
+      "Easy",
+      "Height, recursively."
+     ]
+    ]
+   },
+   "bst": {
+    "label": "Binary search tree",
+    "items": [
+     [
+      700,
+      "Search in a Binary Search Tree",
+      "search-in-a-binary-search-tree",
+      "Easy",
+      "search(k) from this tab."
+     ],
+     [
+      701,
+      "Insert into a Binary Search Tree",
+      "insert-into-a-binary-search-tree",
+      "Medium",
+      "insert(k): a new leaf where the search falls off."
+     ],
+     [
+      450,
+      "Delete Node in a BST",
+      "delete-node-in-a-bst",
+      "Medium",
+      "delete(k), including the two-children case."
+     ],
+     [
+      98,
+      "Validate Binary Search Tree",
+      "validate-binary-search-tree",
+      "Medium",
+      "The BST property is about whole subtrees."
+     ],
+     [
+      230,
+      "Kth Smallest Element in a BST",
+      "kth-smallest-element-in-a-bst",
+      "Medium",
+      "In-order traversal, stopped early."
+     ]
+    ]
+   },
+   "avl": {
+    "label": "AVL tree",
+    "items": [
+     [
+      110,
+      "Balanced Binary Tree",
+      "balanced-binary-tree",
+      "Easy",
+      "Check |height(left) − height(right)| ≤ 1 everywhere."
+     ],
+     [
+      108,
+      "Convert Sorted Array to Binary Search Tree",
+      "convert-sorted-array-to-binary-search-tree",
+      "Easy",
+      "Build a height-balanced BST."
+     ],
+     [
+      1382,
+      "Balance a Binary Search Tree",
+      "balance-a-binary-search-tree",
+      "Medium",
+      "Rebalance a degenerate BST."
+     ]
+    ]
+   },
+   "t24": {
+    "label": "(2,4)-tree",
+    "note": "LeetCode has no (2,4)-tree or B-tree problems. These practise the same ideas: sorted keys inside a node and balanced height.",
+    "items": [
+     [
+      1382,
+      "Balance a Binary Search Tree",
+      "balance-a-binary-search-tree",
+      "Medium",
+      "Why balance matters for search cost."
+     ],
+     [
+      108,
+      "Convert Sorted Array to Binary Search Tree",
+      "convert-sorted-array-to-binary-search-tree",
+      "Easy",
+      "Pick the middle key to keep height low — like a split."
+     ],
+     [
+      35,
+      "Search Insert Position",
+      "search-insert-position",
+      "Easy",
+      "Finding the gap a key falls into inside a sorted node."
+     ]
+    ]
+   },
+   "btree": {
+    "label": "B-tree",
+    "note": "LeetCode has no B-tree problems. These practise the same ideas: searching within sorted keys and keeping every leaf at one depth.",
+    "items": [
+     [
+      35,
+      "Search Insert Position",
+      "search-insert-position",
+      "Easy",
+      "Which child to follow inside a B-tree node."
+     ],
+     [
+      1382,
+      "Balance a Binary Search Tree",
+      "balance-a-binary-search-tree",
+      "Medium",
+      "Balanced height, the goal of every B-tree operation."
+     ],
+     [
+      108,
+      "Convert Sorted Array to Binary Search Tree",
+      "convert-sorted-array-to-binary-search-tree",
+      "Easy",
+      "Build a tree with all leaves at similar depth."
+     ]
+    ]
+   }
+  };
+
   document.addEventListener("DOMContentLoaded", function () {
-    const dock = D.CodeDock("#code", CODE);
+    D.Practice(PRACTICE);
+    const dock = D.CodeDock("#code", CODE, { recv: "tree" });
     player = new D.Player({ mount: "#player", render: render, delay: 660, code: dock });
     const PANELS = ["tools-trav", "tools-bst", "tools-avl", "tools-t24", "tools-btree"];
     const st = () => ST[mode];
@@ -1126,6 +1309,7 @@
       q("bt-order-wrap").style.display = id === "btree" ? "flex" : "none";
       dock.show({ trav: "trav_in", bst: "bst_insert", avl: "avl_insert", t24: "m_insert", btree: "m_insert" }[id]);
       D.Examples("#examples", EXAMPLES[id]);
+      D.practiceShow(id);
       still("Showing the <b>" + (id === "trav" ? "traversal" : id === "bst" ? "BST" : id === "avl" ? "AVL" : id === "t24" ? "(2,4)" : "B-tree") + "</b> demo.");
     });
 

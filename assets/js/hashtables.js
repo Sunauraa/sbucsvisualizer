@@ -13,6 +13,7 @@
     slots: [],          /* chain: array of arrays. open: {k} | null | TOMB */
     n: 0,
     auto: true,
+    keyType: "int",          /* "int" or "str" — a table holds one kind of key */
     probesTotal: 0,
     opsTotal: 0,
   };
@@ -47,8 +48,12 @@
       ? "<span class='mono'>h(" + k + ") = " + k + " mod " + T.m + " = " + h1(k, T.m) + "</span>"
       : "<span class='mono'>h(\"" + k + "\") = " + hashCode(k) + " mod " + T.m + " = " + h1(k, T.m) + "</span>";
 
+  /* a String's hash is only known once hash(s) has run, so the intro of a probing operation doesn't give it away */
+  const introHash = (k) => (typeof k === "string" ? "its home slot comes from hash(k), computed at the first probe" : hashNote(k));
   const alpha = () => T.n / T.m;
-  const threshold = () => (T.mode === "chain" ? 0.9 : 0.6);
+  /* rehash limits: chains tolerate long lists; linear probing degrades past ~0.6; quadratic probing is only
+     guaranteed to find a free slot while the table is at most half full (m prime), so it rehashes above 0.5 */
+  const threshold = () => (T.mode === "chain" ? 0.9 : T.mode === "quad" ? 0.5 : 0.6);
 
   function fresh(m) {
     T.m = m;
@@ -287,7 +292,79 @@
   }
   oaCode("linear");
   oaCode("quad");
-  const listing = (op) => (T.mode === "chain" ? "ch_" + op : "oa_" + op + "_" + T.mode);
+
+  /* ---- String keys: the same algorithms, with String types, equals() and an explicit hash function ---- */
+  function strVariant(L) {
+    const map = (lines, fn) => lines.map((t) => { const i = t.lastIndexOf(" @@"); return i >= 0 ? fn(t.slice(0, i)) + t.slice(i) : fn(t); });
+    return {
+      title: L.title + " · String keys",
+      pseudo: L.pseudo.slice(),
+      java: map(L.java, (t) => t.replace(/\bint k\b/g, "String k").replace("(int x : table[b])", "(String x : table[b])")
+        .replace("x == k", "x.equals(k)").replace("it.next() == k", "it.next().equals(k)").replace("table[j] == k", "k.equals(table[j])")
+        .replace("Iterator<Integer>", "Iterator<String>")),
+      cpp: map(L.cpp, (t) => t.replace(/\bint k\b/g, "const string& k").replace("(int x : table[b])", "(const string& x : table[b])")),
+      python: map(L.python, (t) => t.replace(/\bhash\(k\)/g, "poly_hash(k)")),
+    };
+  }
+  Object.keys(CODE).forEach((k) => { CODE[k + "_s"] = strVariant(CODE[k]); });
+  CODE.hash_s = {
+    title: "hash(s) — polynomial string hash",
+    pseudo: [
+      "hash(s):                        // what Java's String.hashCode computes",
+      "  h ← 0 @@init",
+      "  for each character c in s: @@loop",
+      "    h ← 31·h + code(c)            // kept to 32 bits, so it wraps around @@step",
+      "  return h @@ret",
+    ],
+    java: [
+      "int hash(String s) {            // same value as s.hashCode()",
+      "  int h = 0; @@init",
+      "  for (int i = 0; i < s.length(); i++) @@loop",
+      "    h = 31 * h + s.charAt(i);     // int overflow wraps around @@step",
+      "  return h; @@ret",
+      "}",
+    ],
+    cpp: [
+      "int32_t hash(const string& s) {",
+      "  uint32_t h = 0;                 // unsigned, so wrap-around is well defined @@init",
+      "  for (unsigned char c : s) @@loop",
+      "    h = 31 * h + c; @@step",
+      "  return (int32_t) h;             // the same bits as Java's int @@ret",
+      "}",
+    ],
+    python: [
+      "def poly_hash(s):               # Python's own hash() of a str changes every run",
+      "  h = 0 @@init",
+      "  for c in s: @@loop",
+      "    h = (31 * h + ord(c)) & 0xFFFFFFFF      # keep 32 bits @@step",
+      "  return h - (1 << 32) if h >= (1 << 31) else h   # signed, like Java @@ret",
+    ],
+  };
+  const listing = (op) => (op === "rehash" ? "rehash" : T.mode === "chain" ? "ch_" + op : "oa_" + op + "_" + T.mode) + (T.keyType === "str" ? "_s" : "");
+
+  /* ---- specs ---- */
+  {
+    const M = (t) => "<span class='mono'>" + t + "</span>";
+    const keyP = (str) => M("k") + (str ? " — a String key" : " — an int key");
+    const eq = (str) => (str ? " Keys are compared with " + M("equals") + ", never " + M("==") + ", which would only compare references." : "");
+    const specs = {};
+    [false, true].forEach((str) => {
+      const sfx = str ? "_s" : "";
+      const h = str ? "the polynomial hash of k" : "k itself";
+      specs["ch_put" + sfx] = { does: "Adds key k to bucket " + M("h(k) mod m") + "'s list unless it is already there, then rehashes if the load factor is too high." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "none", cost: "O(1 + α) expected; O(n) if everything collides. h(k) is " + h + "." };
+      specs["ch_get" + sfx] = { does: "Walks bucket " + M("h(k) mod m") + "'s list looking for k." + eq(str), params: keyP(str), returns: "true if k is in the table", errors: "none", cost: "O(1 + α) expected" };
+      specs["ch_remove" + sfx] = { does: "Unlinks k from its bucket's list, if present. No tombstones are needed." + eq(str), params: keyP(str), returns: "nothing (a missing key is ignored)", errors: "none", cost: "O(1 + α) expected" };
+      specs["rehash" + sfx] = { does: "Allocates a table of the next prime size above 2m and re-inserts every key; tombstones are dropped.", params: "none", returns: "nothing", errors: "none", cost: "Θ(n + m) — rare enough that put stays O(1) amortised" };
+      ["linear", "quad"].forEach((mode) => {
+        const how = mode === "linear" ? "the next slot, i = 1, 2, 3 …" : "offsets i² = 1, 4, 9 …";
+        specs["oa_put_" + mode + sfx] = { does: "Probes from " + M("h(k) mod m") + ", trying " + how + ", and stores k in the first EMPTY slot (or the first tombstone passed)." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "no free slot found — the table is full" + (mode === "quad" ? ", or quadratic probing missed the free slots (possible when α ≥ ½)" : ""), cost: "O(1) expected while α stays small; O(n) worst case" };
+        specs["oa_get_" + mode + sfx] = { does: "Follows the same probe sequence as put until it finds k or an EMPTY slot. Tombstones do not stop it." + eq(str), params: keyP(str), returns: "true if k is in the table", errors: "none", cost: "O(1) expected; O(n) worst case" };
+        specs["oa_remove_" + mode + sfx] = { does: "Finds k along its probe sequence and replaces it with a DELETED tombstone, so later searches still pass through." + eq(str), params: keyP(str), returns: "nothing (a missing key is ignored)", errors: "none", cost: "O(1) expected; O(n) worst case" };
+      });
+    });
+    specs.hash_s = { does: "Turns a string into an int: h = 31·h + code(c) for each character. Position matters, so anagrams hash differently; different strings can still collide (\"Aa\" and \"BB\" both give 2112).", params: M("s") + " — the string", returns: "a 32-bit int, possibly negative after overflow — that is why the table uses floorMod", errors: "none", cost: "O(length of s); Java caches the result inside the String", callVals: { s: '"cat"' } };
+    D.specs(CODE, specs);
+  }
 
   /* ---------------- recorder ---------------- */
   function Ctx(limit) {
@@ -322,8 +399,25 @@
   }
 
   /* ---------------- chaining ---------------- */
+  /* For a String key, show the hash being computed, character by character, then return to the caller */
+  function traceHash(c, k, backTo) {
+    if (typeof k !== "string") return;
+    c.code("hash_s");
+    let h = 0;
+    c.at("init").snap({}, "<b>hash(\"" + k + "\")</b> — start with h = 0.", { hc: { s: k, i: -1, h: 0 } });
+    for (let i = 0; i < k.length; i++) {
+      const code = k.charCodeAt(i), raw = h * 31 + code, nh = raw | 0;
+      c.at(["loop", "step"]).snap({}, "'" + k[i] + "' has code " + code + ": h ← 31 · " + h + " + " + code + " = " + raw +
+        (raw !== nh ? ", which does not fit in 32 bits, so it wraps around to <b>" + nh + "</b>." : "."), { hc: { s: k, i: i, h: nh } });
+      h = nh;
+    }
+    c.at("loop").snap({}, "No characters left.", { hc: { s: k, i: k.length, h: h } });
+    c.at("ret").snap({}, "Return <b>" + h + "</b> — exactly what Java's <span class='mono'>\"" + k + "\".hashCode()</span> gives." + (h < 0 ? " It is negative, so a plain % could give a negative index; floorMod (or ((h % m) + m) % m) keeps it in [0, m)." : ""), { hc: { s: k, i: k.length, h: h, done: true } });
+    c.code(backTo);
+  }
   function chainInsert(c, k) {
-    c.code("ch_put");
+    c.code(listing("put"));
+    if (typeof k === "string") { c.at("hash").snap({}, "<b>put(" + fmtk(k) + ")</b> — the bucket index needs hash(k), so call the string hash first."); traceHash(c, k, listing("put")); }
     const i = h1(k, T.m);
     c.at("hash").snap({ [i]: "active" }, "<b>put(" + fmtk(k) + ")</b> — " + hashNote(k) + ", so it belongs in bucket <b>" + i + "</b>.");
     const chain = T.slots[i];
@@ -341,7 +435,8 @@
     c.at(alpha() > threshold() ? "rehash" : "rehash^").snap({}, "α = " + alpha().toFixed(2) + (alpha() > threshold() ? " is above " : " ≤ ") + "maxLoad = " + threshold() + (alpha() > threshold() ? (T.auto ? " — time to rehash." : ", but auto-rehash is off.") : " — no rehash needed."));
   }
   function chainSearch(c, k) {
-    c.code("ch_get");
+    c.code(listing("get"));
+    if (typeof k === "string") { c.at("hash").snap({}, "<b>get(" + fmtk(k) + ")</b> — compute hash(k) first."); traceHash(c, k, listing("get")); }
     const i = h1(k, T.m);
     c.at("hash").snap({ [i]: "active" }, "<b>get(" + fmtk(k) + ")</b> — " + hashNote(k) + ". Only bucket " + i + " can possibly hold it.");
     const chain = T.slots[i];
@@ -355,7 +450,8 @@
     c.at("miss").snap({ [i]: "swap" }, chain.length ? "End of the chain — <b>not found</b> after " + c.probes + " comparison(s)." : "Bucket " + i + " is empty, so <b>" + fmtk(k) + " is not in the table</b>.");
   }
   function chainDelete(c, k) {
-    c.code("ch_remove");
+    c.code(listing("remove"));
+    if (typeof k === "string") { c.at("hash").snap({}, "<b>remove(" + fmtk(k) + ")</b> — compute hash(k) first."); traceHash(c, k, listing("remove")); }
     const i = h1(k, T.m);
     c.at("hash").snap({ [i]: "active" }, "<b>remove(" + fmtk(k) + ")</b> — hash to bucket " + i + ".");
     const chain = T.slots[i];
@@ -377,12 +473,13 @@
   /* ---------------- open addressing ---------------- */
   function openInsert(c, k) {
     c.code(listing("put"));
-    c.at("init").snap({}, "<b>put(" + fmtk(k) + ")</b> — " + hashNote(k) + ". With open addressing every key lives in the table itself, so on a collision we <em>probe</em> for another slot.");
+    c.at("init").snap({}, "<b>put(" + fmtk(k) + ")</b> — " + introHash(k) + ". With open addressing every key lives in the table itself, so on a collision we <em>probe</em> for another slot.");
     let firstTomb = -1;
     for (let i = 0; i < T.m; i++) {
       const p = probeAt(k, i);
       c.probes++;
       c.at("loop").snap(firstTomb >= 0 ? { [firstTomb]: "visit" } : {}, "Probe number i = " + i + ".");
+      if (i === 0 && typeof k === "string") { c.at("probe").snap({}, "The probe needs hash(k). Compute it once — Java caches a String's hash code, so later probes reuse it."); traceHash(c, k, listing("put")); }
       const cellIs = T.slots[p] === null ? "EMPTY" : T.slots[p] === TOMB ? "DELETED (a tombstone)" : "occupied by " + fmtk(T.slots[p]);
       c.at("probe").snap({ [p]: T.slots[p] == null || T.slots[p] === TOMB ? "active" : "cmp" }, probeFormula(k, i) + " → slot " + p + " is " + cellIs + ".");
       if (T.slots[p] === null) {
@@ -406,11 +503,12 @@
   }
   function openSearch(c, k) {
     c.code(listing("get"));
-    c.snap({}, "<b>get(" + fmtk(k) + ")</b> — " + hashNote(k) + ". Follow the <em>same probe sequence</em> that put would have used.");
+    c.snap({}, "<b>get(" + fmtk(k) + ")</b> — " + introHash(k) + ". Follow the <em>same probe sequence</em> that put would have used.");
     for (let i = 0; i < T.m; i++) {
       const p = probeAt(k, i);
       c.probes++;
       c.at("loop").snap({}, "i = " + i + ".");
+      if (i === 0 && typeof k === "string") { c.at("probe").snap({}, "The probe needs hash(k). Compute it once — Java caches a String's hash code, so later probes reuse it."); traceHash(c, k, listing("get")); }
       c.at("probe").snap({ [p]: T.slots[p] == null ? "active" : "cmp" }, probeFormula(k, i) + " → slot " + p + ".");
       if (T.slots[p] === null) { c.at("empty").snap({ [p]: "swap" }, "An <b>EMPTY</b> slot ends the search: if the key existed, put would have placed it here. <b>Not found</b> after " + c.probes + " probes."); return; }
       if (T.slots[p] === TOMB) { c.at(["empty^", "tomb"]).snap({ [p]: "visit" }, "A tombstone means “something was deleted here, keep going”. It must <b>not</b> stop the search, or we would lose keys placed after it."); continue; }
@@ -427,6 +525,7 @@
       const p = probeAt(k, i);
       c.probes++;
       c.at("loop").snap({}, "i = " + i + ".");
+      if (i === 0 && typeof k === "string") { c.at("probe").snap({}, "The probe needs hash(k). Compute it once — Java caches a String's hash code, so later probes reuse it."); traceHash(c, k, listing("remove")); }
       c.at("probe").snap({ [p]: "cmp" }, probeFormula(k, i) + " → slot " + p + ".");
       if (T.slots[p] === null) { c.at("empty").snap({ [p]: "swap" }, "EMPTY slot — <b>" + fmtk(k) + "</b> is not in the table."); return; }
       if (T.slots[p] !== TOMB && String(T.slots[p]) === String(k)) {
@@ -443,7 +542,7 @@
 
   /* ---------------- rehash ---------------- */
   function rehash(c, why) {
-    c.code("rehash");
+    c.code(listing("rehash"));
     const old = T.slots, oldM = T.m;
     const keys = [];
     old.forEach((s) => { if (Array.isArray(s)) s.forEach((k) => keys.push(k)); else if (s !== null && s !== TOMB) keys.push(s); });
@@ -461,10 +560,11 @@
 
   /* ---------------- op driver ---------------- */
   function doOp(kind, k) {
+    if (k === null) return;
     const c = Ctx(1400);
     if (kind === "insert") {
       if (T.mode === "chain") chainInsert(c, k); else openInsert(c, k);
-      if (T.auto && alpha() > threshold()) rehash(c, "Load factor α = " + alpha().toFixed(2) + " has passed the " + threshold() + " limit" + (T.mode === "chain" ? " (chains are getting long)" : " (probe sequences are getting long)") + ".");
+      if (T.auto && alpha() > threshold()) rehash(c, "Load factor α = " + alpha().toFixed(2) + " has passed the " + threshold() + " limit" + (T.mode === "chain" ? " (chains are getting long)" : T.mode === "quad" ? " (past ½, quadratic probing could miss free slots)" : " (probe sequences are getting long)") + ".");
     } else if (kind === "search") {
       if (T.mode === "chain") chainSearch(c, k); else openSearch(c, k);
     } else if (kind === "delete") {
@@ -478,10 +578,18 @@
   }
 
   const fmtk = (k) => (typeof k === "number" ? k : '"' + k + '"');
+  const WORDS = ["cat", "dog", "owl", "emu", "bee", "fox", "yak", "elk", "ram", "eel", "bat", "rat", "ape", "gnu", "pig", "hen", "cow", "ant", "bird", "fish", "frog", "duck", "lion", "wolf", "bear", "deer", "goat", "crab", "moth", "seal"];
   function parseKey(s) {
     s = String(s == null ? "" : s).trim();
+    if (T.keyType === "str") {
+      if (!s.length) return WORDS[D.randInt(0, WORDS.length - 1)];
+      if (s.length > 16) { D.toast("Keep string keys to 16 characters so the hash steps stay readable.", true); return null; }
+      return s;
+    }
     if (!s.length) return D.randInt(1, 99);
-    return /^-?\d+$/.test(s) ? parseInt(s, 10) : s;
+    if (/^-?\d+$/.test(s)) return parseInt(s, 10);
+    D.toast("This table holds integer keys. Switch “keys” to Strings to use words like \"" + s.slice(0, 12) + "\".", true);
+    return null;
   }
 
   /* ---------------- rendering ---------------- */
@@ -489,6 +597,19 @@
     const view = q("table-view");
     view.innerHTML = "";
     if (!f.slots) return;
+    if (f.hc) {
+      /* hash(s) in progress: each character with its code, the current one highlighted, and the running h */
+      const box = D.el("div", { style: "display:flex;align-items:flex-end;gap:1.2rem;flex-wrap:wrap;margin-bottom:.9rem" });
+      const chars = f.hc.s.split("");
+      box.appendChild(D.cells(chars, {
+        label: "hash(\"" + f.hc.s + "\") — characters and their codes",
+        marks: chars.reduce((m, ch, i) => { m[i] = i < f.hc.i ? "visit" : i === f.hc.i ? "active" : ""; return m; }, {}),
+        ptrs: chars.reduce((m, ch, i) => { m[i] = String(ch.charCodeAt(0)); return m; }, {}),
+        index: false, w: 34, h: 34, roomBelow: true,
+      }));
+      box.appendChild(D.el("div", { class: "mono", style: "font-size:1.05rem;padding-bottom:1.4rem", html: "h = <b style='color:var(--c-" + (f.hc.done ? "done" : "active") + ")'>" + f.hc.h + "</b>" }));
+      view.appendChild(box);
+    }
 
     if (f.mode === "chain") {
       const wrap = D.el("div", { style: "display:flex;flex-direction:column;gap:5px" });
@@ -582,6 +703,13 @@
   }
   function examples() {
     const setM = (m) => { T.m = m; q("msize").value = m; };
+    if (T.keyType === "str") return [
+      { label: "hash a word, letter by letter", desc: "h = 31·h + code(c) for c, a, t", run: () => { setM(11); scripted([], [["put", "cat"]], "String keys have to be turned into a number first. Watch hash(\"cat\") run."); } },
+      { label: "anagrams land apart", desc: "stop, pots, tops, spot, opts: same letters, five different buckets", run: () => { setM(11); scripted([], [["put", "stop"], ["put", "pots"], ["put", "tops"], ["put", "spot"], ["put", "opts"]], "Same letters in different orders. The multiplier 31 makes the position of each letter matter."); } },
+      { label: "\"Aa\" vs \"BB\": same hash", desc: "Different strings, identical hashCode 2112", run: () => { setM(11); scripted([], [["put", "Aa"], ["put", "BB"], ["get", "BB"]], "A classic Java collision: 31·65 + 97 = 31·66 + 66 = 2112. Only equals() can tell them apart."); } },
+      { label: "a negative hash code", desc: "\"polynomial\" overflows 32 bits", run: () => { setM(11); scripted([], [["put", "polynomial"]], "Long strings overflow the int and can come out negative. floorMod keeps the index in range."); } },
+      { label: "three words collide", desc: "dog, owl and emu all land in bucket 6 when m = 11", run: () => { setM(11); scripted([], [["put", "dog"], ["put", "owl"], ["put", "emu"]], "dog, owl and emu hash to different numbers that are all ≡ 6 (mod 11)."); } },
+    ];
     const base = [
       { label: "three keys collide", desc: "12, 23 and 34 all hash to 1 when m = 11", run: () => { setM(11); scripted([], [["put", 12], ["put", 23], ["put", 34]], "12, 23 and 34 are all ≡ 1 (mod 11)."); } },
       { label: "search a missing key", run: () => { setM(11); scripted([12, 23, 34, 5, 16], [["get", 45]], "Five keys in the table; search for one that isn't there."); } },
@@ -598,8 +726,112 @@
     ]);
   }
 
+  /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
+  const PRACTICE = {
+   "chain": {
+    "label": "Separate chaining",
+    "items": [
+     [
+      706,
+      "Design HashMap",
+      "design-hashmap",
+      "Easy",
+      "Build it with an array of buckets — this tab."
+     ],
+     [
+      705,
+      "Design HashSet",
+      "design-hashset",
+      "Easy",
+      "The same, keys only."
+     ],
+     [
+      1,
+      "Two Sum",
+      "two-sum",
+      "Easy",
+      "The most famous use of a hash map."
+     ],
+     [
+      242,
+      "Valid Anagram",
+      "valid-anagram",
+      "Easy",
+      "String keys: count characters."
+     ],
+     [
+      49,
+      "Group Anagrams",
+      "group-anagrams",
+      "Medium",
+      "String keys: the sorted word as the key."
+     ]
+    ]
+   },
+   "linear": {
+    "label": "Linear probing",
+    "items": [
+     [
+      706,
+      "Design HashMap",
+      "design-hashmap",
+      "Easy",
+      "Build it with open addressing and tombstones."
+     ],
+     [
+      217,
+      "Contains Duplicate",
+      "contains-duplicate",
+      "Easy",
+      "Membership tests in O(1) expected."
+     ],
+     [
+      387,
+      "First Unique Character in a String",
+      "first-unique-character-in-a-string",
+      "Easy",
+      "Counting with a map."
+     ],
+     [
+      128,
+      "Longest Consecutive Sequence",
+      "longest-consecutive-sequence",
+      "Medium",
+      "O(n) only because lookups are O(1)."
+     ]
+    ]
+   },
+   "quad": {
+    "label": "Quadratic probing",
+    "items": [
+     [
+      705,
+      "Design HashSet",
+      "design-hashset",
+      "Easy",
+      "Try quadratic probing with a prime table size."
+     ],
+     [
+      205,
+      "Isomorphic Strings",
+      "isomorphic-strings",
+      "Easy",
+      "Two maps over string characters."
+     ],
+     [
+      290,
+      "Word Pattern",
+      "word-pattern",
+      "Easy",
+      "String keys mapped both ways."
+     ]
+    ]
+   }
+  };
+
   document.addEventListener("DOMContentLoaded", function () {
-    dock = D.CodeDock("#code", CODE);
+    D.Practice(PRACTICE);
+    dock = D.CodeDock("#code", CODE, { recv: "table" });
     player = new D.Player({ mount: "#player", render: render, code: dock });
 
     D.Tabs("#tabs", Object.keys(MODES).map((id) => ({ id: id, label: MODES[id].label })), (id) => {
@@ -615,9 +847,24 @@
       q("mode-formula").textContent = MODES[id].formula;
       dock.show(listing("put"));
       D.Examples("#examples", examples());
+      D.practiceShow(id);
       still("Switched to <b>" + MODES[id].label + "</b> and reinserted the " + keys.length + " existing key(s).");
     });
 
+    D.Segmented("#keytype", [
+      { id: "int", label: "Integers", desc: "int keys: h(k) = k" },
+      { id: "str", label: "Strings", desc: "String keys: a polynomial hash turns the text into an int first" },
+    ], (t) => {
+      T.keyType = t;
+      fresh(T.m); T.probesTotal = 0; T.opsTotal = 0;
+      q("key").placeholder = t === "str" ? "cat" : "42";
+      q("key").value = "";
+      dock.show(listing("put"));
+      D.Examples("#examples", examples());
+      still(t === "str"
+        ? "<b>String keys.</b> A string must become a number before it can pick a slot: every operation now calls <b>hash(s)</b> first, and keys are compared with equals(). The table was cleared — it holds one kind of key."
+        : "<b>Integer keys.</b> h(k) = k, so the slot is simply k mod m. The table was cleared.");
+    }, "int");
     q("op-insert").addEventListener("click", () => doOp("insert", parseKey(q("key").value)));
     q("op-search").addEventListener("click", () => doOp("search", parseKey(q("key").value)));
     q("op-delete").addEventListener("click", () => doOp("delete", parseKey(q("key").value)));
@@ -632,7 +879,8 @@
     });
     q("op-fill").addEventListener("click", () => {
       const c = Ctx(2000);
-      const vals = D.shuffled(D.randArray(Math.max(3, Math.round(T.m * 0.55)), 1, 99));
+      const count = Math.max(3, Math.round(T.m * 0.55));
+      const vals = T.keyType === "str" ? D.shuffled(WORDS).slice(0, count) : D.shuffled(D.randArray(count, 1, 99));
       fresh(T.m);
       c.snap({}, "Filling an empty table with " + vals.length + " random keys to α ≈ " + (vals.length / T.m).toFixed(2) + ".");
       vals.forEach((k) => { if (T.mode === "chain") chainInsert(c, k); else openInsert(c, k); });
@@ -640,14 +888,6 @@
       player.load(c.frames, true);
     });
     q("op-clear").addEventListener("click", () => { fresh(T.m); T.probesTotal = 0; T.opsTotal = 0; still("Cleared."); });
-    q("op-words").addEventListener("click", () => {
-      const c = Ctx(2000);
-      fresh(T.m);
-      c.snap({}, "String keys use a <b>polynomial hash</b>: h = h·31 + charCode, which mixes both the letters and their positions.");
-      ["cat", "dog", "bird", "fish", "ant", "bee"].forEach((k) => { if (T.mode === "chain") chainInsert(c, k); else openInsert(c, k); });
-      player.load(c.frames, true);
-    });
-
     D.legend("#legend", [
       { color: "var(--c-active)", label: "home slot / free slot found" },
       { color: "var(--c-cmp)", label: "occupied — collision, keep probing" },

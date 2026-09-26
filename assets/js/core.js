@@ -171,7 +171,10 @@
     /* panels are rebuilt whenever you pick a new algorithm — drop the detached ones */
     blocks = blocks.filter((b) => b.node.isConnected);
     blocks.forEach((b) => b.refresh());
+    langListeners.forEach((fn) => { try { fn(id); } catch (e) { console.error(e); } });
   }
+  const langListeners = [];
+  DSA.onLang = (fn) => langListeners.push(fn);
 
   /** Plain single-language panel: CodePanel(mount, ["line", ...]). */
   DSA.CodePanel = function (mount, lines) {
@@ -291,6 +294,141 @@
        frame.code  which listing to show (kept until a frame changes it)
        frame.line  anchor name / pseudocode index to highlight
      ------------------------------------------------------------ */
+  /* ------------------------------------------------------------
+     Signatures and calls
+     Every listing's first line is its signature, so the dock can show
+     how you would CALL the function in each language, with the values
+     that were actually used (parsed from the operation's opening
+     caption, e.g. "<b>insert(2, 99)</b>") or the parameter names.
+     ------------------------------------------------------------ */
+  function splitTop(s) {             /* split on commas not inside <> () [] {} */
+    const out = []; let depth = 0, cur = "";
+    for (const ch of s) {
+      if ("<([{".includes(ch)) depth++;
+      else if (">)]}".includes(ch)) depth--;
+      if (ch === "," && depth === 0) { out.push(cur); cur = ""; } else cur += ch;
+    }
+    if (cur.trim()) out.push(cur);
+    return out.map((x) => x.trim()).filter(Boolean);
+  }
+  function sigOf(L, lang) {
+    const first = L && L[lang] && L[lang][0];
+    if (!first) return null;
+    let t = splitAnchor(first).text;
+    t = t.replace(lang === "python" ? /#.*$/ : /\/\/.*$/, "").trim();
+    let m;
+    if (lang === "python") {
+      m = /^def\s+(\w+)\s*\((.*)\)\s*:/.exec(t);
+      if (!m) return null;
+      let ps = splitTop(m[2]).map((p) => p.split("=")[0].split(":")[0].trim());
+      const method = ps[0] === "self";
+      if (method) ps = ps.slice(1);
+      return { name: m[1], params: ps, method: method, type: null };
+    }
+    if (lang === "pseudo") {
+      m = /^([\w]+)\s*\(([^)]*)\)\s*:/.exec(t);
+      if (!m) return null;
+      return { name: m[1], params: splitTop(m[2]), type: null };
+    }
+    m = /^(?:static\s+)?(.+?)\s*\b(\w+)\s*\((.*)\)\s*(?:const)?\s*\{?\s*$/.exec(t);
+    if (!m) return null;
+    const params = splitTop(m[3]).map((p) => { const w = p.split("=")[0].trim().match(/(\w+)\s*(\[\s*\])*$/); return w ? w[1] : p; });
+    return { name: m[2], params: params, type: m[1].trim() };
+  }
+  const resultName = (name, type) =>
+    /^(boolean|bool)$/.test(type || "") ? "found"
+      : /Node/.test(type || "") ? "node"
+      : /^Entry/.test(type || "") ? "e"
+      : /^(hash|poly_hash)$/.test(name) ? "h"
+      : /^(indexOf|index_of|search|binarySearch|binary_search|binarySearchIter|binary_search_iter)/i.test(name) ? "i"
+      : /^(find)/i.test(name) ? "pos"
+      : /^(remove|pop|dequeue|get|top|first|min|peek|removeMin|remove_min|removeFirst|removeLast)/i.test(name) ? "x"
+      : "result";
+  /** the call statement for listing L in `lang`; recv = object name (null for a plain function), vals = {param: value} */
+  DSA.callLine = function (L, lang, recv, vals) {
+    const sig = sigOf(L, lang), pseudo = sigOf(L, "pseudo");
+    if (!sig) return null;
+    /* L.callVals: defaults for a top-level call, e.g. { lo: "0", hi: { java: "a.length - 1", python: "len(a) - 1" } } */
+    const v = {};
+    Object.entries(L.callVals || {}).forEach(([k, x]) => { const y = x && typeof x === "object" ? x[lang] : x; if (y != null) v[k] = y; });
+    Object.assign(v, vals || {});
+    const args = sig.params.map((p) => (v[p] != null ? v[p] : p)).join(", ");
+    const isMethod = lang === "python" ? sig.method : (sigOf(L, "python") || {}).method;
+    const target = (isMethod && recv ? recv + "." : "") + sig.name + "(" + args + ")";
+    const pyType = (sigOf(L, "java") || {}).type;
+    const ret = lang === "java" || lang === "cpp" ? sig.type : pyType;
+    const hasRet = ret && !/^void$/.test(ret);
+    const nm = resultName(sig.name, (sigOf(L, "java") || {}).type);
+    if (lang === "java" || lang === "cpp") return (hasRet ? ret + " " + nm + " = " : "") + target + ";";
+    if (lang === "python") return (hasRet ? nm + " = " : "") + target;
+    return (hasRet ? nm + " ← " : "") + target;
+  };
+  /* values of a call written in a caption: "<b>insert(2, 99)</b> — …" → {i: 2, x: 99} (pseudocode parameter names) */
+  function argsFromNote(L, note) {
+    const sig = sigOf(L, "pseudo");
+    if (!sig || !note) return null;
+    const text = String(note).replace(/<[^>]*>/g, "").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+    const m = new RegExp("\\b" + sig.name + "\\s*\\(").exec(text);
+    if (!m || text.slice(0, m.index).trim()) return null;   /* only a call that OPENS the caption */
+    let depth = 1, j = m.index + m[0].length, inner = "";
+    for (; j < text.length && depth; j++) { const ch = text[j]; if (ch === "(") depth++; else if (ch === ")") depth--; if (depth) inner += ch; }
+    const vals = splitTop(inner);
+    if (vals.length !== sig.params.length) return null;
+    const out = {};
+    sig.params.forEach((p, i) => (out[p] = vals[i]));
+    return out;
+  }
+  /* Tag every frame (and compare-mode sides) with the argument values of the operation it belongs to */
+  function listingOf(key) {
+    for (const d of docks) if (d.listings[key]) return d.listings[key];
+    return null;
+  }
+  DSA.annotateArgs = function (frames) {
+    const state = { S: { code: null, args: {} }, L: { code: null, args: {} }, R: { code: null, args: {} } };
+    const visit = (f, st) => {
+      if (!f) return;
+      if (f.code && f.code !== st.code) st.code = f.code;
+      const L = st.code && listingOf(st.code);
+      if (L && f.note) { const a = argsFromNote(L, f.note); if (a) st.args[st.code] = a; }
+      if (st.code && st.args[st.code]) f._args = st.args[st.code];
+    };
+    (frames || []).forEach((f) => { if (!f) return; if (f.L || f.R) { visit(f.L, state.L); visit(f.R, state.R); } else visit(f, state.S); });
+  };
+
+  /* spec block: what the function does, how to call it, parameters, result, errors, cost */
+  function specBox(L, key, recv, argsHook) {
+    const box = DSA.el("div", { class: "code-spec" });
+    const sp = L.spec || {};
+    let vals = null;
+    const callEl = DSA.el("code", { class: "spec-call-code" });
+    function paintCall() {
+      const lang = variantsHave(L, curLang) ? curLang : "pseudo";
+      const r = typeof recv === "function" ? recv(key) : recv;
+      const v = vals || (argsHook ? argsHook(key) : null);
+      const line = DSA.callLine(L, lang, r, v);
+      callEl.innerHTML = line ? paint(line, lang) : "";
+      callRow.style.display = line ? "" : "none";
+    }
+    if (sp.does) box.appendChild(DSA.el("div", { class: "spec-does", html: sp.does }));
+    const callRow = DSA.el("div", { class: "spec-row" }, [DSA.el("span", { class: "spec-k", text: "call" }), callEl]);
+    box.appendChild(callRow);
+    const rows = [["params", sp.params], ["returns", sp.returns], ["errors", sp.errors], ["cost", sp.cost]];
+    rows.forEach(([k, v]) => { if (v) box.appendChild(DSA.el("div", { class: "spec-row" }, [DSA.el("span", { class: "spec-k", text: k }), DSA.el("span", { class: "spec-v", html: v })])); });
+    paintCall();
+    return { node: box, setArgs(a) { if (a !== vals || argsHook) { vals = a || null; paintCall(); } }, repaint: paintCall };
+  }
+  /** specs(listings, { key: { does, params, returns, errors, cost, callVals? } }) — attach specs to listings */
+  DSA.specs = function (listings, map) {
+    Object.keys(map).forEach((k) => {
+      const L = listings[k];
+      if (!L) { console.warn("spec for unknown listing " + k); return; }
+      const sp = Object.assign({}, map[k]);
+      if (sp.callVals) { L.callVals = sp.callVals; delete sp.callVals; }
+      L.spec = sp;
+    });
+  };
+  function variantsHave(L, lang) { return Array.isArray(L[lang]) && L[lang].length > 0; }
+
   const LS_HIDE = "dsa.codeHidden";
   let codeHidden = false;
   try { codeHidden = localStorage.getItem(LS_HIDE) === "1"; } catch (e) {}
@@ -321,7 +459,12 @@
       docks.forEach((d) => d.paintHidden());
     });
 
-    let key = null, block = null;
+    let key = null, block = null, spec = null;
+    const specMount = DSA.el("div", { class: "code-spec-wrap" });
+    const codeMount = DSA.el("div");
+    body.appendChild(specMount);
+    body.appendChild(codeMount);
+    DSA.onLang(() => { if (spec && specMount.isConnected) spec.repaint(); });
     const api = {
       listings: listings,
       paintHidden: paintHidden,
@@ -333,14 +476,18 @@
         if (!L) return api;
         key = k;
         title.innerHTML = '<span class="lang-label">running</span> <span class="mono">' + (L.title || k) + "</span>";
-        block = DSA.CodeBlock(body, L, { switcherMount: sw });
+        specMount.innerHTML = "";
+        spec = specBox(L, k, o.recv || null, o.args || null);
+        specMount.appendChild(spec.node);
+        block = DSA.CodeBlock(codeMount, L, { switcherMount: sw });
         return api;
       },
       highlight(line) { if (block) block.highlight(line == null ? null : line); },
-      /** Follow a frame: switch listing if it names one, then highlight its line. */
+      /** Follow a frame: switch listing if it names one, then highlight its line and show its call. */
       sync(f) {
         if (!f) return;
         if (f.code) api.show(f.code);
+        if (spec) spec.setArgs(f._args || null);
         api.highlight(f.line);
       },
     };
@@ -385,6 +532,46 @@
       n.style.display = on ? "" : "none";
     });
   };
+
+  /* ---------------- LeetCode practice ----------------
+     Practice({ key: { label, note?, items: [[number, "Title", "slug", "Easy|Medium|Hard", "why"], ...] } })
+     registers a page's lists; practiceShow(key) shows the list for the part the reader is on.
+     The panel is created right below the visualizer panel. */
+  let pData = null, pKey = null;
+  function practiceMount() {
+    let m = DSA.$("#practice");
+    if (!m) {
+      const host = DSA.$("#player") && DSA.$("#player").closest(".panel");
+      if (!host) return null;
+      m = DSA.el("section", { class: "panel", id: "practice" });
+      host.parentNode.insertBefore(m, host.nextSibling);
+    }
+    return m;
+  }
+  function practiceRender() {
+    if (!pData || pKey == null) return;
+    const m = practiceMount();
+    if (!m) return;
+    const d = pData[pKey];
+    m.innerHTML = "";
+    m.style.display = d ? "" : "none";
+    if (!d) return;
+    m.appendChild(DSA.el("div", { class: "panel-title" }, [
+      DSA.el("h2", { html: "Practice on LeetCode <span class='muted' style='font-weight:400'>— " + d.label + "</span>" }),
+      DSA.el("span", { class: "hint", text: "opens in a new tab" }),
+    ]));
+    if (d.note) m.appendChild(DSA.el("p", { class: "small muted", style: "margin:-.3rem 0 .7rem", html: d.note }));
+    const list = DSA.el("div", { class: "lc-list" });
+    (d.items || []).forEach(([n, title, slug, diff, why]) => {
+      const a = DSA.el("a", { class: "lc-item", href: "https://leetcode.com/problems/" + slug + "/", target: "_blank", rel: "noopener" });
+      a.innerHTML = '<span class="lc-top"><span class="lc-num">' + n + '.</span> <span class="lc-title">' + title + '</span> <span class="lc-diff ' + diff.toLowerCase() + '">' + diff + "</span></span>" +
+        (why ? '<span class="lc-why">' + why + "</span>" : "");
+      list.appendChild(a);
+    });
+    m.appendChild(list);
+  }
+  DSA.Practice = function (data) { pData = data; practiceRender(); };
+  DSA.practiceShow = function (key) { pKey = key; practiceRender(); };
 
   /* ---------------- segmented toggle ---------------- */
   /** Segmented(mount, [{id,label}], onChange, initialId) — a small pill switch (mode pickers). */
@@ -616,6 +803,7 @@
       markCurrent();
       this.pause();
       this.frames = frames && frames.length ? frames : [{ note: "No steps were produced." }];
+      DSA.annotateArgs(this.frames);
       this.index = 0;
       this._sync();
       if (autoplay !== false) this.play();

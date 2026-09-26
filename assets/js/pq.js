@@ -492,6 +492,31 @@
   CODE.sort_heap = sortCode("heap sort = pqSort with a heap", "O(log n)", "O(log n)");
 
   /* ============================================================
+     SPECS
+     ============================================================ */
+  const M = (t) => "<span class='mono'>" + t + "</span>";
+  const pqSortSpec = (how, p1, p2, cls, py) => ({ does: "Sorts S by inserting every key into a priority queue P, then removing the minimum n times. With " + how + ".", params: M("S") + " — the sequence to sort · " + M("P") + " — an empty priority queue", returns: "nothing — S ends up in ascending order", errors: "none", cost: "phase 1 " + p1 + " · phase 2 " + p2, callVals: { s: "s", p: { java: "new " + cls + "()", cpp: "pq", python: py + "()" } } });
+  D.specs(CODE, {
+    u_insert: { does: "Adds key " + M("k") + " anywhere — an unsorted list just appends.", params: M("k") + " — the key", returns: "nothing", errors: "none", cost: "O(1)" },
+    u_min: { does: "Finds the smallest key by scanning the whole list.", params: "none", returns: "the minimum key", errors: "empty priority queue", cost: "O(n)" },
+    u_removeMin: { does: "Scans for the smallest key, removes it and returns it.", params: "none", returns: "the minimum key", errors: "empty priority queue", cost: "O(n)" },
+    s_insert: { does: "Walks the sorted list to " + M("k") + "'s place and inserts it there, keeping the list sorted.", params: M("k") + " — the key", returns: "nothing", errors: "none", cost: "O(n) worst case (a key smaller than everything walks the whole list)" },
+    s_min: { does: "Returns the first element — the list is kept sorted, so it is the minimum.", params: "none", returns: "the minimum key", errors: "empty priority queue", cost: "O(1)" },
+    s_removeMin: { does: "Removes and returns the first element.", params: "none", returns: "the minimum key", errors: "empty priority queue", cost: "O(1)" },
+    a_insert: { does: "Appends " + M("k") + " at the end of the heap array, then up-heaps it past larger parents.", params: M("k") + " — the key", returns: "nothing", errors: "none", cost: "O(log n)" },
+    a_removeMin: { does: "Returns the root, moves the last element to the root, then down-heaps it past smaller children.", params: "none", returns: "the minimum key", errors: "empty priority queue", cost: "O(log n)" },
+    a_min: { does: "Returns the root of the heap — always the minimum.", params: "none", returns: "the minimum key", errors: "empty priority queue", cost: "O(1)" },
+    a_heapify: { does: "Turns an arbitrary array into a heap bottom-up: down-heap every internal node from the last one back to the root.", params: M("A") + " — the keys", returns: "nothing — the heap now holds A", errors: "none", cost: "Θ(n) — most nodes are near the bottom and barely move", callVals: { A: "A", a: "a" } },
+    a_build: { does: "Builds a heap by inserting the keys one at a time.", params: M("A") + " — the keys", returns: "nothing", errors: "none", cost: "O(n log n) — compare with bottom-up heapify" },
+    t_insert: { does: "Hangs a new node at the next free position (found by reading n in binary), then up-heaps it.", params: M("k") + " — the key", returns: "nothing", errors: "none", cost: "O(log n) for the walk plus O(log n) for up-heap" },
+    t_removeMin: { does: "Returns the root's key, moves the last node's key to the root, unlinks the last node, then down-heaps.", params: "none", returns: "the minimum key", errors: "empty priority queue", cost: "O(log n)" },
+    t_min: { does: "Returns the root's key.", params: "none", returns: "the minimum key", errors: "empty priority queue", cost: "O(1)" },
+    sort_selection: pqSortSpec("an <b>unsorted list</b> as P this is selection sort", "O(n)", "O(n²)", "UnsortedListPQ", "UnsortedListPQ"),
+    sort_insertion: pqSortSpec("a <b>sorted list</b> as P this is insertion sort", "O(n²) (O(n) if already sorted)", "O(n)", "SortedListPQ", "SortedListPQ"),
+    sort_heap: pqSortSpec("a <b>heap</b> as P this is heap sort", "O(n log n)", "O(n log n)", "HeapPQ", "HeapPQ"),
+  });
+
+  /* ============================================================
      STATE
      ============================================================ */
   const U = { a: [] };      /* unsorted list */
@@ -983,6 +1008,7 @@
   function selectTab(id) {
     tab = id;
     D.showFor(id);
+    D.practiceShow(id);
     q("notes").innerHTML = "<p class='blurb'>" + NOTES[id] + "</p>";
     D.Examples("#examples", EXAMPLES[id]);
     dock.show({ unsorted: "u_removeMin", sorted: "s_insert", aheap: "a_insert", theap: "t_insert", sort: "sort_" + SORT.algo }[id]);
@@ -995,8 +1021,143 @@
     }[id]);
   }
 
+  /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
+  const PRACTICE = {
+   "unsorted": {
+    "label": "Unsorted-list PQ",
+    "items": [
+     [
+      1046,
+      "Last Stone Weight",
+      "last-stone-weight",
+      "Easy",
+      "Repeatedly remove the largest two — try it with a scan first, then a heap."
+     ],
+     [
+      215,
+      "Kth Largest Element in an Array",
+      "kth-largest-element-in-an-array",
+      "Medium",
+      "Compare O(n·k) scanning with a heap."
+     ]
+    ]
+   },
+   "sorted": {
+    "label": "Sorted-list PQ",
+    "items": [
+     [
+      703,
+      "Kth Largest Element in a Stream",
+      "kth-largest-element-in-a-stream",
+      "Easy",
+      "Keep the best k in order as values arrive."
+     ],
+     [
+      1046,
+      "Last Stone Weight",
+      "last-stone-weight",
+      "Easy",
+      "removeMax is O(1) on a sorted list; insert is not."
+     ]
+    ]
+   },
+   "aheap": {
+    "label": "Array-based heap",
+    "items": [
+     [
+      1046,
+      "Last Stone Weight",
+      "last-stone-weight",
+      "Easy",
+      "The standard heap warm-up."
+     ],
+     [
+      703,
+      "Kth Largest Element in a Stream",
+      "kth-largest-element-in-a-stream",
+      "Easy",
+      "A min-heap of size k."
+     ],
+     [
+      347,
+      "Top K Frequent Elements",
+      "top-k-frequent-elements",
+      "Medium",
+      "Heap + hash map."
+     ],
+     [
+      973,
+      "K Closest Points to Origin",
+      "k-closest-points-to-origin",
+      "Medium",
+      "A heap ordered by a computed key."
+     ],
+     [
+      23,
+      "Merge k Sorted Lists",
+      "merge-k-sorted-lists",
+      "Hard",
+      "Always removeMin across k lists."
+     ]
+    ]
+   },
+   "theap": {
+    "label": "Tree-based heap",
+    "items": [
+     [
+      958,
+      "Check Completeness of a Binary Tree",
+      "check-completeness-of-a-binary-tree",
+      "Medium",
+      "The shape a linked heap must keep."
+     ],
+     [
+      222,
+      "Count Complete Tree Nodes",
+      "count-complete-tree-nodes",
+      "Medium",
+      "Reasoning about positions in a complete tree."
+     ],
+     [
+      1046,
+      "Last Stone Weight",
+      "last-stone-weight",
+      "Easy",
+      "Same ADT — try it with your own linked heap."
+     ]
+    ]
+   },
+   "sort": {
+    "label": "PQ-sort",
+    "items": [
+     [
+      912,
+      "Sort an Array",
+      "sort-an-array",
+      "Medium",
+      "Submit heap sort — then selection and insertion sort, and watch them time out."
+     ],
+     [
+      215,
+      "Kth Largest Element in an Array",
+      "kth-largest-element-in-an-array",
+      "Medium",
+      "Stop PQ-sort early: only k removeMins."
+     ],
+     [
+      1985,
+      "Find the Kth Largest Integer in the Array",
+      "find-the-kth-largest-integer-in-the-array",
+      "Medium",
+      "Same idea with a custom comparator."
+     ]
+    ]
+   }
+  };
+
   document.addEventListener("DOMContentLoaded", function () {
-    dock = D.CodeDock("#code", CODE);
+    D.Practice(PRACTICE);
+    dock = D.CodeDock("#code", CODE, { recv: "pq" });
     player = new D.Player({ mount: "#player", render: render, code: dock });
     const val = () => { const v = parseInt(q("val").value, 10); return isNaN(v) ? D.randInt(1, 99) : v; };
     const impl = () => ({ unsorted: unsorted, sorted: sorted, aheap: aheap, theap: theap })[tab];

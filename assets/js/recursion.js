@@ -1028,6 +1028,7 @@
     buildInputs(id);
     setMode(mode);
     D.Examples("#examples", EX[id].map((e) => ({ label: e.label, run: () => runExample(e) })));
+    D.practiceShow(id);
     nodes = [];
     player.load([{ note: "Ready — press <b>Run</b> to trace " + f.label + "." }], false);
   }
@@ -1100,16 +1101,260 @@
     player.load(frames, true);
   }
 
+  /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
+  const PRACTICE = {
+   "factorial": {
+    "label": "factorial",
+    "items": [
+     [
+      509,
+      "Fibonacci Number",
+      "fibonacci-number",
+      "Easy",
+      "The next simplest recursion."
+     ],
+     [
+      172,
+      "Factorial Trailing Zeroes",
+      "factorial-trailing-zeroes",
+      "Medium",
+      "Reason about n! without computing it."
+     ],
+     [
+      344,
+      "Reverse String",
+      "reverse-string",
+      "Easy",
+      "Recursion that shrinks the input by one."
+     ]
+    ]
+   },
+   "fib": {
+    "label": "fib (naive)",
+    "items": [
+     [
+      509,
+      "Fibonacci Number",
+      "fibonacci-number",
+      "Easy",
+      "Write it naively, then time it for n = 40."
+     ],
+     [
+      1137,
+      "N-th Tribonacci Number",
+      "n-th-tribonacci-number",
+      "Easy",
+      "Three branches — even more repeated work."
+     ],
+     [
+      70,
+      "Climbing Stairs",
+      "climbing-stairs",
+      "Easy",
+      "Fibonacci in disguise."
+     ]
+    ]
+   },
+   "fibmemo": {
+    "label": "fib (memoised)",
+    "items": [
+     [
+      70,
+      "Climbing Stairs",
+      "climbing-stairs",
+      "Easy",
+      "Add a memo and it becomes O(n)."
+     ],
+     [
+      746,
+      "Min Cost Climbing Stairs",
+      "min-cost-climbing-stairs",
+      "Easy",
+      "Top-down memo or bottom-up table."
+     ],
+     [
+      198,
+      "House Robber",
+      "house-robber",
+      "Medium",
+      "The next step in dynamic programming."
+     ]
+    ]
+   },
+   "gcd": {
+    "label": "gcd",
+    "items": [
+     [
+      1979,
+      "Find Greatest Common Divisor of Array",
+      "find-greatest-common-divisor-of-array",
+      "Easy",
+      "Euclid's algorithm directly."
+     ],
+     [
+      1071,
+      "Greatest Common Divisor of Strings",
+      "greatest-common-divisor-of-strings",
+      "Easy",
+      "The same recursion on strings."
+     ]
+    ]
+   },
+   "power": {
+    "label": "fast power",
+    "items": [
+     [
+      50,
+      "Pow(x, n)",
+      "powx-n",
+      "Medium",
+      "Exactly this algorithm — watch out for negative n."
+     ],
+     [
+      231,
+      "Power of Two",
+      "power-of-two",
+      "Easy",
+      "Read the bits of n."
+     ],
+     [
+      326,
+      "Power of Three",
+      "power-of-three",
+      "Easy",
+      "Divide until you hit the base case."
+     ]
+    ]
+   },
+   "hanoi": {
+    "label": "Towers of Hanoi",
+    "note": "Hanoi itself is not on LeetCode. These use the same pattern: solve a smaller copy of the problem, then combine.",
+    "items": [
+     [
+      206,
+      "Reverse Linked List",
+      "reverse-linked-list",
+      "Easy",
+      "Recurse on the rest, then fix one link."
+     ],
+     [
+      24,
+      "Swap Nodes in Pairs",
+      "swap-nodes-in-pairs",
+      "Medium",
+      "Handle two nodes, recurse on the rest."
+     ],
+     [
+      779,
+      "K-th Symbol in Grammar",
+      "k-th-symbol-in-grammar",
+      "Medium",
+      "Each row is built from the row above, like each Hanoi level."
+     ]
+    ]
+   },
+   "bsearch": {
+    "label": "binary search",
+    "items": [
+     [
+      704,
+      "Binary Search",
+      "binary-search",
+      "Easy",
+      "Exactly this tab."
+     ],
+     [
+      35,
+      "Search Insert Position",
+      "search-insert-position",
+      "Easy",
+      "What lo points at when the search misses."
+     ],
+     [
+      33,
+      "Search in Rotated Sorted Array",
+      "search-in-rotated-sorted-array",
+      "Medium",
+      "Decide which half is sorted first."
+     ]
+    ]
+   },
+   "perms": {
+    "label": "permutations",
+    "items": [
+     [
+      46,
+      "Permutations",
+      "permutations",
+      "Medium",
+      "Exactly this tab."
+     ],
+     [
+      47,
+      "Permutations II",
+      "permutations-ii",
+      "Medium",
+      "Skip duplicate letters."
+     ],
+     [
+      78,
+      "Subsets",
+      "subsets",
+      "Medium",
+      "The same choose-or-skip recursion tree."
+     ],
+     [
+      17,
+      "Letter Combinations of a Phone Number",
+      "letter-combinations-of-a-phone-number",
+      "Medium",
+      "Backtracking over choices."
+     ]
+    ]
+   }
+  };
+
   document.addEventListener("DOMContentLoaded", function () {
+    D.Practice(PRACTICE);
     sortedArr = [3, 8, 14, 21, 29, 36, 47, 55, 68, 74, 82, 91];
     const listings = {};
     ORDER.forEach((id) => {
       listings[id + "_rec"] = Object.assign({ title: FN[id].label + " — recursive" }, FN[id].code);
       listings[id + "_iter"] = ITER[id].code;
     });
-    dock = D.CodeDock("#code", listings);
-    dockL = D.CodeDock("#L-code", listings, { collapsible: false });
-    dockR = D.CodeDock("#R-code", listings, { collapsible: false });
+    const M = (t) => "<span class='mono'>" + t + "</span>";
+    const HI = { pseudo: "n − 1", java: "a.length - 1", cpp: "(int)a.size() - 1", python: "len(a) - 1" };
+    D.specs(listings, {
+      factorial_rec: { does: "Computes n! = n · (n−1)!, with 0! = 1! = 1 as the base case.", params: M("n") + " — n ≥ 0", returns: "n!", errors: "overflows an int beyond 12!", cost: "O(n) time, O(n) stack frames" },
+      factorial_iter: { does: "Computes n! with a loop that multiplies 2, 3, …, n into one variable.", params: M("n") + " — n ≥ 0", returns: "n!", errors: "overflows a long beyond 20!", cost: "O(n) time, O(1) space" },
+      fib_rec: { does: "Computes the n-th Fibonacci number straight from the definition fib(n) = fib(n−1) + fib(n−2).", params: M("n") + " — n ≥ 0", returns: "fib(n)", errors: "none, but it recomputes the same values over and over", cost: "Θ(φⁿ) ≈ Θ(1.618ⁿ) calls, O(n) stack" },
+      fib_iter: { does: "Computes fib(n) by sliding two variables (the previous two numbers) forward.", params: M("n") + " — n ≥ 0", returns: "fib(n)", errors: "none", cost: "O(n) time, O(1) space" },
+      fibmemo_rec: { does: "Recursive fib that stores each answer in a memo, so every fib(k) is computed only once (top-down DP).", params: M("n") + " — n ≥ 0 · " + M("memo") + " — the map of answers found so far", returns: "fib(n)", errors: "none", cost: "O(n) time, O(n) memo + O(n) stack", callVals: { memo: { pseudo: "{}", java: "new HashMap<>()", cpp: "memo", python: "{}" } } },
+      fibmemo_iter: { does: "Fills a table T[0..n] from the bottom up: T[i] = T[i−1] + T[i−2].", params: M("n") + " — n ≥ 0", returns: "T[n] = fib(n)", errors: "none", cost: "O(n) time, O(n) space" },
+      gcd_rec: { does: "Euclid's algorithm: gcd(a, b) = gcd(b, a mod b), and gcd(a, 0) = a.", params: M("a") + ", " + M("b") + " — non-negative integers", returns: "their greatest common divisor", errors: "none", cost: "O(log min(a, b)) calls — tail recursive" },
+      gcd_iter: { does: "Euclid's algorithm as a loop: replace (a, b) by (b, a mod b) until b is 0.", params: M("a") + ", " + M("b") + " — non-negative integers", returns: "gcd(a, b)", errors: "none", cost: "O(log min(a, b)) time, O(1) space" },
+      power_rec: { does: "Computes xⁿ by squaring: xⁿ = (x^⌊n/2⌋)², times x when n is odd.", params: M("x") + " — the base · " + M("n") + " — exponent ≥ 0", returns: "xⁿ", errors: "overflows a long for large results", cost: "O(log n) multiplications and stack frames" },
+      power_iter: { does: "Computes xⁿ by reading the bits of n: square x each step, multiply it in when the bit is 1.", params: M("x") + " — the base · " + M("n") + " — exponent ≥ 0", returns: "xⁿ", errors: "overflows a long for large results", cost: "O(log n) time, O(1) space" },
+      hanoi_rec: { does: "Moves n disks from one peg to another: move n−1 out of the way, move the biggest, move n−1 back on top.", params: M("n") + " — number of disks · the three pegs", returns: "nothing (prints the moves)", errors: "none", cost: "2ⁿ − 1 moves, O(n) stack", callVals: { from: "'A'", to: "'C'", via: "'B'", src: "'A'", dst: "'C'" } },
+      hanoi_iter: { does: "The same moves, driven by an explicit stack of pending tasks instead of the call stack.", params: M("n") + " — number of disks", returns: "nothing (prints the moves)", errors: "none", cost: "2ⁿ − 1 moves, O(n) explicit stack" },
+      bsearch_rec: { does: "Binary search in a sorted array: compare with the middle, then recurse into the half that can hold the target.", params: M("A") + " — sorted array · " + M("target") + " — the key · " + M("lo") + ", " + M("hi") + " — the range (call with 0 and n − 1)", returns: "an index holding target, or −1", errors: "wrong answers if A is not sorted", cost: "O(log n) time and stack", callVals: { lo: "0", hi: HI, A: "A", a: "a" } },
+      bsearch_iter: { does: "The same binary search with a loop that moves lo and hi.", params: M("A") + " — sorted array · " + M("target") + " — the key", returns: "an index holding target, or −1", errors: "wrong answers if A is not sorted", cost: "O(log n) time, O(1) space" },
+      perms_rec: { does: "Prints every ordering of the characters: fix each remaining character next, then permute the rest.", params: M("chosen") + " — the prefix built so far · " + M("rest") + " — characters still to place", returns: "nothing (prints n! strings)", errors: "none", cost: "Θ(n · n!)", callVals: { chosen: '""' } },
+      perms_iter: { does: "The same orderings, produced by an explicit stack of (chosen, rest) states.", params: M("s") + " — the characters", returns: "nothing (prints n! strings)", errors: "none", cost: "Θ(n · n!)" },
+    });
+    /* the call line shows the values in the input boxes */
+    const inputArgs = () => {
+      const v = {};
+      D.$$("#inputs input").forEach((el) => {
+        const id = el.id.replace(/^in-/, "");
+        if (id === "str") { v.s = v.rest = '"' + el.value + '"'; }
+        else if (id !== "arr" && el.value !== "") v[id] = el.value;
+      });
+      return v;
+    };
+    dock = D.CodeDock("#code", listings, { args: inputArgs });
+    dockL = D.CodeDock("#L-code", listings, { collapsible: false, args: inputArgs });
+    dockR = D.CodeDock("#R-code", listings, { collapsible: false, args: inputArgs });
     player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock });
     const tabs = q("fn-tabs");
     ORDER.forEach((id) => tabs.appendChild(D.el("button", { text: FN[id].label, "data-id": id, onclick: () => select(id) })));

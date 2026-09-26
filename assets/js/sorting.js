@@ -867,6 +867,19 @@
 
   const LISTINGS = {};
   Object.keys(ALGO).forEach((id) => (LISTINGS[id] = Object.assign({ title: ALGO[id].label }, ALGO[id].code)));
+  const M = (t) => "<span class='mono'>" + t + "</span>";
+  const HI = { pseudo: "n − 1", java: "a.length - 1", cpp: "(int)a.size() - 1", python: "len(a) - 1" };
+  const sortSpec = (does, cost, extra) => Object.assign({ does: does, params: M("A") + " — the array to sort (changed in place)", returns: "nothing — A ends up in ascending order", errors: "none", cost: cost }, extra || {});
+  D.specs(LISTINGS, {
+    bubble: sortSpec("Repeatedly swaps neighbours that are out of order; stops early after a pass with no swaps.", "O(n²) worst/average, O(n) on sorted input · O(1) space · stable"),
+    selection: sortSpec("Repeatedly selects the minimum of the unsorted part and swaps it into place.", "Θ(n²) always, but at most n − 1 swaps · O(1) space · not stable"),
+    insertion: sortSpec("Grows a sorted prefix, shifting larger values right to drop each new key into place.", "O(n²) worst, O(n) on nearly sorted input · O(1) space · stable"),
+    heap: sortSpec("Builds a max-heap in the array, then repeatedly swaps the maximum to the end and repairs the heap.", "O(n log n) always · O(1) space · not stable"),
+    merge: sortSpec("Splits the range in half, sorts each half recursively, then merges the two sorted halves.", "Θ(n log n) always · O(n) extra space · stable", { params: M("A") + " — the array · " + M("lo") + ", " + M("hi") + " — the range to sort (call with 0 and n − 1)", callVals: { lo: "0", hi: HI } }),
+    quick: sortSpec("Partitions around a pivot (Lomuto: the last element), then sorts both sides recursively.", "O(n log n) average, O(n²) worst (sorted input with this pivot) · O(log n) stack · not stable", { params: M("A") + " — the array · " + M("lo") + ", " + M("hi") + " — the range to sort (call with 0 and n − 1)", callVals: { lo: "0", hi: HI } }),
+    twothird: sortSpec("Sorts the first two-thirds, the last two-thirds, then the first two-thirds again — correct, but famously slow.", "Θ(n^2.71) — a recurrence exercise, not a practical sort", { params: M("A") + " — the array · " + M("i") + ", " + M("j") + " — the range (call with 0 and n − 1)", callVals: { i: "0", j: HI } }),
+    counting: sortSpec("Counts how many times each key occurs, turns the counts into positions, then places every key directly — no comparisons.", "Θ(n + k) time and space · stable", { params: M("A") + " — keys in 0…k · " + M("k") + " — the largest key", callVals: { k: "9" } }),
+  });
   const dock = D.CodeDock("#code", LISTINGS);
   const player = new D.Player({
     mount: "#player",
@@ -907,6 +920,7 @@
     q("algo-blurb").innerHTML = A.blurb;
     q("algo-big").innerHTML = A.big.map((b) => "<span>" + b + "</span>").join("");
     dock.show(id);
+    D.practiceShow(id);
     D.$$("#algo-tabs button").forEach((b) => b.classList.toggle("active", b.dataset.id === id));
     if (A.maxN && arr.length > A.maxN) {
       newArray(A.maxN, "random");
@@ -973,7 +987,193 @@
   }
 
   /* ---------- init ---------- */
+  /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
+  const PRACTICE = {
+   "bubble": {
+    "label": "Bubble sort",
+    "items": [
+     [
+      912,
+      "Sort an Array",
+      "sort-an-array",
+      "Medium",
+      "Try bubble sort — it times out, which is the lesson."
+     ],
+     [
+      283,
+      "Move Zeroes",
+      "move-zeroes",
+      "Easy",
+      "Stable in-place movement of elements."
+     ]
+    ]
+   },
+   "selection": {
+    "label": "Selection sort",
+    "items": [
+     [
+      912,
+      "Sort an Array",
+      "sort-an-array",
+      "Medium",
+      "Selection sort is always Θ(n²): see where it fails."
+     ],
+     [
+      1051,
+      "Height Checker",
+      "height-checker",
+      "Easy",
+      "Compare an array with its sorted version."
+     ]
+    ]
+   },
+   "insertion": {
+    "label": "Insertion sort",
+    "items": [
+     [
+      147,
+      "Insertion Sort List",
+      "insertion-sort-list",
+      "Medium",
+      "Insertion sort on a linked list."
+     ],
+     [
+      35,
+      "Search Insert Position",
+      "search-insert-position",
+      "Easy",
+      "Find where one key belongs in a sorted prefix."
+     ]
+    ]
+   },
+   "heap": {
+    "label": "Heap sort",
+    "items": [
+     [
+      912,
+      "Sort an Array",
+      "sort-an-array",
+      "Medium",
+      "Heap sort passes in O(n log n) with O(1) space."
+     ],
+     [
+      215,
+      "Kth Largest Element in an Array",
+      "kth-largest-element-in-an-array",
+      "Medium",
+      "Stop heap sort after k extractions."
+     ]
+    ]
+   },
+   "merge": {
+    "label": "Merge sort",
+    "items": [
+     [
+      88,
+      "Merge Sorted Array",
+      "merge-sorted-array",
+      "Easy",
+      "The merge step on its own."
+     ],
+     [
+      21,
+      "Merge Two Sorted Lists",
+      "merge-two-sorted-lists",
+      "Easy",
+      "The merge step on linked lists."
+     ],
+     [
+      148,
+      "Sort List",
+      "sort-list",
+      "Medium",
+      "Merge sort a linked list in O(n log n)."
+     ],
+     [
+      912,
+      "Sort an Array",
+      "sort-an-array",
+      "Medium",
+      "Full merge sort."
+     ]
+    ]
+   },
+   "quick": {
+    "label": "Quick sort",
+    "items": [
+     [
+      75,
+      "Sort Colors",
+      "sort-colors",
+      "Medium",
+      "A three-way partition."
+     ],
+     [
+      215,
+      "Kth Largest Element in an Array",
+      "kth-largest-element-in-an-array",
+      "Medium",
+      "Quickselect: partition, then recurse into one side only."
+     ],
+     [
+      912,
+      "Sort an Array",
+      "sort-an-array",
+      "Medium",
+      "Randomise the pivot, or sorted input will time out."
+     ]
+    ]
+   },
+   "twothird": {
+    "label": "Two-third sort",
+    "note": "Two-third sort (stooge sort) is a recurrence exercise, not something LeetCode asks for. Practise the recursion and the analysis instead.",
+    "items": [
+     [
+      912,
+      "Sort an Array",
+      "sort-an-array",
+      "Medium",
+      "Watch it time out — Θ(n^2.71) is slower than bubble sort."
+     ],
+     [
+      509,
+      "Fibonacci Number",
+      "fibonacci-number",
+      "Easy",
+      "Another recursion whose running time comes from a recurrence."
+     ]
+    ]
+   },
+   "counting": {
+    "label": "Counting sort",
+    "items": [
+     [
+      75,
+      "Sort Colors",
+      "sort-colors",
+      "Medium",
+      "Keys 0, 1, 2: count them."
+     ],
+     [
+      1122,
+      "Relative Sort Array",
+      "relative-sort-array",
+      "Easy",
+      "Counting with a custom order."
+     ],
+     [
+      1051,
+      "Height Checker",
+      "height-checker",
+      "Easy",
+      "Small key range, so counting sort is Θ(n + k)."
+     ]
+    ]
+   }
+  };
+
   document.addEventListener("DOMContentLoaded", function () {
+    D.Practice(PRACTICE);
     barsEl = q("bars");
     const tabs = q("algo-tabs");
     ORDER.forEach((id) => {

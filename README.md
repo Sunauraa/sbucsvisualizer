@@ -53,6 +53,21 @@ language is showing, so the four languages never need index maps. Rules every mo
 - every listing must carry the same set of anchors in all four languages, and every anchor must be reachable from
   some input (both checked by the test harness).
 
+### Specs, calls and practice
+
+- **Spec box.** Every listing carries a `spec` (`does`, `params`, `returns`, `errors`, `cost`), attached with
+  `D.specs(CODE, {...})` and shown above the code.
+- **Call line.** The dock writes the call in the selected language from each listing's first line (its signature),
+  e.g. `int x = arr.remove(2);` / `x = arr.remove(2)`. Values come from the operation's opening caption
+  (`<b>remove(2)</b> — …`), from the page's `args` hook (Recursion reads its input boxes), or from `callVals` defaults;
+  otherwise the parameter names are shown. Pass `recv` to `CodeDock` to name the object (`arr`, `list`, `stack`, …).
+- **LeetCode practice.** Each page registers `D.Practice({ part: { label, items } })` and calls `D.practiceShow(part)`
+  when the tab changes; the panel appears under the visualizer. Every problem's number, title, difficulty and free
+  status was checked against LeetCode.
+- **Hash tables with String keys.** The *keys* switch picks Integers or Strings. String mode uses `String` / `equals`
+  versions of every listing and steps through `hash(s)` (h = 31·h + code(c), the same value as Java's
+  `String.hashCode`) before each operation.
+
 ### Errors and edge cases run for real
 
 Toolbars only reject input that is not a number. An out-of-range index, a pop from an empty stack or a put into a

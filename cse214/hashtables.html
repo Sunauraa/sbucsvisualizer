@@ -29,7 +29,8 @@
 
   <div class="panel">
     <div class="toolbar">
-      <div class="field"><label for="key">key</label><input type="text" id="key" placeholder="42 or cat" style="width:7rem"></div>
+      <div class="field"><label>keys</label><div id="keytype"></div></div>
+      <div class="field"><label for="key">key</label><input type="text" id="key" placeholder="42" style="width:7rem"></div>
       <button id="op-insert">put(k)</button>
       <button id="op-search">get(k)</button>
       <button id="op-delete">remove(k)</button>
@@ -39,7 +40,6 @@
       <button id="op-rehash">rehash now</button>
       <div class="sep"></div>
       <button id="op-fill">↻ random keys</button>
-      <button id="op-words">string keys</button>
       <button class="danger" id="op-clear">clear</button>
     </div>
 

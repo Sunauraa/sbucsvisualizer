@@ -1242,6 +1242,49 @@
   };
 
   /* ============================================================
+     SPECS — what each function does, shown above its code
+     ============================================================ */
+  const M = (t) => "<span class='mono'>" + t + "</span>";
+  D.specs(CODE, {
+    get: { does: "Returns the element at index " + M("i") + ".", params: M("i") + " — an index in [0, n)", returns: "the element " + M("A[i]"), errors: "index out of bounds if " + M("i < 0") + " or " + M("i ≥ n"), cost: "O(1) — one address calculation, no scanning" },
+    set: { does: "Overwrites the element at index " + M("i") + " with " + M("x") + ".", params: M("i") + " — an index in [0, n) · " + M("x") + " — the new value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n)"), cost: "O(1)" },
+    remove: { does: "Removes and returns the element at index " + M("i") + ", shifting everything after it one slot left.", params: M("i") + " — an index in [0, n)", returns: "the removed element", errors: "index out of bounds if " + M("i ∉ [0, n)"), cost: "O(n − i) shifts, so O(n) worst case (i = 0); O(1) extra space" },
+    indexOf: { does: "Finds the first index holding " + M("x") + ".", params: M("x") + " — the value to look for", returns: "its index, or −1 if absent", errors: "none", cost: "O(n) — linear search, no order to exploit" },
+    fa_add: { does: "Appends " + M("x") + " after the last element of a fixed-capacity array.", params: M("x") + " — the value to append", returns: "nothing", errors: "array is full when " + M("n == capacity") + " — a fixed array cannot grow", cost: "O(1)" },
+    fa_insert: { does: "Inserts " + M("x") + " at index " + M("i") + ", shifting " + M("A[i..n−1]") + " one slot right.", params: M("i") + " — a position in [0, n] (n = append) · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]") + "; array is full if " + M("n == capacity"), cost: "O(n − i) shifts, so O(n) worst case (i = 0)" },
+    da_add_geo: { does: "Appends " + M("x") + "; when the array is full it first grows to <b>double</b> the capacity.", params: M("x") + " — the value to append", returns: "nothing", errors: "none — the array grows instead of failing", cost: "O(1) amortised; one add in a resize costs O(n)" },
+    da_add_arith: { does: "Appends " + M("x") + "; when the array is full it first grows by a <b>constant 2</b> slots.", params: M("x") + " — the value to append", returns: "nothing", errors: "none", cost: "O(n) amortised — resizes happen every 2 adds, which is why real libraries double instead" },
+    da_insert_geo: { does: "Inserts " + M("x") + " at index " + M("i") + ", doubling the capacity first if the array is full.", params: M("i") + " — a position in [0, n] · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]"), cost: "O(n) — shifting dominates whatever the growth rule" },
+    da_insert_arith: { does: "Inserts " + M("x") + " at index " + M("i") + ", growing by 2 slots first if the array is full.", params: M("i") + " — a position in [0, n] · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]"), cost: "O(n)" },
+    g_get: { does: "Reads the cell at row " + M("r") + ", column " + M("c") + ".", params: M("r") + " — row in [0, rows) · " + M("c") + " — column in [0, cols)", returns: M("M[r][c]"), errors: "index out of bounds if either index is out of range", cost: "O(1) — the address is r · cols + c" },
+    g_set: { does: "Writes " + M("x") + " into row " + M("r") + ", column " + M("c") + ".", params: M("r") + ", " + M("c") + " — cell position · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if either index is out of range", cost: "O(1)" },
+    g_rowmajor: { does: "Visits every cell row by row — the order the cells sit in memory.", params: M("m") + " — the 2-D array", returns: "nothing (visits each cell)", errors: "none", cost: "Θ(rows · cols); cache-friendly because each step is the next address" },
+    g_colmajor: { does: "Visits every cell column by column, jumping a whole row ahead in memory each step.", params: M("m") + " — the 2-D array", returns: "nothing (visits each cell)", errors: "none", cost: "Θ(rows · cols), but each step jumps " + M("cols") + " cells, so it is slower on large arrays" },
+    g_rowsum: { does: "Adds up the values in row " + M("r") + ".", params: M("r") + " — a row in [0, rows)", returns: "the sum of the row", errors: "index out of bounds if " + M("r ∉ [0, rows)"), cost: "O(cols)" },
+    g_find: { does: "Searches every cell, row by row, for " + M("x") + ".", params: M("x") + " — the value to look for", returns: "its (row, column), or (−1, −1) if absent", errors: "none", cost: "O(rows · cols)" },
+    s_addFirst: { does: "Puts a new node holding " + M("x") + " at the front of a singly linked list.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1) — two pointer writes, no traversal" },
+    s_addLast: { does: "Puts a new node holding " + M("x") + " at the back, using the tail reference.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1) thanks to the tail pointer" },
+    s_insert: { does: "Inserts " + M("x") + " so that it ends up at index " + M("i") + ", by walking to the node before it.", params: M("i") + " — a position in [1, size] (0 is addFirst) · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [1, size]"), cost: "O(i) for the walk; the splice itself is O(1)" },
+    s_removeFirst: { does: "Unlinks and returns the first node's value.", params: "none", returns: "the removed value", errors: "list is empty if " + M("head == null"), cost: "O(1)" },
+    s_removeLast: { does: "Unlinks and returns the last node's value. A singly linked list must walk to find the node before the tail.", params: "none", returns: "the removed value", errors: "list is empty (via removeFirst when there are 0 nodes)", cost: "O(n) — the walk to the second-to-last node" },
+    s_remove: { does: "Removes the node at index " + M("i") + " by walking to its predecessor and bypassing it.", params: M("i") + " — a position in [1, size) (0 is removeFirst)", returns: "the removed value", errors: "index out of bounds if " + M("i ∉ [1, size)"), cost: "O(i)" },
+    l_indexOf: { does: "Follows next pointers from the head until it finds " + M("x") + ".", params: M("x") + " — the value to look for", returns: "its index, or −1 if absent", errors: "none", cost: "O(n)" },
+    s_reverse: { does: "Reverses the list in place by flipping every next pointer.", params: "none", returns: "nothing (head and tail swap roles)", errors: "none — works for 0 or 1 nodes too", cost: "O(n) time, O(1) extra space" },
+    d_addFirst: { does: "Puts a new node at the front of a doubly linked list, linking it both ways.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1)" },
+    d_addLast: { does: "Puts a new node at the back, linking it both ways.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1)" },
+    d_insert: { does: "Splices " + M("x") + " in before the node currently at index " + M("i") + ".", params: M("i") + " — a position in [1, size) (0 is addFirst, size is addLast) · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [1, size)"), cost: "O(i) for the walk; four pointer writes" },
+    d_removeFirst: { does: "Unlinks and returns the first node's value.", params: "none", returns: "the removed value", errors: "list is empty if " + M("head == null"), cost: "O(1)" },
+    d_removeLast: { does: "Unlinks and returns the last node's value using " + M("tail.prev") + " — no walk.", params: "none", returns: "the removed value", errors: "list is empty if " + M("tail == null"), cost: "O(1)" },
+    d_remove: { does: "Removes the node at index " + M("i") + " by making its neighbours point past it.", params: M("i") + " — a position in [1, size − 1)", returns: "the removed value", errors: "index out of bounds if " + M("i ∉ [1, size − 1)"), cost: "O(i) for the walk; O(1) if you already hold the node" },
+    d_backward: { does: "Visits every value from the tail back to the head using prev links.", params: "none", returns: "nothing (visits each value)", errors: "none", cost: "O(n)" },
+    c_addFirst: { does: "Adds " + M("x") + " as the new head of a circular list — the node right after the tail.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1)" },
+    c_addLast: { does: "Adds " + M("x") + " at the back: addFirst, then move the tail one step forward.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1)" },
+    c_removeFirst: { does: "Removes and returns the head (the node after the tail) and closes the ring past it.", params: "none", returns: "the removed value", errors: "list is empty if " + M("tail == null"), cost: "O(1)" },
+    c_rotate: { does: "Moves the front element to the back by advancing the tail pointer — nothing is unlinked.", params: "none", returns: "nothing", errors: "none — does nothing on an empty ring", cost: "O(1)" },
+    c_indexOf: { does: "Walks once around the ring looking for " + M("x") + ", stopping after a full lap.", params: M("x") + " — the value to look for", returns: "its index, or −1 if absent", errors: "none", cost: "O(n)" },
+  });
+
+  /* ============================================================
      STATE
      ============================================================ */
   const FA = { cap: 8, a: new Array(8).fill(null), n: 0 };
@@ -2122,6 +2165,7 @@
   function selectTab(id) {
     tab = id;
     D.showFor(id);
+    D.practiceShow(id);
     q("notes").innerHTML = NOTES[id];
     D.Examples("#examples", EXAMPLES[id]);
     const first = {
@@ -2143,8 +2187,232 @@
   /* ============================================================
      INIT
      ============================================================ */
+  /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
+  const PRACTICE = {
+   "fixed": {
+    "label": "Fixed array",
+    "items": [
+     [
+      1089,
+      "Duplicate Zeros",
+      "duplicate-zeros",
+      "Easy",
+      "Shift elements right inside a fixed-length array — exactly insert-at-index."
+     ],
+     [
+      27,
+      "Remove Element",
+      "remove-element",
+      "Easy",
+      "Close gaps in place and track n yourself."
+     ],
+     [
+      283,
+      "Move Zeroes",
+      "move-zeroes",
+      "Easy",
+      "In-place shifting without extra space."
+     ],
+     [
+      88,
+      "Merge Sorted Array",
+      "merge-sorted-array",
+      "Easy",
+      "Fill a fixed-capacity array from the back so nothing is overwritten."
+     ],
+     [
+      189,
+      "Rotate Array",
+      "rotate-array",
+      "Medium",
+      "Moving every element: O(n) no matter how you do it."
+     ]
+    ]
+   },
+   "dynamic": {
+    "label": "Dynamic array",
+    "items": [
+     [
+      1929,
+      "Concatenation of Array",
+      "concatenation-of-array",
+      "Easy",
+      "Build a new array twice the size — the core of a resize."
+     ],
+     [
+      1480,
+      "Running Sum of 1d Array",
+      "running-sum-of-1d-array",
+      "Easy",
+      "Warm-up: indexed reads and writes are O(1)."
+     ],
+     [
+      1470,
+      "Shuffle the Array",
+      "shuffle-the-array",
+      "Easy",
+      "Index arithmetic into a new array."
+     ],
+     [
+      1672,
+      "Richest Customer Wealth",
+      "richest-customer-wealth",
+      "Easy",
+      "Lists of lists, like ArrayList<ArrayList<Integer>>."
+     ]
+    ]
+   },
+   "grid": {
+    "label": "2-D array",
+    "items": [
+     [
+      566,
+      "Reshape the Matrix",
+      "reshape-the-matrix",
+      "Easy",
+      "Row-major order: flat index = r · cols + c."
+     ],
+     [
+      867,
+      "Transpose Matrix",
+      "transpose-matrix",
+      "Easy",
+      "Swap the roles of rows and columns."
+     ],
+     [
+      54,
+      "Spiral Matrix",
+      "spiral-matrix",
+      "Medium",
+      "Traversal order through a grid."
+     ],
+     [
+      48,
+      "Rotate Image",
+      "rotate-image",
+      "Medium",
+      "In-place 2-D index gymnastics."
+     ],
+     [
+      74,
+      "Search a 2D Matrix",
+      "search-a-2d-matrix",
+      "Medium",
+      "Treat a row-major grid as one sorted 1-D array."
+     ]
+    ]
+   },
+   "single": {
+    "label": "Singly linked list",
+    "items": [
+     [
+      707,
+      "Design Linked List",
+      "design-linked-list",
+      "Medium",
+      "Implement get, addAtHead, addAtTail, addAtIndex, deleteAtIndex — this whole tab."
+     ],
+     [
+      206,
+      "Reverse Linked List",
+      "reverse-linked-list",
+      "Easy",
+      "The three-pointer reverse from this page."
+     ],
+     [
+      203,
+      "Remove Linked List Elements",
+      "remove-linked-list-elements",
+      "Easy",
+      "Unlink by keeping a pointer to the previous node."
+     ],
+     [
+      876,
+      "Middle of the Linked List",
+      "middle-of-the-linked-list",
+      "Easy",
+      "Walking a list with two pointers."
+     ],
+     [
+      19,
+      "Remove Nth Node From End of List",
+      "remove-nth-node-from-end-of-list",
+      "Medium",
+      "Find a predecessor without knowing the size."
+     ],
+     [
+      21,
+      "Merge Two Sorted Lists",
+      "merge-two-sorted-lists",
+      "Easy",
+      "Splice nodes instead of copying values."
+     ]
+    ]
+   },
+   "double": {
+    "label": "Doubly linked list",
+    "items": [
+     [
+      146,
+      "LRU Cache",
+      "lru-cache",
+      "Medium",
+      "A doubly linked list plus a hash map: O(1) remove from the middle."
+     ],
+     [
+      430,
+      "Flatten a Multilevel Doubly Linked List",
+      "flatten-a-multilevel-doubly-linked-list",
+      "Medium",
+      "Keep next and prev consistent while splicing."
+     ],
+     [
+      707,
+      "Design Linked List",
+      "design-linked-list",
+      "Medium",
+      "Try it again with prev pointers and compare removeLast."
+     ]
+    ]
+   },
+   "circular": {
+    "label": "Circularly linked list",
+    "items": [
+     [
+      61,
+      "Rotate List",
+      "rotate-list",
+      "Medium",
+      "Close the list into a ring, then move the tail — this tab's rotate()."
+     ],
+     [
+      141,
+      "Linked List Cycle",
+      "linked-list-cycle",
+      "Easy",
+      "Detect a ring: the loop that would never stop without a lap check."
+     ],
+     [
+      142,
+      "Linked List Cycle II",
+      "linked-list-cycle-ii",
+      "Medium",
+      "Find where the ring starts."
+     ],
+     [
+      1823,
+      "Find the Winner of the Circular Game",
+      "find-the-winner-of-the-circular-game",
+      "Medium",
+      "Josephus: round-robin elimination on a ring."
+     ]
+    ]
+   }
+  };
+
   document.addEventListener("DOMContentLoaded", function () {
-    dock = D.CodeDock("#code", CODE);
+    D.Practice(PRACTICE);
+    dock = D.CodeDock("#code", CODE, { recv: (k) => (/^(s|d|c|l)_/.test(k) ? "list" : "arr") });
     player = new D.Player({ mount: "#player", render: render, code: dock });
 
     const num = (id) => parseInt(q(id).value, 10);

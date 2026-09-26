@@ -523,8 +523,71 @@
       ],
     },
   };
+  D.specs(CODE, {
+    bfs: { does: "Breadth-first search from " + "<span class='mono'>s</span>" + ": visits vertices in order of distance, using a FIFO queue.", params: "<span class='mono'>s</span> — the start vertex", returns: "nothing; fills dist[] (edge counts) and parent[] (the BFS tree)", errors: "none — unreachable vertices keep no distance", cost: "Θ(V + E) with adjacency lists, Θ(V²) with a matrix", callVals: { s: "0" } },
+    dfs: { does: "Depth-first search: goes as deep as possible from " + "<span class='mono'>u</span>" + " before backtracking, recording discovery and finish times.", params: "<span class='mono'>u</span> — the vertex to explore from", returns: "nothing; colours every reachable vertex and records d[] / f[]", errors: "none", cost: "Θ(V + E); recursion depth up to V", callVals: { u: "0" } },
+  });
+
+  /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
+  const PRACTICE = {
+   "graphs": {
+    "label": "BFS & DFS",
+    "items": [
+     [
+      733,
+      "Flood Fill",
+      "flood-fill",
+      "Easy",
+      "BFS or DFS on a grid graph."
+     ],
+     [
+      1971,
+      "Find if Path Exists in Graph",
+      "find-if-path-exists-in-graph",
+      "Easy",
+      "Reachability from a start vertex."
+     ],
+     [
+      200,
+      "Number of Islands",
+      "number-of-islands",
+      "Medium",
+      "Count components, like the DFS-forest example."
+     ],
+     [
+      547,
+      "Number of Provinces",
+      "number-of-provinces",
+      "Medium",
+      "Components from an adjacency matrix."
+     ],
+     [
+      994,
+      "Rotting Oranges",
+      "rotting-oranges",
+      "Medium",
+      "Multi-source BFS: distance by levels."
+     ],
+     [
+      207,
+      "Course Schedule",
+      "course-schedule",
+      "Medium",
+      "Cycle detection with DFS: a back edge means a cycle."
+     ],
+     [
+      785,
+      "Is Graph Bipartite?",
+      "is-graph-bipartite",
+      "Medium",
+      "Two-colour the BFS levels."
+     ]
+    ]
+   }
+  };
 
   document.addEventListener("DOMContentLoaded", function () {
+    D.Practice(PRACTICE);
     const dock = D.CodeDock("#code", CODE);
     player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock });
     wireHost(q("gr-canvas"));
@@ -574,6 +637,7 @@
       q("start").value = start;
       go(kind);
     };
+    D.practiceShow("graphs");
     D.Examples("#examples", [
       { label: "BFS on a grid: shortest paths", desc: "dist labels grow level by level", run: example("grid", false, 0, "bfs") },
       { label: "DFS finds a cycle (back edge)", run: example("cycle", false, 0, "dfs") },

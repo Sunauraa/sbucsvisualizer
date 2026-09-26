@@ -491,6 +491,29 @@
   };
 
   /* ============================================================
+     SPECS
+     ============================================================ */
+  const M = (t) => "<span class='mono'>" + t + "</span>";
+  D.specs(CODE, {
+    st_push: { does: "Pushes " + M("x") + " onto the top of an array-backed stack.", params: M("x") + " — the value", returns: "nothing", errors: "stack overflow when the array is full (t == capacity − 1)", cost: "O(1)" },
+    st_pop: { does: "Removes and returns the top element — the one pushed most recently (LIFO).", params: "none", returns: "the former top", errors: "stack underflow when empty (t == −1)", cost: "O(1)" },
+    st_top: { does: "Returns the top element without removing it (also called peek).", params: "none", returns: "the top element", errors: "empty-stack error when t == −1", cost: "O(1)" },
+    aq_enqueue: { does: "Adds " + M("x") + " at the rear of a queue whose front is pinned at index 0.", params: M("x") + " — the value", returns: "nothing", errors: "queue is full when n == capacity", cost: "O(1)" },
+    aq_dequeue: { does: "Removes and returns the front, then shifts every other element one slot forward so the front stays at 0.", params: "none", returns: "the former front (FIFO)", errors: "queue is empty when n == 0", cost: "O(n) — the shifting is the problem a circular array solves" },
+    dr_enqueue: { does: "Adds " + M("x") + " at the rear; front and rear only ever move right.", params: M("x") + " — the value", returns: "nothing", errors: "reports full once rear reaches the end, even if the front has freed slots", cost: "O(1)" },
+    dr_dequeue: { does: "Removes and returns the front by moving the front index right — no shifting.", params: "none", returns: "the former front", errors: "queue is empty when front == rear", cost: "O(1), but freed slots are never reused" },
+    cq_enqueue: { does: "Adds " + M("x") + " at the rear of a circular array, at " + M("(front + size) mod capacity") + ".", params: M("x") + " — the value", returns: "nothing", errors: "queue is full when size == capacity", cost: "O(1)" },
+    cq_dequeue: { does: "Removes and returns the front, then advances front with wrap-around.", params: "none", returns: "the former front (FIFO)", errors: "queue is empty when size == 0", cost: "O(1), and every slot gets reused" },
+    cq_first: { does: "Returns the front element without removing it.", params: "none", returns: "the front, or null if the queue is empty", errors: "none (null when empty)", cost: "O(1)" },
+    dq_addFirst: { does: "Adds " + M("x") + " at the front of a circular deque by stepping front back one slot (mod capacity).", params: M("x") + " — the value", returns: "nothing", errors: "deque is full when size == capacity", cost: "O(1)" },
+    dq_addLast: { does: "Adds " + M("x") + " at the back, at " + M("(front + size) mod capacity") + ".", params: M("x") + " — the value", returns: "nothing", errors: "deque is full when size == capacity", cost: "O(1)" },
+    dq_removeFirst: { does: "Removes and returns the front element and advances front.", params: "none", returns: "the former front", errors: "deque is empty when size == 0", cost: "O(1)" },
+    dq_removeLast: { does: "Removes and returns the back element; front does not move.", params: "none", returns: "the former back", errors: "deque is empty when size == 0", cost: "O(1)" },
+    brackets: { does: "Checks that every (, [ and { is closed by the matching bracket in the right order, using a stack of open brackets.", params: M("s") + " — any string; other characters are ignored", returns: "true if balanced, false otherwise", errors: "none — mismatches return false", cost: "O(n) time, O(n) stack space in the worst case", callVals: { s: '"{[()()]}"' } },
+    postfix: { does: "Evaluates a postfix (reverse Polish) expression with a stack of operands.", params: M("tokens") + " — numbers and operators + − × ÷ % ^", returns: "the value of the expression", errors: "malformed if an operator finds fewer than 2 operands, or more than one value is left; division by zero", cost: "O(n)", callVals: { tokens: { pseudo: "[5, 1, 2, +, 4, *, +, 3, −]", java: 'new String[]{"5", "1", "2", "+"}', cpp: '{"5", "1", "2", "+"}', python: '["5", "1", "2", "+"]' } } },
+  });
+
+  /* ============================================================
      STATE
      ============================================================ */
   const fresh = () => new Array(CAP).fill(null);
@@ -997,6 +1020,7 @@
   function selectTab(id) {
     tab = id;
     D.showFor(id);
+    D.practiceShow(id);
     q("notes").innerHTML = "<p class='blurb'>" + NOTES[id] + "</p>";
     D.Examples("#examples", EXAMPLES[id]);
     dock.show({ stack: "st_push", aqueue: "aq_dequeue", cqueue: "cq_enqueue", deque: "dq_addFirst", app: "brackets", compare: "st_push" }[id]);
@@ -1010,10 +1034,178 @@
     }[id]);
   }
 
+  /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
+  const PRACTICE = {
+   "stack": {
+    "label": "Stack",
+    "items": [
+     [
+      155,
+      "Min Stack",
+      "min-stack",
+      "Medium",
+      "push, pop, top and getMin all in O(1)."
+     ],
+     [
+      225,
+      "Implement Stack using Queues",
+      "implement-stack-using-queues",
+      "Easy",
+      "Rebuild LIFO out of FIFO."
+     ],
+     [
+      1047,
+      "Remove All Adjacent Duplicates In String",
+      "remove-all-adjacent-duplicates-in-string",
+      "Easy",
+      "The stack remembers what is still open."
+     ],
+     [
+      739,
+      "Daily Temperatures",
+      "daily-temperatures",
+      "Medium",
+      "A monotonic stack."
+     ]
+    ]
+   },
+   "aqueue": {
+    "label": "Queue (plain array)",
+    "items": [
+     [
+      232,
+      "Implement Queue using Stacks",
+      "implement-queue-using-stacks",
+      "Easy",
+      "Amortised O(1) without shifting."
+     ],
+     [
+      933,
+      "Number of Recent Calls",
+      "number-of-recent-calls",
+      "Easy",
+      "Enqueue at the back, drop old calls from the front."
+     ],
+     [
+      1700,
+      "Number of Students Unable to Eat Lunch",
+      "number-of-students-unable-to-eat-lunch",
+      "Easy",
+      "Simulate a queue."
+     ]
+    ]
+   },
+   "cqueue": {
+    "label": "Queue (circular array)",
+    "items": [
+     [
+      622,
+      "Design Circular Queue",
+      "design-circular-queue",
+      "Medium",
+      "This exact tab: front, size and mod capacity."
+     ],
+     [
+      933,
+      "Number of Recent Calls",
+      "number-of-recent-calls",
+      "Easy",
+      "A sliding window is a queue."
+     ],
+     [
+      2073,
+      "Time Needed to Buy Tickets",
+      "time-needed-to-buy-tickets",
+      "Easy",
+      "People rejoin at the back: a queue that cycles round."
+     ]
+    ]
+   },
+   "deque": {
+    "label": "Deque",
+    "items": [
+     [
+      641,
+      "Design Circular Deque",
+      "design-circular-deque",
+      "Medium",
+      "This exact tab: add and remove at both ends in O(1)."
+     ],
+     [
+      239,
+      "Sliding Window Maximum",
+      "sliding-window-maximum",
+      "Hard",
+      "The classic monotonic-deque problem."
+     ],
+     [
+      125,
+      "Valid Palindrome",
+      "valid-palindrome",
+      "Easy",
+      "Compare both ends and move inwards, like the palindrome example."
+     ]
+    ]
+   },
+   "compare": {
+    "label": "Plain vs circular queue",
+    "items": [
+     [
+      622,
+      "Design Circular Queue",
+      "design-circular-queue",
+      "Medium",
+      "Build the right-hand side of this comparison yourself."
+     ],
+     [
+      641,
+      "Design Circular Deque",
+      "design-circular-deque",
+      "Medium",
+      "The same wrap-around, at both ends."
+     ]
+    ]
+   },
+   "app": {
+    "label": "Stack applications",
+    "items": [
+     [
+      20,
+      "Valid Parentheses",
+      "valid-parentheses",
+      "Easy",
+      "The bracket checker on this tab."
+     ],
+     [
+      150,
+      "Evaluate Reverse Polish Notation",
+      "evaluate-reverse-polish-notation",
+      "Medium",
+      "The postfix evaluator on this tab."
+     ],
+     [
+      1021,
+      "Remove Outermost Parentheses",
+      "remove-outermost-parentheses",
+      "Easy",
+      "Track nesting depth."
+     ],
+     [
+      224,
+      "Basic Calculator",
+      "basic-calculator",
+      "Hard",
+      "Infix with parentheses, using a stack."
+     ]
+    ]
+   }
+  };
+
   document.addEventListener("DOMContentLoaded", function () {
-    dock = D.CodeDock("#code", CODE);
-    dockL = D.CodeDock("#L-code", CODE, { initial: "aq_dequeue", collapsible: false });
-    dockR = D.CodeDock("#R-code", CODE, { initial: "cq_dequeue", collapsible: false });
+    D.Practice(PRACTICE);
+    dock = D.CodeDock("#code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue") });
+    dockL = D.CodeDock("#L-code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "aq_dequeue", collapsible: false });
+    dockR = D.CodeDock("#R-code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "cq_dequeue", collapsible: false });
     player = new D.Player({ mount: "#player", render: render, code: dock });
     const val = () => { const v = parseInt(q("val").value, 10); return isNaN(v) ? D.randInt(10, 99) : v; };
 
