@@ -125,6 +125,14 @@ The site appears at `https://<you>.github.io/<repo>/` within a minute or two.
 
 `.nojekyll` is included so GitHub serves the files as-is.
 
+**After every update, bump the asset version.** Every page loads `style.css` and the scripts as `…?v=20260926`.
+GitHub Pages lets browsers cache files for about 10 minutes, and a new page running next to an old cached
+`core.js` breaks. Changing the number makes every browser fetch the matching files:
+
+```sh
+NEW=$(date +%Y%m%d%H%M); sed -i '' -E "s/\?v=[0-9]+/?v=$NEW/g" index.html cse214/*.html cse373/index.html
+```
+
 ## Feedback button
 
 Every page has a **Send feedback** button (top bar and footer) that opens a form in a new tab. To connect it,
