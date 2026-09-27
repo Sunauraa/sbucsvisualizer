@@ -21,7 +21,9 @@ dependencies, no framework. Drop it on GitHub Pages and it works.
 Every module shares the same layout: tabs → toolbar → **Examples** → **code dock** (the running line highlighted
 in pseudocode, Java, C++ or Python, above the visualization) → stage → player → stats → legend → notes.
 
-CSE 373 (`cse373/index.html`) is a placeholder listing the planned modules.
+CSE 373 (`cse373/index.html`) lists the planned modules grouped into six units that follow the course lectures;
+none is built yet. [CROSSLINKS.md](CROSSLINKS.md) tracks which CSE 214 pages should link to which CSE 373 modules
+once those exist.
 
 ## How it works
 

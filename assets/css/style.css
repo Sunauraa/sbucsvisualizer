@@ -154,6 +154,26 @@ a.card:hover {
   background: #fb923c22; color: var(--c-warn); border: 1px solid #fb923c55;
 }
 
+/* ---------- course page grouped by unit (CSE 373) ---------- */
+.unit-nav { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0 0 1.6rem; }
+.unit-nav a {
+  font-size: .8rem; padding: .3rem .7rem; border-radius: 999px;
+  background: #ffffff0a; border: 1px solid var(--line); color: var(--muted);
+}
+.unit-nav a:hover { text-decoration: none; color: var(--txt); border-color: var(--accent-dim); }
+.unit { margin: 0 0 2.2rem; scroll-margin-top: 4.5rem; }
+.unit-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: .3rem .7rem; }
+.unit-head h2 { margin: 0; font-size: 1.3rem; letter-spacing: -.01em; }
+.unit-no {
+  font-family: var(--mono); font-size: .75rem; color: var(--accent);
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.unit .lec { font-family: var(--mono); font-size: .72rem; color: var(--muted-2); }
+.unit-sub { color: var(--muted); margin: .3rem 0 .9rem; font-size: .92rem; }
+.card.planned { position: relative; opacity: .82; }
+.card.planned h3 { padding-right: 4.8rem; }   /* keep the title clear of the badge */
+.card .lec { margin: 0 0 .45rem; }
+
 /* ---------- panels ---------- */
 .panel {
   background: var(--panel);

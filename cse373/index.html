@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CSE 373 — Analysis of Algorithms (planned)</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=20260926">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌲</text></svg>">
+<title>CSE 373 — Analysis of Algorithms</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202609271735">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
 </head>
 <body>
 
@@ -14,40 +14,227 @@
     <a class="brand" href="../index.html"><span class="logo">D</span> DSA Visualizer</a>
     <div class="crumbs"><a href="../index.html">Home</a> / <span>CSE 373</span></div>
     <div class="spacer"></div>
-    <span class="pill">planned</span>
+    <span class="pill">6 units &middot; 14 modules</span>
   </div>
 </div>
 
 <div class="wrap">
   <div class="page-head">
     <h1>CSE 373 &middot; Analysis of Algorithms</h1>
-    <p>Nothing here is built yet — the CSE 214 modules came first. This is the shape of what goes here next, so the
-       navigation and structure are already in place.</p>
+    <p>Six units that follow the course lectures in order, from asymptotic analysis through graphs and dynamic
+       programming to NP-completeness. Every module is still being built. Each one will work like the CSE 214 pages:
+       record every step, then play, pause, scrub and step backwards, with the running line highlighted in the
+       code.</p>
   </div>
 
-  <div class="grid cols-3" style="margin-bottom:1.4rem">
-    <div class="card course-card soon"><span class="badge-soon">planned</span><h3>Asymptotic Analysis</h3>
-      <p>Growth-rate races, recurrence trees, and the Master Theorem applied step by step.</p></div>
-    <div class="card course-card soon"><span class="badge-soon">planned</span><h3>Divide &amp; Conquer</h3>
-      <p>Karatsuba, Strassen, closest pair, and selection in linear time.</p></div>
-    <div class="card course-card soon"><span class="badge-soon">planned</span><h3>Greedy Algorithms</h3>
-      <p>Interval scheduling, Huffman coding, and the exchange-argument proofs.</p></div>
-    <div class="card course-card soon"><span class="badge-soon">planned</span><h3>Dynamic Programming</h3>
-      <p>Table-filling for LCS, edit distance, knapsack and matrix chains — with the traceback highlighted.</p></div>
-    <div class="card course-card soon"><span class="badge-soon">planned</span><h3>Graph Algorithms</h3>
-      <p>Dijkstra, Bellman–Ford, Floyd–Warshall, Prim, Kruskal, topological order and max-flow.</p></div>
-    <div class="card course-card soon"><span class="badge-soon">planned</span><h3>Intractability</h3>
-      <p>Reductions between SAT, clique, vertex cover and friends, plus approximation bounds.</p></div>
-  </div>
+  <nav class="unit-nav" aria-label="Units">
+    <a href="#u1">1 &middot; Foundations</a>
+    <a href="#u2">2 &middot; Data Structures</a>
+    <a href="#u3">3 &middot; Sorting</a>
+    <a href="#u4">4 &middot; Graphs</a>
+    <a href="#u5">5 &middot; Search &amp; DP</a>
+    <a href="#u6">6 &middot; Intractability</a>
+  </nav>
 
-  <div class="callout" style="margin-bottom:2rem">
-    In the meantime, several CSE 373 topics already have working visualizers on the
-    <a href="../cse214/index.html">CSE 214 side</a> — the sorting module covers the divide-and-conquer sorts and their
-    recursion structure, and the graph module covers BFS/DFS.
-  </div>
+  <!-- ================= Unit 1 ================= -->
+  <section class="unit" id="u1">
+    <div class="unit-head">
+      <span class="unit-no">Unit 1</span>
+      <h2>Foundations</h2>
+      <span class="lec">Lectures 1–3</span>
+    </div>
+    <p class="unit-sub">How to tell whether an algorithm is correct, and how to measure how fast it is.</p>
+    <div class="grid cols-3">
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">🤖</div>
+        <h3>Correctness &amp; Heuristics</h3>
+        <div class="lec">L1 &middot; Introduction to algorithms</div>
+        <p>Robot tour: nearest-neighbor and closest-pair heuristics against the optimal tour, with the inputs that
+           break them. Movie scheduling: why only "earliest finish first" is always optimal.</p>
+        <div class="tags"><span class="tag">counterexamples</span><span class="tag">robot tour</span><span class="tag">scheduling</span></div>
+      </div>
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">📈</div>
+        <h3>Asymptotics &amp; Logarithms</h3>
+        <div class="lec">L2 &middot; Asymptotic notation &nbsp; L3 &middot; Logarithms and more</div>
+        <p>A growth-rate race from 1 to n!, big-O / Ω / Θ drawn with adjustable <i>c</i> and <i>n₀</i>, the
+           dominance ordering, and where logarithms come from: halving, tree height and bits.</p>
+        <div class="tags"><span class="tag">O Ω Θ</span><span class="tag">dominance</span><span class="tag">log n</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Unit 2 ================= -->
+  <section class="unit" id="u2">
+    <div class="unit-head">
+      <span class="unit-no">Unit 2</span>
+      <h2>Data Structures</h2>
+      <span class="lec">Lectures 4–6</span>
+    </div>
+    <p class="unit-sub">Contiguous vs linked storage, and the dictionary operations every structure has to trade off.</p>
+    <div class="grid cols-3">
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">📚</div>
+        <h3>Elementary Structures &amp; Dictionaries</h3>
+        <div class="lec">L4 &middot; Elementary data structures &nbsp; L5 &middot; Dictionary data structures</div>
+        <p>Arrays vs linked lists, stacks and queues, then search / insert / delete / min / max / successor /
+           predecessor on unsorted and sorted arrays, linked lists, BSTs and balanced trees, with the cost of each.</p>
+        <div class="tags"><span class="tag">arrays</span><span class="tag">lists</span><span class="tag">BST</span><span class="tag">balanced trees</span></div>
+      </div>
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">#️⃣</div>
+        <h3>Hashing</h3>
+        <div class="lec">L6 &middot; Hashing</div>
+        <p>Chaining and open addressing, duplicate detection with a hash table, and Rabin–Karp string matching
+           with a rolling hash, including spurious hash matches.</p>
+        <div class="tags"><span class="tag">collisions</span><span class="tag">Rabin–Karp</span><span class="tag">rolling hash</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Unit 3 ================= -->
+  <section class="unit" id="u3">
+    <div class="unit-head">
+      <span class="unit-no">Unit 3</span>
+      <h2>Sorting</h2>
+      <span class="lec">Lectures 7–9</span>
+    </div>
+    <p class="unit-sub">Sorting as a building block for other problems, and the n log n algorithms that do it.</p>
+    <div class="grid cols-3">
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">🧩</div>
+        <h3>Applications of Sorting</h3>
+        <div class="lec">L7 &middot; Applications of sorting</div>
+        <p>Problems that become easy once the data is sorted: searching, closest pair, element uniqueness, mode,
+           selection and convex hull.</p>
+        <div class="tags"><span class="tag">uniqueness</span><span class="tag">selection</span><span class="tag">convex hull</span></div>
+      </div>
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">📊</div>
+        <h3>Heapsort, Mergesort, Quicksort, Binsort</h3>
+        <div class="lec">L8 &middot; Heapsort / priority queues &nbsp; L9 &middot; Mergesort / quicksort / binsort</div>
+        <p>Heaps and heapsort, mergesort, quicksort with a randomized pivot (and how pivot quality changes the
+           recursion depth), then bucket sort.</p>
+        <div class="tags"><span class="tag">heaps</span><span class="tag">divide &amp; conquer</span><span class="tag">randomized</span><span class="tag">bucket sort</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Unit 4 ================= -->
+  <section class="unit" id="u4">
+    <div class="unit-head">
+      <span class="unit-no">Unit 4</span>
+      <h2>Graphs</h2>
+      <span class="lec">Lectures 10–15</span>
+    </div>
+    <p class="unit-sub">Unweighted traversal first, then weighted graphs, then modelling problems as graph problems.</p>
+    <div class="grid cols-3">
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">🕸️</div>
+        <h3>Graph Traversal</h3>
+        <div class="lec">L10 &middot; Data structures for graphs &nbsp; L11 &middot; BFS &nbsp; L12 &middot; Topological sort / connectivity</div>
+        <p>Adjacency matrix and list, BFS and DFS, connected components, two-coloring, edge classification,
+           articulation vertices, topological sort and strongly connected components.</p>
+        <div class="tags"><span class="tag">BFS</span><span class="tag">DFS</span><span class="tag">bipartite</span><span class="tag">topo sort</span><span class="tag">SCC</span></div>
+      </div>
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">🌲</div>
+        <h3>Minimum Spanning Trees</h3>
+        <div class="lec">L13 &middot; Minimum spanning trees</div>
+        <p>Prim and Kruskal side by side on the same weighted graph, with the union-find forest behind Kruskal.</p>
+        <div class="tags"><span class="tag">Prim</span><span class="tag">Kruskal</span><span class="tag">union-find</span></div>
+      </div>
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">🛣️</div>
+        <h3>Shortest Paths</h3>
+        <div class="lec">L14 &middot; Shortest paths</div>
+        <p>Dijkstra with its priority queue next to the graph, and Floyd–Warshall filling the distance matrix one
+           intermediate vertex at a time.</p>
+        <div class="tags"><span class="tag">Dijkstra</span><span class="tag">Floyd–Warshall</span></div>
+      </div>
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">🚰</div>
+        <h3>Network Flow &amp; Matching</h3>
+        <div class="lec">L15 &middot; Exploiting graph algorithms</div>
+        <p>Augmenting paths in the residual graph, max-flow = min-cut, and bipartite matching solved as a flow
+           problem.</p>
+        <div class="tags"><span class="tag">residual graph</span><span class="tag">min cut</span><span class="tag">matching</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Unit 5 ================= -->
+  <section class="unit" id="u5">
+    <div class="unit-head">
+      <span class="unit-no">Unit 5</span>
+      <h2>Search &amp; Dynamic Programming</h2>
+      <span class="lec">Lectures 16–21</span>
+    </div>
+    <p class="unit-sub">Exhaustive search, heuristic search when that is too slow, and DP when subproblems repeat.</p>
+    <div class="grid cols-3">
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">♛</div>
+        <h3>Backtracking</h3>
+        <div class="lec">L16 &middot; Combinatorial search</div>
+        <p>Generating subsets and permutations, then N-queens and Sudoku, with a counter of how many branches
+           pruning cuts off.</p>
+        <div class="tags"><span class="tag">subsets</span><span class="tag">permutations</span><span class="tag">pruning</span><span class="tag">Sudoku</span></div>
+      </div>
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">🔥</div>
+        <h3>Heuristic Search</h3>
+        <div class="lec">L17 &middot; Program optimization</div>
+        <p>Random sampling, local search and simulated annealing on a travelling-salesman tour, with the temperature
+           and tour cost plotted as it runs.</p>
+        <div class="tags"><span class="tag">local search</span><span class="tag">simulated annealing</span><span class="tag">TSP</span></div>
+      </div>
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">🧮</div>
+        <h3>Dynamic Programming</h3>
+        <div class="lec">L18 &middot; Elements &nbsp; L19 &middot; Examples &nbsp; L20 &middot; Limitations &nbsp; L21 &middot; Review</div>
+        <p>Recursion vs memoization vs table on Fibonacci and binomial coefficients; edit distance with traceback,
+           longest increasing subsequence and linear partition; where DP fails or needs exponential space.</p>
+        <div class="tags"><span class="tag">memoization</span><span class="tag">edit distance</span><span class="tag">LIS</span><span class="tag">partition</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Unit 6 ================= -->
+  <section class="unit" id="u6">
+    <div class="unit-head">
+      <span class="unit-no">Unit 6</span>
+      <h2>Intractability</h2>
+      <span class="lec">Lectures 22–25</span>
+    </div>
+    <p class="unit-sub">How to show that a problem is hard: reduce a known hard problem to it.</p>
+    <div class="grid cols-3">
+      <div class="card planned">
+        <span class="badge-soon">planned</span>
+        <div class="ico">🔗</div>
+        <h3>Reductions &amp; NP-Completeness</h3>
+        <div class="lec">L22 &middot; Reductions &nbsp; L23 &middot; Easy &nbsp; L24 &middot; Harder &nbsp; L25 &middot; The NP-completeness challenge</div>
+        <p>Build an instance, watch it transformed, and check that both answers agree: Hamiltonian cycle → TSP,
+           vertex cover ↔ independent set ↔ clique, and 3-SAT → vertex cover gadget by gadget.</p>
+        <div class="tags"><span class="tag">reductions</span><span class="tag">3-SAT</span><span class="tag">vertex cover</span><span class="tag">P vs NP</span></div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=20260926"></script>
+<script src="../assets/js/core.js?v=202609271735"></script>
 </body>
 </html>
