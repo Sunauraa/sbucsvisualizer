@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Graphs — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=20260926">
+<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕸️</text></svg>">
 </head>
 <body>
@@ -50,7 +50,6 @@
       <button id="btn-forest">DFS forest</button>
     </div>
 
-    <div id="examples"></div>
     <div id="code"></div>
     <p class="small muted" id="tool-hint" style="margin:.1rem 0 .7rem">Click empty space to <b>add a vertex</b>. Click
        one vertex, then another, to <b>toggle an edge</b>. <b>Drag</b> any vertex to move it.</p>
@@ -70,14 +69,6 @@
 
     <div id="player"></div>
 
-    <div class="stats">
-      <div class="stat"><span class="k">vertices V</span><span class="v" id="g-v">0</span></div>
-      <div class="stat"><span class="k">edges E</span><span class="v" id="g-e">0</span></div>
-      <div class="stat"><span class="k">type</span><span class="v" id="g-kind" style="font-size:.85rem">undirected</span></div>
-      <div class="stat"><span class="k">avg degree</span><span class="v" id="g-deg">–</span></div>
-      <div class="stat"><span class="k">density</span><span class="v" id="g-dense">–</span></div>
-    </div>
-
     <div id="legend"></div>
     <p class="blurb" id="algo-explain"></p>
   </div>
@@ -91,8 +82,8 @@
             <tr><th></th><th>BFS</th><th>DFS</th></tr>
             <tr><td>frontier</td><td>queue (FIFO)</td><td>stack (LIFO / recursion)</td></tr>
             <tr><td>order</td><td>by distance from source</td><td>deepest-first, backtracking</td></tr>
-            <tr><td>time</td><td class="one">Θ(V + E)</td><td class="one">Θ(V + E)</td></tr>
-            <tr><td>extra space</td><td>O(V) — a whole level</td><td>O(V) — the deepest path</td></tr>
+            <tr><td>time (worst case)</td><td class="one">O(V + E)</td><td class="one">O(V + E)</td></tr>
+            <tr><td>extra space (worst case)</td><td>O(V) — a whole level in the queue</td><td>O(V) — the deepest path on the stack</td></tr>
             <tr><td>gives you</td><td>shortest paths (unweighted)</td><td>cycles, components, topo order</td></tr>
             <tr><td>tree edges</td><td>shortest-path tree</td><td>DFS tree / forest</td></tr>
           </table>
@@ -104,17 +95,17 @@
         <h2>Matrix or list?</h2>
         <div style="overflow-x:auto">
           <table class="tbl" style="min-width:400px">
-            <tr><th>Operation</th><th>Matrix</th><th>List</th></tr>
-            <tr><td>space</td><td>Θ(V²)</td><td class="one">Θ(V + E)</td></tr>
-            <tr><td>is (u,v) an edge?</td><td class="one">O(1)</td><td>O(deg u)</td></tr>
-            <tr><td>iterate neighbours of u</td><td>Θ(V)</td><td class="one">Θ(deg u)</td></tr>
-            <tr><td>add edge</td><td class="one">O(1)</td><td class="one">O(1)</td></tr>
-            <tr><td>BFS / DFS overall</td><td>Θ(V²)</td><td class="one">Θ(V + E)</td></tr>
+            <tr><th>Operation (time / extra space)</th><th>Matrix</th><th>List</th></tr>
+            <tr><td>memory for the graph</td><td>O(V²)</td><td class="one">O(V + E)</td></tr>
+            <tr><td>is (u,v) an edge?</td><td class="one">O(1) / O(1)</td><td>O(deg u) / O(1)</td></tr>
+            <tr><td>iterate neighbours of u</td><td>O(V) / O(1)</td><td class="one">O(deg u) / O(1)</td></tr>
+            <tr><td>add edge</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>BFS / DFS overall</td><td>O(V²) / O(V)</td><td class="one">O(V + E) / O(V)</td></tr>
           </table>
         </div>
         <p class="small muted" style="margin:.7rem 0">Real graphs are <b>sparse</b> — E is closer to V than to V², so
-           adjacency lists win almost always. Load the <em>complete K₆</em> preset and watch the density hit 100%: that
-           is the only regime where the matrix is competitive.</p>
+           adjacency lists win almost always. Load the <em>complete K₆</em> preset: every pair of vertices is joined, and
+           that dense regime is the only one where the matrix is competitive.</p>
         <h3 style="font-size:.95rem;margin:.9rem 0 .3rem">Vocabulary the visualizer uses</h3>
         <dl class="kv">
           <dt>degree</dt><dd>edges touching a vertex (in + out if directed)</dd>
@@ -130,7 +121,7 @@
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=20260926"></script>
-<script src="../assets/js/graphs.js?v=20260926"></script>
+<script src="../assets/js/core.js?v=202610042131"></script>
+<script src="../assets/js/graphs.js?v=202610042131"></script>
 </body>
 </html>

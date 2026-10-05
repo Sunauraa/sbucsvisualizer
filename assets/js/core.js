@@ -67,12 +67,27 @@
   };
   DSA.randArray = (n, lo, hi) => Array.from({ length: n }, () => DSA.randInt(lo == null ? 5 : lo, hi == null ? 99 : hi));
 
-  /** Parse "3, 9 12,-4" into a number array. Returns [] on empty. */
+  /** Parse "3, 9 12,-4, 2.5" into a number array (negatives and decimals allowed). Returns [] on empty. */
+  const NUM_RE = /^[-+]?(\d+\.?\d*|\.\d+)$/;
   DSA.parseNums = function (s) {
     return String(s || "")
+      .replace(/[−–]/g, "-")
       .split(/[\s,;]+/)
-      .filter((t) => t.length && /^-?\d+(\.\d+)?$/.test(t))
+      .filter((t) => t.length && NUM_RE.test(t))
       .map(Number);
+  };
+  /** The number typed in an input — negative and decimal values included — or fallback() when it is empty
+      or not a number. Values are kept to 2 decimal places so they fit in a cell. */
+  DSA.readNum = function (sel, fallback) {
+    const el = typeof sel === "string" ? DSA.$(sel) : sel;
+    const t = el ? String(el.value).trim().replace(/[−–]/g, "-") : "";
+    if (!NUM_RE.test(t)) return fallback ? fallback() : NaN;
+    return Math.round(Number(t) * 100) / 100;
+  };
+  /** A whole number typed in an input (an index, a count), or NaN. 2.5 is not an index, so it gives NaN too. */
+  DSA.readInt = function (sel) {
+    const v = DSA.readNum(sel);
+    return Number.isInteger(v) ? v : NaN;
   };
   DSA.parseTokens = function (s) {
     return String(s || "").split(/[\s,;]+/).filter((t) => t.length);
@@ -111,13 +126,6 @@
       "abstract boolean break case catch char class continue default do double else extends final finally " +
       "float for if implements import instanceof int interface long new null private protected public return " +
       "static super switch this throw throws true false try void while",
-    cpp:
-      "auto bool break case catch class const constexpr continue default delete do double else enum false " +
-      "float for if inline int long namespace new nullptr private protected public return short signed sizeof " +
-      "static struct swap switch template this throw true try typedef typename unsigned using vector void while",
-    python:
-      "and as assert break class continue def del elif else except False finally for from global if import " +
-      "in is lambda None nonlocal not or pass raise return True try while with yield",
   };
   const KW_RE = {};
   for (const k in KEYWORDS) KW_RE[k] = new RegExp("^(?:" + KEYWORDS[k].split(" ").join("|") + ")$");
@@ -127,7 +135,7 @@
   /** Colourise one plain-text line for `lang`. Pseudocode only gets comments. */
   function paint(line, lang) {
     if (line === "") return "&nbsp;";
-    const cmt = lang === "python" ? "#" : "//";
+    const cmt = "//";
     const kw = KW_RE[lang];
     let out = "", rest = line;
 
@@ -155,8 +163,6 @@
   const LANGS = [
     { id: "pseudo", label: "Pseudocode" },
     { id: "java", label: "Java" },
-    { id: "cpp", label: "C++" },
-    { id: "python", label: "Python" },
   ];
   const LS_KEY = "dsa.lang";
   let curLang = "pseudo";
@@ -183,8 +189,7 @@
 
   /* ------------------------------------------------------------
      CodeBlock(mount, variants)
-       variants = { pseudo: [...], java: [...], cpp: [...], python: [...],
-                    map: { java: [...], ... } }
+       variants = { pseudo: [...], java: [...], map: { java: [...] } }
 
      Two ways to say which line a frame is on:
 
@@ -192,7 +197,7 @@
         "@@a,b" for several) in EVERY language that has an equivalent
         line; highlight("name") lights all lines carrying that anchor
         in whatever language is on screen. No index bookkeeping, and a
-        step that is two lines in Python and one in Java just works.
+        step that is two lines in Java and one in pseudocode just works.
 
      2. Numeric (older listings). highlight(i) with i an index into the
         PSEUDOCODE listing; `map[lang][i]` translates it for the other
@@ -315,52 +320,43 @@
     const first = L && L[lang] && L[lang][0];
     if (!first) return null;
     let t = splitAnchor(first).text;
-    t = t.replace(lang === "python" ? /#.*$/ : /\/\/.*$/, "").trim();
+    t = t.replace(/\/\/.*$/, "").trim();
     let m;
-    if (lang === "python") {
-      m = /^def\s+(\w+)\s*\((.*)\)\s*:/.exec(t);
-      if (!m) return null;
-      let ps = splitTop(m[2]).map((p) => p.split("=")[0].split(":")[0].trim());
-      const method = ps[0] === "self";
-      if (method) ps = ps.slice(1);
-      return { name: m[1], params: ps, method: method, type: null };
-    }
     if (lang === "pseudo") {
       m = /^([\w]+)\s*\(([^)]*)\)\s*:/.exec(t);
       if (!m) return null;
       return { name: m[1], params: splitTop(m[2]), type: null };
     }
-    m = /^(?:static\s+)?(.+?)\s*\b(\w+)\s*\((.*)\)\s*(?:const)?\s*\{?\s*$/.exec(t);
+    m = /^((?:(?:public|private|protected)\s+)?(?:static\s+)?)(.+?)\s*\b(\w+)\s*\((.*)\)\s*\{?\s*$/.exec(t);
     if (!m) return null;
-    const params = splitTop(m[3]).map((p) => { const w = p.split("=")[0].trim().match(/(\w+)\s*(\[\s*\])*$/); return w ? w[1] : p; });
-    return { name: m[2], params: params, type: m[1].trim() };
+    const params = splitTop(m[4]).map((p) => { const w = p.split("=")[0].trim().match(/(\w+)\s*(\[\s*\])*$/); return w ? w[1] : p; });
+    /* a Java method without `static` belongs to an object, so the call names the receiver (stack.push(x)) */
+    return { name: m[3], params: params, type: m[2].trim(), method: !/static/.test(m[1]) };
   }
   const resultName = (name, type) =>
     /^(boolean|bool)$/.test(type || "") ? "found"
       : /Node/.test(type || "") ? "node"
       : /^Entry/.test(type || "") ? "e"
       : /^(hash|poly_hash)$/.test(name) ? "h"
-      : /^(indexOf|index_of|search|binarySearch|binary_search|binarySearchIter|binary_search_iter)/i.test(name) ? "i"
+      : /^(indexOf|search|binarySearch|binarySearchIter)/i.test(name) ? "i"
       : /^(find)/i.test(name) ? "pos"
-      : /^(remove|pop|dequeue|get|top|first|min|peek|removeMin|remove_min|removeFirst|removeLast)/i.test(name) ? "x"
+      : /^(remove|pop|dequeue|get|top|first|min|peek|removeMin|removeFirst|removeLast)/i.test(name) ? "x"
       : "result";
   /** the call statement for listing L in `lang`; recv = object name (null for a plain function), vals = {param: value} */
   DSA.callLine = function (L, lang, recv, vals) {
     const sig = sigOf(L, lang), pseudo = sigOf(L, "pseudo");
     if (!sig) return null;
-    /* L.callVals: defaults for a top-level call, e.g. { lo: "0", hi: { java: "a.length - 1", python: "len(a) - 1" } } */
+    /* L.callVals: defaults for a top-level call, e.g. { lo: "0", hi: { pseudo: "n − 1", java: "a.length - 1" } } */
     const v = {};
     Object.entries(L.callVals || {}).forEach(([k, x]) => { const y = x && typeof x === "object" ? x[lang] : x; if (y != null) v[k] = y; });
     Object.assign(v, vals || {});
     const args = sig.params.map((p) => (v[p] != null ? v[p] : p)).join(", ");
-    const isMethod = lang === "python" ? sig.method : (sigOf(L, "python") || {}).method;
-    const target = (isMethod && recv ? recv + "." : "") + sig.name + "(" + args + ")";
-    const pyType = (sigOf(L, "java") || {}).type;
-    const ret = lang === "java" || lang === "cpp" ? sig.type : pyType;
+    const java = sigOf(L, "java") || {};
+    const target = (java.method && recv ? recv + "." : "") + sig.name + "(" + args + ")";
+    const ret = java.type;
     const hasRet = ret && !/^void$/.test(ret);
-    const nm = resultName(sig.name, (sigOf(L, "java") || {}).type);
-    if (lang === "java" || lang === "cpp") return (hasRet ? ret + " " + nm + " = " : "") + target + ";";
-    if (lang === "python") return (hasRet ? nm + " = " : "") + target;
+    const nm = resultName(sig.name, ret);
+    if (lang === "java") return (hasRet ? ret + " " + nm + " = " : "") + target + ";";
     return (hasRet ? nm + " ← " : "") + target;
   };
   /* values of a call written in a caption: "<b>insert(2, 99)</b> — …" → {i: 2, x: 99} (pseudocode parameter names) */
@@ -395,7 +391,7 @@
     (frames || []).forEach((f) => { if (!f) return; if (f.L || f.R) { visit(f.L, state.L); visit(f.R, state.R); } else visit(f, state.S); });
   };
 
-  /* spec block: what the function does, how to call it, parameters, result, errors, cost */
+  /* spec block: what the function does, how to call it, parameters, result, errors, worst-case time and space */
   function specBox(L, key, recv, argsHook) {
     const box = DSA.el("div", { class: "code-spec" });
     const sp = L.spec || {};
@@ -412,12 +408,13 @@
     if (sp.does) box.appendChild(DSA.el("div", { class: "spec-does", html: sp.does }));
     const callRow = DSA.el("div", { class: "spec-row" }, [DSA.el("span", { class: "spec-k", text: "call" }), callEl]);
     box.appendChild(callRow);
-    const rows = [["params", sp.params], ["returns", sp.returns], ["errors", sp.errors], ["cost", sp.cost]];
+    const rows = [["params", sp.params], ["returns", sp.returns], ["errors", sp.errors], ["time", sp.time], ["space", sp.space]];
     rows.forEach(([k, v]) => { if (v) box.appendChild(DSA.el("div", { class: "spec-row" }, [DSA.el("span", { class: "spec-k", text: k }), DSA.el("span", { class: "spec-v", html: v })])); });
     paintCall();
     return { node: box, setArgs(a) { if (a !== vals || argsHook) { vals = a || null; paintCall(); } }, repaint: paintCall };
   }
-  /** specs(listings, { key: { does, params, returns, errors, cost, callVals? } }) — attach specs to listings */
+  /** specs(listings, { key: { does, params, returns, errors, time, space, callVals? } }) — attach specs to listings.
+      time / space are WORST-CASE bounds written with O; space is the extra memory the call uses. */
   DSA.specs = function (listings, map) {
     Object.keys(map).forEach((k) => {
       const L = listings[k];
@@ -429,9 +426,37 @@
   };
   function variantsHave(L, lang) { return Array.isArray(L[lang]) && L[lang].length > 0; }
 
-  const LS_HIDE = "dsa.codeHidden";
-  let codeHidden = false;
-  try { codeHidden = localStorage.getItem(LS_HIDE) === "1"; } catch (e) {}
+  /* The code starts HIDDEN so a newcomer first sees only the picture and the caption; "show code" opens it,
+     and that choice is remembered from page to page. (.v3: a new key, so a preference saved under the
+     earlier default does not carry over.) */
+  const LS_HIDE = "dsa.codeHidden.v3", LS_CLS = "dsa.classHidden.v2";
+  let codeHidden = true, classHidden = false;
+  try { codeHidden = localStorage.getItem(LS_HIDE) !== "0"; classHidden = localStorage.getItem(LS_CLS) === "1"; } catch (e) {}
+
+  /* ------------------------------------------------------------
+     Classes. A method listing such as push(x) uses fields (data, t)
+     that only make sense inside its class, so a listing can name the
+     class it belongs to:
+       D.classes(CODE, [{ name, pseudo: [...], java: [...], note, keys: /^st_/ }])
+     The dock then shows that class (fields, constructor, Node class)
+     above the method, with a one-line reminder of how objects work.
+     ------------------------------------------------------------ */
+  DSA.classes = function (listings, defs) {
+    defs.forEach((d) => {
+      Object.keys(listings).forEach((k) => {
+        const hit = d.keys instanceof RegExp ? d.keys.test(k) : (d.keys || []).indexOf(k) >= 0;
+        if (hit) listings[k].cls = d;
+      });
+    });
+  };
+  /* "O(1) time · O(1) space" for the dock header, from a listing's spec */
+  function costBadge(L) {
+    const sp = (L && L.spec) || {};
+    const strip = (h) => String(h || "").replace(/<[^>]*>/g, "").split(/ — |; /)[0].trim();   /* "O(n) — why" → "O(n)" */
+    const t = strip(sp.time), sMem = strip(sp.space);
+    if (!t && !sMem) return "";
+    return '<span class="cost-badge" title="worst case">' + (t ? "<b>" + t + "</b> time" : "") + (t && sMem ? " · " : "") + (sMem ? "<b>" + sMem + "</b> space" : "") + "</span>";
+  }
 
   DSA.CodeDock = function (mount, listings, opts) {
     const o = opts || {};
@@ -449,9 +474,12 @@
     m.appendChild(head);
     m.appendChild(body);
 
+    /* a dock without the toggle (the side-by-side panes) always shows its code */
     const paintHidden = () => {
-      m.classList.toggle("collapsed", codeHidden);
-      hide.textContent = codeHidden ? "show code" : "hide code";
+      const hidden = codeHidden && o.collapsible !== false;
+      m.classList.toggle("collapsed", hidden);
+      hide.textContent = hidden ? "show code" : "hide code";
+      hide.classList.toggle("primary", hidden);
     };
     hide.addEventListener("click", () => {
       codeHidden = !codeHidden;
@@ -461,13 +489,43 @@
 
     let key = null, block = null, spec = null;
     const specMount = DSA.el("div", { class: "code-spec-wrap" });
+    const clsMount = DSA.el("div", { class: "code-class" });
     const codeMount = DSA.el("div");
     body.appendChild(specMount);
+    body.appendChild(clsMount);
     body.appendChild(codeMount);
+    function showClass(c) {   /* rebuilt per listing: the note names the method being shown */
+      clsMount.innerHTML = "";
+      clsMount.style.display = c ? "" : "none";
+      if (!c) return;
+      const tog = DSA.el("button", { class: "ghost cls-toggle", type: "button" });
+      const head = DSA.el("div", { class: "cls-head" }, [
+        DSA.el("span", { class: "lang-label", text: "inside" }),
+        DSA.el("span", { class: "mono", text: "class " + c.name }),
+        DSA.el("span", { class: "cls-sub", text: "the fields every method below uses" }),
+        tog,
+      ]);
+      const inner = DSA.el("div", { class: "cls-body" });
+      const codeEl = DSA.el("div");
+      inner.appendChild(codeEl);
+      inner.appendChild(DSA.el("p", { class: "cls-note", html: (c.note ? c.note + " " : "") + oopNote(c, key) }));
+      clsMount.appendChild(head);
+      clsMount.appendChild(inner);
+      DSA.CodeBlock(codeEl, c, { switcher: false });
+      const paint = () => { inner.style.display = classHidden ? "none" : ""; tog.textContent = classHidden ? "show class" : "hide class"; };
+      tog.addEventListener("click", () => {
+        classHidden = !classHidden;
+        try { localStorage.setItem(LS_CLS, classHidden ? "1" : "0"); } catch (e) {}
+        docks.forEach((d) => d.paintClass && d.paintClass());
+      });
+      api.paintClass = paint;
+      paint();
+    }
     DSA.onLang(() => { if (spec && specMount.isConnected) spec.repaint(); });
     const api = {
       listings: listings,
       paintHidden: paintHidden,
+      recvOf: (k) => (typeof o.recv === "function" ? o.recv(k) : o.recv || null),
       get current() { return key; },
       /** Switch to listing `k` (no-op if already showing it). */
       show(k) {
@@ -475,7 +533,8 @@
         const L = listings[k];
         if (!L) return api;
         key = k;
-        title.innerHTML = '<span class="lang-label">running</span> <span class="mono">' + (L.title || k) + "</span>";
+        title.innerHTML = '<span class="lang-label">running</span> <span class="mono">' + (L.title || k) + "</span>" + costBadge(L);
+        showClass(L.cls || null);
         specMount.innerHTML = "";
         spec = specBox(L, k, o.recv || null, o.args || null);
         specMount.appendChild(spec.node);
@@ -499,30 +558,20 @@
   };
   const docks = [];
   DSA._docks = docks;   /* exposed for the headless test harness */
-
-  /* ---------------- examples bar ---------------- */
-  /** Examples(mount, [{ label, desc, run }]) — one-click worked scenarios. */
-  DSA.Examples = function (mount, items) {
-    const m = typeof mount === "string" ? DSA.$(mount) : mount;
-    if (!m) return;
-    m.className = "examples";
-    m.innerHTML = "";
-    m.appendChild(DSA.el("span", { class: "ex-label", text: "Examples" }));
-    items.forEach((it) =>
-      m.appendChild(DSA.el("button", { class: "ex", type: "button", text: it.label, title: it.desc || "", onclick: it.run }))
-    );
-  };
-
-  /* ---------------- stat tiles ---------------- */
-  /** stats(mount, [[label, value], ...]) — replaces the row of stat tiles. */
-  DSA.stats = function (mount, pairs) {
-    const m = typeof mount === "string" ? DSA.$(mount) : mount;
-    if (!m) return;
-    m.className = "stats";
-    m.innerHTML = pairs
-      .map((p) => '<div class="stat"><span class="k">' + p[0] + '</span><span class="v">' + (p[1] == null ? "–" : p[1]) + "</span></div>")
-      .join("");
-  };
+  /* the "how objects work" reminder, written with this page's own names (list.addFirst, head, …) */
+  function oopNote(c, key) {
+    const d = docks.find((x) => x.listings[key]);
+    const L = d && d.listings[key];
+    const recv = (d && d.recvOf(key)) || "obj";
+    const sig = L ? sigOf(L, "java") : null;
+    const m = (c.java || []).map((t) => /^\s*private\s+(?!static)[\w<>\[\]]+\s+(\w+)\s*[;=]/.exec(t)).find(Boolean);
+    const field = m ? m[1] : "size";
+    const call = recv + "." + (sig ? sig.name : "method") + "(…)";
+    const M = (t) => "<span class='mono'>" + t + "</span>";
+    return "<b>How objects work:</b> a class is a blueprint. Each object made from it with " + M("new") + " gets its own copy of the fields. " +
+      "A call such as " + M(call) + " runs " + M(sig ? sig.name : "the method") + " on the object " + M(recv) + ", and inside the method a field name like " +
+      M(field) + " means <em>that object's</em> field. Java lets you write it in full as " + M("this." + field) + ".";
+  }
 
   /* ---------------- per-tab visibility ---------------- */
   /** Show every [data-tab] element whose space-separated list names `id`; hide the rest. */
@@ -631,6 +680,41 @@
     return wrap;
   };
 
+  /* ---------------- a call stack, one card per frame ---------------- */
+  /**
+   * callStack(frames, opts) → element. frames: [{ id, label, vars: {name: value}, wait }], bottom first.
+   *   opts.returning  id of the frame that is returning right now (drawn green, or red with opts.err)
+   *   opts.retVal     what it returns
+   *   opts.fmt        value formatter
+   *   opts.compact    smaller cards
+   *   opts.max        show at most this many frames from the top (default 6)
+   */
+  DSA.callStack = function (frames, opts) {
+    const o = opts || {};
+    const fmt = o.fmt || ((v) => String(v));
+    const col = DSA.el("div", { class: "frame-stack" });
+    const max = o.max || 6;
+    if (!frames || !frames.length) { col.appendChild(DSA.el("p", { class: "small muted", text: o.emptyText || "The call stack is empty." })); return col; }
+    frames.forEach((fr, k) => {
+      const top = k === frames.length - 1;
+      if (frames.length > max + 1 && k < frames.length - max) {
+        if (k === 0) col.appendChild(DSA.el("div", { class: "small muted", text: "… " + (frames.length - max) + " more frame(s) below" }));
+        return;
+      }
+      const returning = o.returning != null && o.returning === fr.id;
+      const cls = returning ? (o.err ? "err" : "ret") : top ? "active" : "wait";
+      const card = DSA.el("div", { class: "frame-card " + cls + (o.compact ? " compact" : "") });
+      const tag = returning ? (o.err ? "throws" : "returning") : top ? "running" : "waiting";
+      card.appendChild(DSA.el("div", { class: "fc-head" }, [DSA.el("span", { class: "mono", text: fr.label }), DSA.el("span", { class: "fc-tag", text: tag })]));
+      const vars = Object.keys(fr.vars || {});
+      if (vars.length) card.appendChild(DSA.el("div", { class: "fc-vars mono", text: vars.map((k2) => k2 + " = " + fmt(fr.vars[k2])).join("   ") }));
+      if (returning) card.appendChild(DSA.el("div", { class: "fc-wait mono", text: o.err ? "✗ throws an exception" : "↩ returns " + o.retVal }));
+      else if (fr.wait) card.appendChild(DSA.el("div", { class: "fc-wait mono", text: "⏳ " + fr.wait }));
+      col.appendChild(card);
+    });
+    return col;
+  };
+
   /* ---------------- a binary tree drawn from an index function ---------------- */
   /**
    * heapTree(n, opts) → svg. Draws a complete binary tree with n nodes laid out by
@@ -706,7 +790,9 @@
 
   /* ============================================================
      Player — scrubs a recorded frame list
-     opts: { mount, render(frame, index, frames), delay }
+     opts: { mount, render(frame, index, frames), delay, onIdle }
+       onIdle() runs when Play is pressed while nothing is loaded yet:
+       a page either loads something to play or explains what to press.
      Frame is any object; by convention `frame.note` is the caption.
      ============================================================ */
   const players = [];
@@ -735,9 +821,17 @@
     }, 0);
   }, true);
 
+  /* The step controls (play, step, speed, slider) only appear once the reader runs something.
+     A load counts as "the reader ran something" when it follows a click, a changed field or typing
+     within a moment (recursion rebuilds its trace a little after you stop typing). */
+  let lastUser = -1e9;
+  ["click", "change", "input"].forEach((t) =>
+    document.addEventListener(t, (e) => { if (e.isTrusted !== false && !(e.target.closest && e.target.closest(".player"))) lastUser = performance.now(); }, true)
+  );
+
   DSA.Player = function Player(opts) {
     const self = this;
-    this.frames = [{ note: "Press an operation button to begin." }];
+    this.frames = [{ note: "Pick an operation above. Its steps load here, ready to play." }];
     this.index = 0;
     this.playing = false;
     this.speed = 1;
@@ -745,11 +839,13 @@
     this.render = opts.render || function () {};
     this.onFrame = opts.onFrame || null;
     this.code = opts.code || null;      /* a CodeDock this player drives */
+    this.onIdle = opts.onIdle || null;
     const mount = typeof opts.mount === "string" ? DSA.$(opts.mount) : opts.mount;
     this.mount = mount;
 
     mount.classList.add("player");
     mount.innerHTML =
+      '<div class="player-ctl" data-a="ctl" hidden>' +
       '<div class="player-row">' +
       '<button class="icon" data-a="first" title="First frame">&#124;&#9664;</button>' +
       '<button class="icon" data-a="prev" title="Step back (&larr;)">&#9664;</button>' +
@@ -760,15 +856,18 @@
       '<div class="field"><label>Speed</label><select data-a="speed">' +
       '<option value="0.35">0.35&times;</option><option value="0.6">0.6&times;</option>' +
       '<option value="1" selected>1&times;</option><option value="2">2&times;</option>' +
-      '<option value="4">4&times;</option><option value="8">8&times;</option></select></div>' +
+      '<option value="4">4&times;</option></select></div>' +
       '<div class="spacer" style="flex:1"></div>' +
       '<div class="counter" data-a="counter">0 / 0</div>' +
       "</div>" +
       '<div class="track"><input type="range" min="0" max="0" value="0" data-a="track"></div>' +
+      "</div>" +
       '<div class="note" data-a="note"></div>';
 
     const q = (a) => mount.querySelector('[data-a="' + a + '"]');
-    const btnPlay = q("play"), track = q("track"), counter = q("counter"), note = q("note");
+    const btnPlay = q("play"), track = q("track"), counter = q("counter"), note = q("note"), ctl = q("ctl");
+    this.ctlShown = false;
+    this.showControls = function (on) { this.ctlShown = !!on; ctl.hidden = !on; };
 
     mount.addEventListener("click", (e) => {
       const a = e.target.closest("button[data-a]");
@@ -803,6 +902,9 @@
       markCurrent();
       this.pause();
       this.frames = frames && frames.length ? frames : [{ note: "No steps were produced." }];
+      /* a single still frame (a tab switch, clear, a new random structure) has nothing to step through */
+      if (this.frames.length < 2) this.showControls(false);
+      else if (performance.now() - lastUser < 1500) this.showControls(true);
       DSA.annotateArgs(this.frames);
       this.index = 0;
       this._sync();
@@ -815,7 +917,11 @@
     };
     this.step = function (d) { this.goto(this.index + d); };
     this.play = function () {
-      if (this.frames.length < 2) return;
+      if (this.frames.length < 2) {
+        if (this.onIdle) this.onIdle();
+        else DSA.toast("Nothing to play yet: pick an operation above (the button runs it, then Play replays it).");
+        return;
+      }
       if (this.index >= this.frames.length - 1) this.index = 0;
       this.playing = true;
       this._sync();
@@ -890,7 +996,7 @@
     if (t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)) return;
     let p = activePlayer && activePlayer.isVisible() ? activePlayer : null;
     if (!p) p = nearestToViewportCentre();
-    if (!p) return;
+    if (!p || !p.ctlShown) return;
     if (e.code === "Space") { e.preventDefault(); setActive(p); p.toggle(); }
     else if (e.code === "ArrowRight") { e.preventDefault(); setActive(p); p.pause(); p.step(1); }
     else if (e.code === "ArrowLeft") { e.preventDefault(); setActive(p); p.pause(); p.step(-1); }

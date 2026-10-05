@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stacks, Queues &amp; Deques — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=20260926">
+<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥞</text></svg>">
 </head>
 <body>
@@ -21,15 +21,16 @@
 <div class="wrap">
   <div class="page-head">
     <h1>Stacks, Queues &amp; Deques</h1>
-    <p>Three restricted lists, each implemented on a plain array. The restriction is the point: allowing access only
-       at the ends makes every operation O(1). The queue shows the one catch, and why it needs a circular array.</p>
+    <p>Three lists that only let you work at their ends. A <b>stack</b> is <b>LIFO</b> (Last In, First Out), a
+       <b>queue</b> is <b>FIFO</b> (First In, First Out), and a <b>deque</b> allows both. Each one is built on a plain
+       array here, and limiting access to the ends is what makes every operation O(1) time.</p>
   </div>
 
   <div id="tabs" class="tabs"></div>
 
   <div class="panel">
     <div class="toolbar">
-      <div class="field" data-tab="stack aqueue cqueue deque compare"><label for="val">value</label><input type="number" id="val" placeholder="random"></div>
+      <div class="field" data-tab="stack aqueue cqueue deque compare"><label for="val">value</label><input type="number" step="any" id="val" placeholder="random"></div>
       <div class="sep" data-tab="stack aqueue cqueue deque compare"></div>
 
       <div class="toolbar" data-tab="stack" style="margin:0">
@@ -77,7 +78,6 @@
       </div>
     </div>
 
-    <div id="examples"></div>
 
     <div data-tab="stack aqueue cqueue deque app">
       <div id="code"></div>
@@ -90,19 +90,16 @@
         <div id="L-code"></div>
         <div class="stage" id="L-stage"></div>
         <div class="pane-note" id="L-note"></div>
-        <div id="L-stats"></div>
       </div>
       <div class="pane" id="pane-R">
         <div class="pane-head"><h3>Circular array queue</h3><span class="tagline">indices wrap with mod</span></div>
         <div id="R-code"></div>
         <div class="stage" id="R-stage"></div>
         <div class="pane-note" id="R-note"></div>
-        <div id="R-stats"></div>
       </div>
     </div>
 
     <div id="player"></div>
-    <div id="stats" data-tab="stack aqueue cqueue deque app"></div>
     <div id="legend"></div>
     <div id="notes"></div>
   </div>
@@ -110,7 +107,24 @@
   <div class="row" style="margin-bottom:2rem">
     <div class="col">
       <div class="panel" style="height:100%">
-        <h2>Why circular?</h2>
+        <h2>Words to know</h2>
+        <dl class="kv defs">
+          <dt>LIFO</dt><dd><b>Last In, First Out.</b> The element added most recently is the first one removed.
+            A pile of plates: you put plates on top and take them off the top. Stacks are LIFO.</dd>
+          <dt>FIFO</dt><dd><b>First In, First Out.</b> Elements leave in the order they arrived. A line at a checkout:
+            the first person in line is served first. Queues are FIFO.</dd>
+          <dt>stack</dt><dd>a LIFO list. <span class="mono">push(x)</span> adds on top, <span class="mono">pop()</span>
+            removes the top, <span class="mono">top()</span> (or peek) looks at it without removing it.</dd>
+          <dt>queue</dt><dd>a FIFO list. <span class="mono">enqueue(x)</span> joins at the <b>rear</b>,
+            <span class="mono">dequeue()</span> leaves from the <b>front</b>, <span class="mono">first()</span> looks at the front.</dd>
+          <dt>deque</dt><dd>“double-ended queue”, said “deck”. Add and remove at both ends, so it can be used as a
+            stack or as a queue.</dd>
+          <dt>overflow</dt><dd>adding to a structure that is already full (here, all 8 array slots are used).</dd>
+          <dt>underflow</dt><dd>removing from (or looking into) an empty structure.</dd>
+        </dl>
+        <h3 style="margin-top:1.2rem">Queues only: why a circular array?</h3>
+        <p class="small muted">Stacks don't need this, because a stack's bottom stays at index 0 forever. A queue removes
+           from the front, so the front keeps moving. There are three ways to handle that:</p>
         <div style="overflow-x:auto">
           <table class="tbl" style="min-width:470px">
             <tr><th>Array queue strategy</th><th>enqueue</th><th>dequeue</th><th>problem</th></tr>
@@ -119,28 +133,31 @@
             <tr><td>circular (front + size, mod N)</td><td class="one">O(1)</td><td class="one">O(1)</td><td>none. Every slot is reusable.</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin-bottom:0">The circular array keeps the cheap “move an index” dequeue of the
-           second strategy, and fixes its flaw by letting the index wrap from N − 1 back to 0. Tracking
-           <span class="mono">size</span> as well as <span class="mono">front</span> tells a full queue apart from an
-           empty one, because both have <span class="mono">front == (front + size) mod N</span>. Open the <b>Why
-           circular?</b> tab to run the plain-array and circular versions side by side.</p>
+        <p class="small muted" style="margin-bottom:0">(time, worst case; all three use O(1) extra space.) The circular
+           array lets the front index wrap from N − 1 back to 0. Tracking <span class="mono">size</span> as well as
+           <span class="mono">front</span> tells a full queue apart from an empty one. The <b>Queue: plain vs circular</b>
+           tab runs the versions side by side.</p>
       </div>
     </div>
     <div class="col">
       <div class="panel" style="height:100%">
-        <h2>Cost of every operation</h2>
+        <h2>Time and space of every operation</h2>
+        <p class="small muted" style="margin-top:-.3rem">Each cell is <b>time / extra space</b>, worst case. These
+           arrays have a fixed capacity of 8, so “full” is an error you can see.</p>
         <div style="overflow-x:auto">
           <table class="tbl">
             <tr><th></th><th>Stack (array)</th><th>Queue (circular)</th><th>Deque (circular)</th></tr>
-            <tr><td>insert front</td><td>–</td><td>–</td><td class="one">O(1)</td></tr>
-            <tr><td>insert rear / push</td><td class="one">O(1)*</td><td class="one">O(1)*</td><td class="one">O(1)*</td></tr>
-            <tr><td>remove front</td><td>–</td><td class="one">O(1)</td><td class="one">O(1)</td></tr>
-            <tr><td>remove rear / pop</td><td class="one">O(1)</td><td>–</td><td class="one">O(1)</td></tr>
-            <tr><td>peek</td><td class="one">O(1)</td><td class="one">O(1)</td><td class="one">O(1)</td></tr>
+            <tr><td>add at front</td><td>–</td><td>–</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>add at rear / push</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>remove front</td><td>–</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>remove rear / pop</td><td class="one">O(1) / O(1)</td><td>–</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>peek (top / first)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>whole structure</td><td>– / O(N)</td><td>– / O(N)</td><td>– / O(N)</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.5rem 0 .7rem">* O(1) amortised if the array doubles when full;
-           these demos use a fixed capacity of 8 so you can see “full”.</p>
+        <p class="small muted" style="margin:.5rem 0 .7rem">The last row is the memory the structure itself takes: an
+           array of N slots. The bracket checker and postfix evaluator are O(n) time and O(n) space for an input of n
+           characters or tokens.</p>
         <dl class="kv">
           <dt>Stack</dt><dd>call frames, undo/redo, DFS, bracket matching, postfix evaluation</dd>
           <dt>Queue</dt><dd>BFS, print/task scheduling, buffers, level-order traversal</dd>
@@ -152,7 +169,7 @@
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=20260926"></script>
-<script src="../assets/js/stacks.js?v=20260926"></script>
+<script src="../assets/js/core.js?v=202610042131"></script>
+<script src="../assets/js/stacks.js?v=202610042131"></script>
 </body>
 </html>

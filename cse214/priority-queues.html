@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Priority Queues — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=20260926">
+<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
 </head>
 <body>
@@ -30,7 +30,7 @@
   <div class="panel">
     <div class="toolbar">
       <div class="toolbar" data-tab="unsorted sorted aheap theap" style="margin:0">
-        <div class="field"><label for="val">key</label><input type="number" id="val" placeholder="random"></div>
+        <div class="field"><label for="val">key</label><input type="number" step="any" id="val" placeholder="random"></div>
         <div class="sep"></div>
         <button id="op-insert">insert(k)</button>
         <button id="op-remove">removeMin()</button>
@@ -41,7 +41,7 @@
       <div class="toolbar" data-tab="aheap" style="margin:0">
         <div class="sep"></div>
         <input type="text" id="heap-input" class="wide" placeholder="37, 12, 55, … (blank = random)" aria-label="keys to build from">
-        <button id="op-heapify">bottom-up heapify Θ(n)</button>
+        <button id="op-heapify">bottom-up heapify O(n)</button>
         <button id="op-build">build by insertion O(n log n)</button>
       </div>
       <div class="toolbar" data-tab="sort" style="margin:0">
@@ -52,17 +52,15 @@
             <option value="heap">heap sort (heap PQ)</option>
           </select>
         </div>
-        <input type="text" id="sort-input" class="wide" value="42, 7, 19, 88, 3, 56, 24, 61" aria-label="keys to sort">
+        <input type="text" id="sort-input" class="wide" value="42, -7, 19, 8.5, 3, 56, -24, 61" aria-label="keys to sort">
         <button id="sort-rand">↻</button>
         <button class="primary" id="sort-run">▶ run PQ-sort</button>
       </div>
     </div>
 
-    <div id="examples"></div>
     <div id="code"></div>
     <div class="stage" id="stage"></div>
     <div id="player"></div>
-    <div id="stats"></div>
     <div id="legend"></div>
     <div id="notes"></div>
   </div>
@@ -71,20 +69,19 @@
     <div class="col">
       <div class="panel" style="height:100%">
         <h2>Four implementations compared</h2>
+        <p class="small muted" style="margin-top:-.3rem">Each cell is <b>time / extra space</b>, worst case, for n keys.</p>
         <div style="overflow-x:auto">
-          <table class="tbl" style="min-width:520px">
+          <table class="tbl" style="min-width:560px">
             <tr><th>Operation</th><th>Unsorted list</th><th>Sorted list</th><th>Array heap</th><th>Tree heap</th></tr>
-            <tr><td>insert</td><td class="one">O(1)</td><td>O(n)</td><td class="one">O(log n)</td><td class="one">O(log n)</td></tr>
-            <tr><td>min</td><td>O(n)</td><td class="one">O(1)</td><td class="one">O(1)</td><td class="one">O(1)</td></tr>
-            <tr><td>removeMin</td><td>O(n)</td><td class="one">O(1)</td><td class="one">O(log n)</td><td class="one">O(log n)</td></tr>
-            <tr><td>build from n keys</td><td class="one">O(n)</td><td>O(n log n)</td><td class="one">O(n) bottom-up</td><td>O(n log n)</td></tr>
-            <tr><td>extra space per key</td><td>list link(s)</td><td>list link(s)</td><td class="one">none</td><td>3 pointers</td></tr>
+            <tr><td>insert</td><td class="one">O(1) / O(1)</td><td>O(n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td></tr>
+            <tr><td>min</td><td>O(n) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>removeMin</td><td>O(n) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td></tr>
+            <tr><td>build from n keys</td><td class="one">O(n) / O(n)</td><td>O(n²) / O(n)</td><td class="one">O(n) / O(n) bottom-up</td><td>O(n log n) / O(n)</td></tr>
+            <tr><td>memory for n keys</td><td>O(n): key + list link(s)</td><td>O(n): key + list link(s)</td><td class="one">O(n): keys only</td><td>O(n): key + 3 pointers</td></tr>
           </table>
         </div>
         <p class="small muted" style="margin:.6rem 0 0">A heap never makes you pay O(n) for anything, which is why
-           it is the default choice. Java's <span class="mono">PriorityQueue</span>, C++'s
-           <span class="mono">std::priority_queue</span> and Python's <span class="mono">heapq</span> are all
-           array-based binary heaps.</p>
+           it is the default choice. Java's <span class="mono">PriorityQueue</span> is an array-based binary heap.</p>
       </div>
     </div>
     <div class="col">
@@ -92,15 +89,15 @@
         <h2>Priority-queue sorting</h2>
         <div style="overflow-x:auto">
           <table class="tbl" style="min-width:470px">
-            <tr><th>PQ used</th><th>Sort you get</th><th>Phase 1<br>(n inserts)</th><th>Phase 2<br>(n removeMins)</th><th>Total</th></tr>
-            <tr><td>unsorted list</td><td>selection sort</td><td class="one">O(n)</td><td>O(n²)</td><td>O(n²)</td></tr>
-            <tr><td>sorted list</td><td>insertion sort</td><td>O(n²)</td><td class="one">O(n)</td><td>O(n²)</td></tr>
-            <tr><td>heap</td><td>heap sort</td><td class="one">O(n log n)</td><td class="one">O(n log n)</td><td class="one">O(n log n)</td></tr>
+            <tr><th>PQ used</th><th>Sort you get</th><th>Phase 1<br>(n inserts)</th><th>Phase 2<br>(n removeMins)</th><th>Total time / space</th></tr>
+            <tr><td>unsorted list</td><td>selection sort</td><td class="one">O(n)</td><td>O(n²)</td><td>O(n²) / O(n)</td></tr>
+            <tr><td>sorted list</td><td>insertion sort</td><td>O(n²)</td><td class="one">O(n)</td><td>O(n²) / O(n)</td></tr>
+            <tr><td>heap</td><td>heap sort</td><td class="one">O(n log n)</td><td class="one">O(n log n)</td><td class="one">O(n log n) / O(n)</td></tr>
           </table>
         </div>
         <p class="small muted" style="margin:.6rem 0 0">Insertion sort's phase 1 is only O(n) when the input is
            already sorted, because each insert stops after one comparison. Heap sort can also run <em>in place</em>
-           by storing the heap in the first part of the input array. The Sorting module shows that version.</p>
+           by storing the heap in the first part of the input array (O(1) extra space). The Sorting module shows that version.</p>
         <dl class="kv" style="margin-top:.7rem">
           <dt>heap order</dt><dd>every node's key ≤ its children's keys</dd>
           <dt>complete</dt><dd>all levels full except the last, which fills left to right</dd>
@@ -112,7 +109,7 @@
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=20260926"></script>
-<script src="../assets/js/pq.js?v=20260926"></script>
+<script src="../assets/js/core.js?v=202610042131"></script>
+<script src="../assets/js/pq.js?v=202610042131"></script>
 </body>
 </html>

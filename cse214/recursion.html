@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Recursion — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=20260926">
+<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔁</text></svg>">
 </head>
 <body>
@@ -21,8 +21,9 @@
 <div class="wrap">
   <div class="page-head">
     <h1>Recursion</h1>
-    <p>Watch the call stack grow and unwind next to a live recursion tree. Then switch to <b>Iterative</b>, or run
-       both <b>side by side</b>, to see the same answer computed with a loop and what that saves.</p>
+    <p>Watch the call stack grow and unwind next to a live recursion tree. Every frame on the stack keeps its own copy
+       of the variables and waits for the call above it to return. Then switch to <b>Iterative</b>, or run both
+       <b>side by side</b>, to see the same answer computed with a loop and what that saves.</p>
   </div>
 
   <div id="fn-tabs" class="tabs"></div>
@@ -32,10 +33,9 @@
       <div class="toolbar" id="inputs" style="margin:0"></div>
       <div class="sep"></div>
       <div id="mode"></div>
-      <button class="primary" id="btn-run">▶ Run trace</button>
+      <span class="small muted">the steps reload as you type</span>
     </div>
 
-    <div id="examples"></div>
 
     <div data-tab="rec iter">
       <div id="code"></div>
@@ -48,19 +48,16 @@
         <div id="L-code"></div>
         <div class="stage" id="L-stage"></div>
         <div class="pane-note" id="L-note"></div>
-        <div id="L-stats"></div>
       </div>
       <div class="pane" id="pane-R">
         <div class="pane-head"><h3>Iterative</h3><span class="tagline">a loop, with an explicit stack if needed</span></div>
         <div id="R-code"></div>
         <div class="stage" id="R-stage"></div>
         <div class="pane-note" id="R-note"></div>
-        <div id="R-stats"></div>
       </div>
     </div>
 
     <div id="player"></div>
-    <div id="stats" data-tab="rec iter"></div>
     <div id="legend"></div>
 
     <div style="margin-top:1rem">
@@ -74,18 +71,19 @@
     <h2>Recursion vs iteration</h2>
     <div style="overflow-x:auto">
       <table class="tbl" style="min-width:640px">
-        <tr><th>Function</th><th>Recursive time / stack space</th><th>Iterative time / extra space</th><th>How the loop version works</th></tr>
-        <tr><td>factorial</td><td>Θ(n) / Θ(n)</td><td>Θ(n) / <span style="color:var(--c-done)">O(1)</span></td><td>accumulate the product upwards</td></tr>
-        <tr><td>fib (naive)</td><td>Θ(φⁿ) / Θ(n)</td><td><span style="color:var(--c-done)">Θ(n) / O(1)</span></td><td>keep only the last two values</td></tr>
-        <tr><td>fib (memoised)</td><td>Θ(n) / Θ(n)</td><td>Θ(n) / Θ(n)</td><td>fill the same table bottom-up</td></tr>
-        <tr><td>gcd</td><td>O(log) / O(log)</td><td>O(log) / <span style="color:var(--c-done)">O(1)</span></td><td>tail recursion → a while loop</td></tr>
-        <tr><td>fast power</td><td>Θ(log n) / Θ(log n)</td><td>Θ(log n) / <span style="color:var(--c-done)">O(1)</span></td><td>read the bits of n</td></tr>
-        <tr><td>binary search</td><td>Θ(log n) / Θ(log n)</td><td>Θ(log n) / <span style="color:var(--c-done)">O(1)</span></td><td>move lo / hi instead of recursing</td></tr>
-        <tr><td>Towers of Hanoi</td><td>Θ(2ⁿ) / Θ(n)</td><td>Θ(2ⁿ) / Θ(n)</td><td>an explicit stack of tasks</td></tr>
-        <tr><td>permutations</td><td>Θ(n·n!) / Θ(n)</td><td>Θ(n·n!) / Θ(n²)</td><td>an explicit stack of states</td></tr>
+        <tr><th>Function</th><th>Recursive: time / stack space</th><th>Iterative: time / extra space</th><th>How the loop version works</th></tr>
+        <tr><td>factorial</td><td>O(n) / O(n)</td><td>O(n) / <span style="color:var(--c-done)">O(1)</span></td><td>accumulate the product upwards</td></tr>
+        <tr><td>fib (naive)</td><td>O(2ⁿ) / O(n)</td><td><span style="color:var(--c-done)">O(n) / O(1)</span></td><td>keep only the last two values</td></tr>
+        <tr><td>fib (memoised)</td><td>O(n) / O(n)</td><td>O(n) / O(n)</td><td>fill the same table bottom-up</td></tr>
+        <tr><td>gcd</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--c-done)">O(1)</span></td><td>tail recursion → a while loop</td></tr>
+        <tr><td>fast power</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--c-done)">O(1)</span></td><td>read the bits of n</td></tr>
+        <tr><td>binary search</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--c-done)">O(1)</span></td><td>move lo / hi instead of recursing</td></tr>
+        <tr><td>Towers of Hanoi</td><td>O(2ⁿ) / O(n)</td><td>O(2ⁿ) / O(n)</td><td>an explicit stack of tasks</td></tr>
+        <tr><td>permutations</td><td>O(n·n!) / O(n)</td><td>O(n·n!) / O(n²)</td><td>an explicit stack of states</td></tr>
       </table>
     </div>
-    <p class="small muted" style="margin-bottom:0">Any recursion can be rewritten as a loop plus a stack, because
+    <p class="small muted" style="margin-bottom:0">All bounds are worst case. A recursive call's space is its
+       stack: each frame waiting on the stack holds its own variables. Any recursion can be rewritten as a loop plus a stack, because
        that is how the machine runs it. When the recursive call is the very last thing a function does (<b>tail
        recursion</b>, as in gcd), the stack isn't needed and a plain loop does it in O(1) space. Recursion wins on
        clarity for branching problems (Hanoi, trees, permutations). Iteration wins on space and on not hitting
@@ -115,20 +113,20 @@
     <h3 style="font-size:1rem;margin:0 0 .5rem">Reading the shape of the tree</h3>
     <div style="overflow-x:auto">
       <table class="tbl" style="min-width:600px">
-        <tr><th>Recurrence</th><th>Tree shape</th><th>Total work</th><th>Example</th></tr>
-        <tr><td>T(n) = T(n−1) + O(1)</td><td>a chain of depth n</td><td>Θ(n)</td><td>factorial, list length</td></tr>
-        <tr><td>T(n) = T(n/2) + O(1)</td><td>a chain of depth log n</td><td>Θ(log n)</td><td>binary search, fast power</td></tr>
-        <tr><td>T(n) = 2T(n/2) + O(n)</td><td>log n full levels of n work</td><td>Θ(n log n)</td><td>merge sort</td></tr>
-        <tr><td>T(n) = 2T(n−1) + O(1)</td><td>complete binary tree of depth n</td><td>Θ(2ⁿ)</td><td>Hanoi, naive Fibonacci</td></tr>
-        <tr><td>T(n) = 3T(2n/3) + O(1)</td><td>branching 3, shrinking slowly</td><td>Θ(n<sup>2.71</sup>)</td><td>two-third sort</td></tr>
-        <tr><td>T(n) = n·T(n−1) + O(1)</td><td>n! leaves</td><td>Θ(n·n!)</td><td>permutations</td></tr>
+        <tr><th>Recurrence</th><th>Tree shape</th><th>Total time</th><th>Example</th></tr>
+        <tr><td>T(n) = T(n−1) + O(1)</td><td>a chain of depth n</td><td>O(n)</td><td>factorial, list length</td></tr>
+        <tr><td>T(n) = T(n/2) + O(1)</td><td>a chain of depth log n</td><td>O(log n)</td><td>binary search, fast power</td></tr>
+        <tr><td>T(n) = 2T(n/2) + O(n)</td><td>log n full levels of n work</td><td>O(n log n)</td><td>merge sort</td></tr>
+        <tr><td>T(n) = 2T(n−1) + O(1)</td><td>complete binary tree of depth n</td><td>O(2ⁿ)</td><td>Hanoi, naive Fibonacci</td></tr>
+        <tr><td>T(n) = 3T(2n/3) + O(1)</td><td>branching 3, shrinking slowly</td><td>O(n<sup>2.71</sup>)</td><td>two-third sort</td></tr>
+        <tr><td>T(n) = n·T(n−1) + O(1)</td><td>n! leaves</td><td>O(n·n!)</td><td>permutations</td></tr>
       </table>
     </div>
   </div>
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=20260926"></script>
-<script src="../assets/js/recursion.js?v=20260926"></script>
+<script src="../assets/js/core.js?v=202610042131"></script>
+<script src="../assets/js/recursion.js?v=202610042131"></script>
 </body>
 </html>

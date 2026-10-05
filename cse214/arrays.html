@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Arrays &amp; Lists — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=20260926">
+<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧱</text></svg>">
 </head>
 <body>
@@ -29,11 +29,11 @@
 
   <div class="panel">
     <div class="toolbar">
-      <div class="field" data-tab="fixed dynamic single double circular"><label for="val">value</label><input type="number" id="val" placeholder="random"></div>
+      <div class="field" data-tab="fixed dynamic single double circular"><label for="val">value</label><input type="number" step="any" id="val" placeholder="random"></div>
       <div class="field" data-tab="fixed dynamic single double"><label for="idx">index</label><input type="number" id="idx" value="2" style="width:4.5rem"></div>
       <div class="field" data-tab="grid"><label for="g-r">row</label><input type="number" id="g-r" value="2" style="width:4rem"></div>
       <div class="field" data-tab="grid"><label for="g-c">col</label><input type="number" id="g-c" value="3" style="width:4rem"></div>
-      <div class="field" data-tab="grid"><label for="g-v">value</label><input type="number" id="g-v" placeholder="random" style="width:5.5rem"></div>
+      <div class="field" data-tab="grid"><label for="g-v">value</label><input type="number" step="any" id="g-v" placeholder="random" style="width:5.5rem"></div>
       <div class="field" data-tab="dynamic">
         <label for="growth">growth</label>
         <select id="growth">
@@ -100,39 +100,40 @@
       </div>
     </div>
 
-    <div id="examples"></div>
     <div id="code"></div>
     <div class="stage" id="stage"></div>
     <div id="player"></div>
-    <div id="stats"></div>
     <div id="legend"></div>
     <div id="notes"></div>
   </div>
 
   <div class="panel" style="margin-bottom:2rem">
-    <h2>Arrays vs linked lists</h2>
+    <h2>Arrays vs linked lists: time / space of every operation</h2>
+    <p class="small muted" style="margin-top:-.3rem">Each cell is <b>time / extra space</b>, worst case, for a list of n elements.</p>
     <div style="overflow-x:auto">
-      <table class="tbl" style="min-width:760px">
+      <table class="tbl" style="min-width:820px">
         <tr><th>Operation</th><th>Fixed array</th><th>Dynamic array</th><th>Singly linked<br>(head + tail)</th><th>Doubly linked</th><th>Circularly linked<br>(tail only)</th></tr>
-        <tr><td>get(i) / set(i)</td><td class="one">O(1)</td><td class="one">O(1)</td><td>O(n)</td><td>O(n)</td><td>O(n)</td></tr>
-        <tr><td>addFirst</td><td>O(n)</td><td>O(n)</td><td class="one">O(1)</td><td class="one">O(1)</td><td class="one">O(1)</td></tr>
-        <tr><td>addLast</td><td class="one">O(1) until full</td><td class="one">O(1)*</td><td class="one">O(1)</td><td class="one">O(1)</td><td class="one">O(1)</td></tr>
-        <tr><td>removeFirst</td><td>O(n)</td><td>O(n)</td><td class="one">O(1)</td><td class="one">O(1)</td><td class="one">O(1)</td></tr>
-        <tr><td>removeLast</td><td class="one">O(1)</td><td class="one">O(1)</td><td>O(n)</td><td class="one">O(1)</td><td>O(n)</td></tr>
-        <tr><td>insert / remove at i</td><td>O(n)</td><td>O(n)</td><td>O(n)</td><td>O(n)</td><td>O(n)</td></tr>
-        <tr><td>rotate (front → back)</td><td>O(n)</td><td>O(n)</td><td>O(1)</td><td>O(1)</td><td class="one">O(1), one pointer</td></tr>
+        <tr><td>get(i) / set(i)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td></tr>
+        <tr><td>addFirst</td><td>O(n) / O(1)</td><td>O(n) / O(n)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+        <tr><td>addLast</td><td class="one">O(1) / O(1)<br><span class="small muted">error when full</span></td><td>O(n) / O(n)<br><span class="small muted">only when it resizes</span></td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+        <tr><td>removeFirst</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+        <tr><td>removeLast</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td>O(n) / O(1)</td><td class="one">O(1) / O(1)</td><td>O(n) / O(1)</td></tr>
+        <tr><td>insert / remove at i</td><td>O(n) / O(1)</td><td>O(n) / O(n)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td></tr>
+        <tr><td>indexOf(x)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td></tr>
+        <tr><td>rotate (front → back)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(1) / O(1)</td><td>O(1) / O(1)</td><td class="one">O(1) / O(1), one pointer</td></tr>
         <tr><td>capacity</td><td>fixed forever</td><td>grows by doubling</td><td>unbounded</td><td>unbounded</td><td>unbounded</td></tr>
-        <tr><td>memory per element</td><td class="one">1 slot</td><td class="one">1 slot (+ slack)</td><td>value + 1 pointer</td><td>value + 2 pointers</td><td>value + 1 pointer</td></tr>
+        <tr><td>memory for n elements</td><td class="one">O(capacity)</td><td class="one">O(n), up to 2n slots</td><td>O(n): value + 1 pointer each</td><td>O(n): value + 2 pointers each</td><td>O(n): value + 1 pointer each</td></tr>
       </table>
     </div>
-    <p class="small muted" style="margin-bottom:0">* amortised. Insert-at-index is O(n) for <em>every</em>
-       structure here: the array pays to shift, the list pays to walk. A linked list only wins when you already hold
-       a reference to the node, or when you work only at the ends.</p>
+    <p class="small muted" style="margin-bottom:0">A dynamic array's resize copies all n elements into a new array, which is
+       why its worst-case add is O(n) time and O(n) space even though most adds are O(1). Insert-at-index is O(n) for
+       <em>every</em> structure here: the array pays to shift, the list pays to walk. A linked list only wins when you
+       already hold a reference to the node, or when you work only at the ends.</p>
   </div>
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=20260926"></script>
-<script src="../assets/js/arrays.js?v=20260926"></script>
+<script src="../assets/js/core.js?v=202610042131"></script>
+<script src="../assets/js/arrays.js?v=202610042131"></script>
 </body>
 </html>

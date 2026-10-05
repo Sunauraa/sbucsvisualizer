@@ -85,41 +85,16 @@
         "  if ((double) n / m > MAX_LOAD) rehash(); @@rehash",
         "}",
       ],
-      cpp: [
-        "void put(int k) {",
-        "  int b = ((hash(k) % m) + m) % m; @@hash",
-        "  for (int x : table[b]) @@loop",
-        "    if (x == k) return; @@dup",
-        "  table[b].push_front(k); @@add",
-        "  n++; @@add",
-        "  if ((double) n / m > MAX_LOAD) rehash(); @@rehash",
-        "}",
-      ],
-      python: [
-        "def put(self, k):",
-        "  b = hash(k) % self.m @@hash",
-        "  for x in self.table[b]: @@loop",
-        "    if x == k: @@dup",
-        "      return @@dup",
-        "  self.table[b].insert(0, k) @@add",
-        "  self.n += 1 @@add",
-        "  if self.n / self.m > MAX_LOAD: @@rehash",
-        "    self._rehash() @@rehash",
-      ],
     },
     ch_get: {
       title: "get(k) — separate chaining",
       pseudo: ["get(k):", "  b ← h(k) mod m @@hash", "  for each key x in bucket[b]: @@loop", "    if x == k: return true @@found", "  return false                       // chain exhausted @@miss"],
       java: ["boolean get(int k) {", "  int b = Math.floorMod(hash(k), m); @@hash", "  for (int x : table[b]) @@loop", "    if (x == k) return true; @@found", "  return false; @@miss", "}"],
-      cpp: ["bool get(int k) const {", "  int b = ((hash(k) % m) + m) % m; @@hash", "  for (int x : table[b]) @@loop", "    if (x == k) return true; @@found", "  return false; @@miss", "}"],
-      python: ["def get(self, k):", "  b = hash(k) % self.m @@hash", "  for x in self.table[b]: @@loop", "    if x == k: @@found", "      return True @@found", "  return False @@miss"],
     },
     ch_remove: {
       title: "remove(k) — separate chaining",
       pseudo: ["remove(k):", "  b ← h(k) mod m @@hash", "  for each key x in bucket[b]: @@loop", "    if x == k: unlink x;  n ← n - 1;  return @@found", "  // not present: nothing to do @@miss"],
       java: ["void remove(int k) {", "  int b = Math.floorMod(hash(k), m); @@hash", "  Iterator<Integer> it = table[b].iterator();", "  while (it.hasNext()) @@loop", "    if (it.next() == k) { it.remove();  n--;  return; } @@found", "} @@miss"],
-      cpp: ["void remove(int k) {", "  int b = ((hash(k) % m) + m) % m; @@hash", "  for (auto it = table[b].begin(); it != table[b].end(); ++it) @@loop", "    if (*it == k) { table[b].erase(it);  n--;  return; } @@found", "} @@miss"],
-      python: ["def remove(self, k):", "  b = hash(k) % self.m @@hash", "  for i, x in enumerate(self.table[b]): @@loop", "    if x == k: @@found", "      del self.table[b][i] @@found", "      self.n -= 1 @@found", "      return @@found", "  # not present @@miss"],
     },
     rehash: {
       title: "rehash()",
@@ -131,8 +106,6 @@
         "    put(k)                           // new m ⇒ every index changes @@put",
       ],
       java: ["void rehash() {", "  var old = table; @@alloc", "  m = nextPrime(2 * m + 1);  table = newTable(m);  n = 0; @@alloc", "  for (int k : keysOf(old)) @@loop", "    put(k); @@put", "}"],
-      cpp: ["void rehash() {", "  auto old = move(table); @@alloc", "  m = nextPrime(2 * m + 1);  table = newTable(m);  n = 0; @@alloc", "  for (int k : keysOf(old)) @@loop", "    put(k); @@put", "}"],
-      python: ["def _rehash(self):", "  old = self.table @@alloc", "  self.m = next_prime(2 * self.m + 1) @@alloc", "  self.table, self.n = self._new_table(self.m), 0 @@alloc", "  for k in keys_of(old): @@loop", "    self.put(k) @@put"],
     },
   };
   /* open addressing: the listings differ only in the probe expression */
@@ -141,8 +114,6 @@
     const P = {
       pseudo: lin ? "(h(k) + i) mod m                // linear probing" : "(h(k) + i²) mod m               // quadratic probing",
       java: lin ? "(hash(k) + i) % m;          // linear probing" : "(hash(k) + i * i) % m;      // quadratic probing",
-      cpp: lin ? "(hash(k) + i) % m;          // linear probing" : "(hash(k) + i * i) % m;      // quadratic probing",
-      python: lin ? "(hash(k) + i) % self.m          # linear probing" : "(hash(k) + i * i) % self.m      # quadratic probing",
     };
     const name = lin ? "linear probing" : "quadratic probing";
     CODE["oa_put_" + mode] = {
@@ -172,35 +143,6 @@
         "  throw new IllegalStateException(\"no free slot\"); @@full",
         "}",
       ],
-      cpp: [
-        "void put(int k) {",
-        "  int tomb = -1; @@init",
-        "  for (int i = 0; i < m; i++) { @@loop",
-        "    int j = " + P.cpp + " @@probe",
-        "    if (table[j] == EMPTY) { @@empty",
-        "      table[tomb >= 0 ? tomb : j] = k;  n++;  return; @@store",
-        "    }",
-        "    if (table[j] == DELETED) { if (tomb < 0) tomb = j; } @@tomb",
-        "    else if (table[j] == k) return; @@dup",
-        "  }",
-        "  throw runtime_error(\"no free slot\"); @@full",
-        "}",
-      ],
-      python: [
-        "def put(self, k):",
-        "  tomb = -1 @@init",
-        "  for i in range(self.m): @@loop",
-        "    j = " + P.python + " @@probe",
-        "    if self.table[j] is EMPTY: @@empty",
-        "      self.table[tomb if tomb >= 0 else j] = k @@store",
-        "      self.n += 1 @@store",
-        "      return @@store",
-        "    if self.table[j] is DELETED: @@tomb",
-        "      if tomb < 0: tomb = j @@tomb",
-        "    elif self.table[j] == k: @@dup",
-        "      return @@dup",
-        "  raise RuntimeError('no free slot') @@full",
-      ],
     };
     CODE["oa_get_" + mode] = {
       title: "get(k) — " + name,
@@ -224,29 +166,6 @@
         "  return false; @@miss",
         "}",
       ],
-      cpp: [
-        "bool get(int k) const {",
-        "  for (int i = 0; i < m; i++) { @@loop",
-        "    int j = " + P.cpp + " @@probe",
-        "    if (table[j] == EMPTY) return false; @@empty",
-        "    if (table[j] == DELETED) continue; @@tomb",
-        "    if (table[j] == k) return true; @@found",
-        "  }",
-        "  return false; @@miss",
-        "}",
-      ],
-      python: [
-        "def get(self, k):",
-        "  for i in range(self.m): @@loop",
-        "    j = " + P.python + " @@probe",
-        "    if self.table[j] is EMPTY: @@empty",
-        "      return False @@empty",
-        "    if self.table[j] is DELETED: @@tomb",
-        "      continue @@tomb",
-        "    if self.table[j] == k: @@found",
-        "      return True @@found",
-        "  return False @@miss",
-      ],
     };
     CODE["oa_remove_" + mode] = {
       title: "remove(k) — " + name,
@@ -267,27 +186,6 @@
         "  }",
         "} @@miss",
       ],
-      cpp: [
-        "void remove(int k) {",
-        "  for (int i = 0; i < m; i++) { @@loop",
-        "    int j = " + P.cpp + " @@probe",
-        "    if (table[j] == EMPTY) return; @@empty",
-        "    if (table[j] == k) { table[j] = DELETED;  n--;  return; } @@found",
-        "  }",
-        "} @@miss",
-      ],
-      python: [
-        "def remove(self, k):",
-        "  for i in range(self.m): @@loop",
-        "    j = " + P.python + " @@probe",
-        "    if self.table[j] is EMPTY: @@empty",
-        "      return @@empty",
-        "    if self.table[j] == k: @@found",
-        "      self.table[j] = DELETED @@found",
-        "      self.n -= 1 @@found",
-        "      return @@found",
-        "  # not present @@miss",
-      ],
     };
   }
   oaCode("linear");
@@ -302,8 +200,6 @@
       java: map(L.java, (t) => t.replace(/\bint k\b/g, "String k").replace("(int x : table[b])", "(String x : table[b])")
         .replace("x == k", "x.equals(k)").replace("it.next() == k", "it.next().equals(k)").replace("table[j] == k", "k.equals(table[j])")
         .replace("Iterator<Integer>", "Iterator<String>")),
-      cpp: map(L.cpp, (t) => t.replace(/\bint k\b/g, "const string& k").replace("(int x : table[b])", "(const string& x : table[b])")),
-      python: map(L.python, (t) => t.replace(/\bhash\(k\)/g, "poly_hash(k)")),
     };
   }
   Object.keys(CODE).forEach((k) => { CODE[k + "_s"] = strVariant(CODE[k]); });
@@ -317,27 +213,12 @@
       "  return h @@ret",
     ],
     java: [
-      "int hash(String s) {            // same value as s.hashCode()",
+      "static int hash(String s) {     // same value as s.hashCode()",
       "  int h = 0; @@init",
       "  for (int i = 0; i < s.length(); i++) @@loop",
       "    h = 31 * h + s.charAt(i);     // int overflow wraps around @@step",
       "  return h; @@ret",
       "}",
-    ],
-    cpp: [
-      "int32_t hash(const string& s) {",
-      "  uint32_t h = 0;                 // unsigned, so wrap-around is well defined @@init",
-      "  for (unsigned char c : s) @@loop",
-      "    h = 31 * h + c; @@step",
-      "  return (int32_t) h;             // the same bits as Java's int @@ret",
-      "}",
-    ],
-    python: [
-      "def poly_hash(s):               # Python's own hash() of a str changes every run",
-      "  h = 0 @@init",
-      "  for c in s: @@loop",
-      "    h = (31 * h + ord(c)) & 0xFFFFFFFF      # keep 32 bits @@step",
-      "  return h - (1 << 32) if h >= (1 << 31) else h   # signed, like Java @@ret",
     ],
   };
   const listing = (op) => (op === "rehash" ? "rehash" : T.mode === "chain" ? "ch_" + op : "oa_" + op + "_" + T.mode) + (T.keyType === "str" ? "_s" : "");
@@ -345,26 +226,93 @@
   /* ---- specs ---- */
   {
     const M = (t) => "<span class='mono'>" + t + "</span>";
-    const keyP = (str) => M("k") + (str ? " — a String key" : " — an int key");
+    const keyP = (str) => M("k") + (str ? " — a String key" : " — an int key (negative keys are fine; floorMod keeps the index in range)");
     const eq = (str) => (str ? " Keys are compared with " + M("equals") + ", never " + M("==") + ", which would only compare references." : "");
     const specs = {};
     [false, true].forEach((str) => {
       const sfx = str ? "_s" : "";
       const h = str ? "the polynomial hash of k" : "k itself";
-      specs["ch_put" + sfx] = { does: "Adds key k to bucket " + M("h(k) mod m") + "'s list unless it is already there, then rehashes if the load factor is too high." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "none", cost: "O(1 + α) expected; O(n) if everything collides. h(k) is " + h + "." };
-      specs["ch_get" + sfx] = { does: "Walks bucket " + M("h(k) mod m") + "'s list looking for k." + eq(str), params: keyP(str), returns: "true if k is in the table", errors: "none", cost: "O(1 + α) expected" };
-      specs["ch_remove" + sfx] = { does: "Unlinks k from its bucket's list, if present. No tombstones are needed." + eq(str), params: keyP(str), returns: "nothing (a missing key is ignored)", errors: "none", cost: "O(1 + α) expected" };
-      specs["rehash" + sfx] = { does: "Allocates a table of the next prime size above 2m and re-inserts every key; tombstones are dropped.", params: "none", returns: "nothing", errors: "none", cost: "Θ(n + m) — rare enough that put stays O(1) amortised" };
+      const L = str ? " (plus O(length of k) to hash it)" : "";
+      specs["ch_put" + sfx] = { does: "Adds key k to bucket " + M("h(k) mod m") + "'s list unless it is already there, then rehashes if the load factor is too high. h(k) is " + h + "." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "none", time: "O(n) — if every key lands in the same bucket, or when the put triggers a rehash; O(1 + α) expected" + L, space: "O(1) — one list node (O(n + m) during a rehash)" };
+      specs["ch_get" + sfx] = { does: "Walks bucket " + M("h(k) mod m") + "'s list looking for k." + eq(str), params: keyP(str), returns: "true if k is in the table", errors: "none", time: "O(n) — if every key collides into one chain; O(1 + α) expected" + L, space: "O(1)" };
+      specs["ch_remove" + sfx] = { does: "Unlinks k from its bucket's list, if present. No tombstones are needed." + eq(str), params: keyP(str), returns: "nothing (a missing key is ignored)", errors: "none", time: "O(n) — if every key collides into one chain; O(1 + α) expected" + L, space: "O(1)" };
+      specs["rehash" + sfx] = { does: "Allocates a table of the next prime size above 2m and re-inserts every key; tombstones are dropped.", params: "none", returns: "nothing", errors: "none", time: "O(n + m) — every key is re-inserted", space: "O(n + m) — the new table" };
       ["linear", "quad"].forEach((mode) => {
         const how = mode === "linear" ? "the next slot, i = 1, 2, 3 …" : "offsets i² = 1, 4, 9 …";
-        specs["oa_put_" + mode + sfx] = { does: "Probes from " + M("h(k) mod m") + ", trying " + how + ", and stores k in the first EMPTY slot (or the first tombstone passed)." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "no free slot found — the table is full" + (mode === "quad" ? ", or quadratic probing missed the free slots (possible when α ≥ ½)" : ""), cost: "O(1) expected while α stays small; O(n) worst case" };
-        specs["oa_get_" + mode + sfx] = { does: "Follows the same probe sequence as put until it finds k or an EMPTY slot. Tombstones do not stop it." + eq(str), params: keyP(str), returns: "true if k is in the table", errors: "none", cost: "O(1) expected; O(n) worst case" };
-        specs["oa_remove_" + mode + sfx] = { does: "Finds k along its probe sequence and replaces it with a DELETED tombstone, so later searches still pass through." + eq(str), params: keyP(str), returns: "nothing (a missing key is ignored)", errors: "none", cost: "O(1) expected; O(n) worst case" };
+        specs["oa_put_" + mode + sfx] = { does: "Probes from " + M("h(k) mod m") + ", trying " + how + ", and stores k in the first EMPTY slot (or the first tombstone passed)." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "no free slot found — the table is full" + (mode === "quad" ? ", or quadratic probing missed the free slots (possible when α ≥ ½)" : ""), time: "O(m) — a probe can visit every slot; O(1) expected while α stays small" + L, space: "O(1)" };
+        specs["oa_get_" + mode + sfx] = { does: "Follows the same probe sequence as put until it finds k or an EMPTY slot. Tombstones do not stop it." + eq(str), params: keyP(str), returns: "true if k is in the table", errors: "none", time: "O(m) — a probe can visit every slot; O(1) expected" + L, space: "O(1)" };
+        specs["oa_remove_" + mode + sfx] = { does: "Finds k along its probe sequence and replaces it with a DELETED tombstone, so later searches still pass through." + eq(str), params: keyP(str), returns: "nothing (a missing key is ignored)", errors: "none", time: "O(m) — a probe can visit every slot; O(1) expected" + L, space: "O(1)" };
       });
     });
-    specs.hash_s = { does: "Turns a string into an int: h = 31·h + code(c) for each character. Position matters, so anagrams hash differently; different strings can still collide (\"Aa\" and \"BB\" both give 2112).", params: M("s") + " — the string", returns: "a 32-bit int, possibly negative after overflow — that is why the table uses floorMod", errors: "none", cost: "O(length of s); Java caches the result inside the String", callVals: { s: '"cat"' } };
+    specs.hash_s = { does: "Turns a string into an int: h = 31·h + code(c) for each character. Position matters, so anagrams hash differently; different strings can still collide (\"Aa\" and \"BB\" both give 2112).", params: M("s") + " — the string", returns: "a 32-bit int, possibly negative after overflow — that is why the table uses floorMod", errors: "none", time: "O(length of s) — Java caches the result inside the String", space: "O(1)", callVals: { s: '"cat"' } };
     D.specs(CODE, specs);
   }
+
+  /* ---- classes: the fields every method uses (rehash is shared, so it follows the table on screen) ---- */
+  function classFor(mode, str) {
+    const K = str ? "String" : "Integer";
+    if (mode === "chain") return {
+      name: "ChainingHashTable",
+      note: "Bucket b is a linked list of every key whose hash lands on b.",
+      pseudo: [
+        "class ChainingHashTable:",
+        "  bucket                     // array of m lists; bucket[b] holds the keys that hash to b",
+        "  m                          // number of buckets (a prime)",
+        "  n                          // number of keys stored",
+        "  maxLoad                    // rehash when n / m goes above this",
+        "",
+        "  constructor(m):",
+        "    bucket ← array of m empty lists;  n ← 0",
+      ],
+      java: [
+        "public class ChainingHashTable {",
+        "  private LinkedList<" + K + ">[] table;   // table[b] = the keys that hash to bucket b",
+        "  private int m;                     // number of buckets (a prime)",
+        "  private int n;                     // number of keys stored",
+        "  private static final double MAX_LOAD = 0.9;",
+        "",
+        "  public ChainingHashTable(int m) {  // constructor: new ChainingHashTable(11)",
+        "    this.m = m;  n = 0;",
+        "    table = new LinkedList[m];",
+        "    for (int b = 0; b < m; b++) table[b] = new LinkedList<>();",
+        "  }",
+        "  // put, get, remove and rehash (below) use table, m and n",
+        "}",
+      ] };
+    const lin = mode === "linear";
+    return {
+      name: lin ? "LinearProbingTable" : "QuadraticProbingTable",
+      note: "Every key lives in the array itself. EMPTY is a slot never used; DELETED is a tombstone left by remove.",
+      pseudo: [
+        "class " + (lin ? "LinearProbingTable" : "QuadraticProbingTable") + ":",
+        "  T                          // array of m slots: a key, EMPTY or DELETED",
+        "  m                          // number of slots (a prime)",
+        "  n                          // number of keys stored",
+        "",
+        "  constructor(m):",
+        "    T ← array of m EMPTY slots;  n ← 0",
+      ],
+      java: [
+        "public class " + (lin ? "LinearProbingTable" : "QuadraticProbingTable") + " {",
+        "  private static final " + K + " EMPTY = null;                 // a slot never used",
+        "  private static final " + K + " DELETED = " + (str ? "new String(\"☠\")" : "Integer.MIN_VALUE") + ";   // a tombstone",
+        "  private " + K + "[] table;   // m slots, each a key, EMPTY or DELETED",
+        "  private int m;               // number of slots (a prime)",
+        "  private int n;               // number of keys stored",
+        "",
+        "  public " + (lin ? "LinearProbingTable" : "QuadraticProbingTable") + "(int m) {",
+        "    this.m = m;  n = 0;  table = new " + K + "[m];   // every slot starts EMPTY",
+        "  }",
+        "  // put, get, remove and rehash (below) use table, m and n",
+        "}",
+      ] };
+  }
+  Object.keys(CODE).forEach((k) => {
+    if (k === "hash_s" || /^rehash/.test(k)) return;
+    const str = /_s$/.test(k);
+    CODE[k].cls = classFor(/^ch_/.test(k) ? "chain" : /_linear/.test(k) ? "linear" : "quad", str);
+  });
+  const shareClass = () => { CODE.rehash.cls = classFor(T.mode, false); CODE.rehash_s.cls = classFor(T.mode, true); };
 
   /* ---------------- recorder ---------------- */
   function Ctx(limit) {
@@ -553,9 +501,9 @@
       c.at("loop").snap({}, "Next old key: " + fmtk(k) + ".");
       if (T.mode === "chain") { T.slots[h1(k, T.m)].unshift(k); T.n++; }
       else { for (let i = 0; i < T.m; i++) { const p = probeAt(k, i); if (T.slots[p] === null) { T.slots[p] = k; T.n++; break; } } }
-      c.at("put").snap({ [h1(k, T.m)]: "done" }, "put(" + fmtk(k) + "): h(k) mod " + T.m + " = " + h1(k, T.m) + ". Every hash changes when m changes, so every key has to move. That is why rehashing costs Θ(n).");
+      c.at("put").snap({ [h1(k, T.m)]: "done" }, "put(" + fmtk(k) + "): h(k) mod " + T.m + " = " + h1(k, T.m) + ". Every hash changes when m changes, so every key has to move. That is why rehashing costs O(n + m) time.");
     });
-    c.at("loop").snap({}, "Rehash complete. α is back down to " + alpha().toFixed(2) + ". Because the table roughly doubles, rehashes are rare enough that put stays <b>O(1) amortised</b>.");
+    c.at("loop").snap({}, "Rehash complete. α is back down to " + alpha().toFixed(2) + ". Because the table roughly doubles, rehashes are rare: most puts never trigger one, though the one that does costs O(n + m).");
   }
 
   /* ---------------- op driver ---------------- */
@@ -570,6 +518,8 @@
     } else if (kind === "delete") {
       if (T.mode === "chain") chainDelete(c, k); else openDelete(c, k);
     } else if (kind === "rehash") {
+      /* each rehash roughly doubles m; past ~50 slots the table no longer fits on screen */
+      if (T.m > 50) { D.toast("The table already has m = " + T.m + " slots. Another rehash would make it about " + (2 * T.m + 1) + ", too big to draw here.", true); return; }
       rehash(c, "Manual rehash requested.");
     }
     T.probesTotal += c.probes;
@@ -587,7 +537,9 @@
       return s;
     }
     if (!s.length) return D.randInt(1, 99);
-    if (/^-?\d+$/.test(s)) return parseInt(s, 10);
+    s = s.replace(/[−–]/g, "-");
+    if (/^[-+]?\d+$/.test(s)) return parseInt(s, 10);
+    if (/^[-+]?(\d+\.\d*|\.\d+)$/.test(s)) { D.toast("The keys are ints in this code (int k), so " + s + " can't be one. Negative keys like -17 are fine; switch “keys” to Strings for text.", true); return null; }
     D.toast("This table holds integer keys. Switch “keys” to Strings to use words like \"" + s.slice(0, 12) + "\".", true);
     return null;
   }
@@ -646,19 +598,6 @@
       view.appendChild(holder);
     }
 
-    q("t-n").textContent = f.n;
-    q("t-m").textContent = f.m;
-    q("t-alpha").textContent = f.alpha.toFixed(2);
-    q("t-probes").textContent = f.probes;
-    q("t-avg").textContent = T.opsTotal ? (T.probesTotal / T.opsTotal).toFixed(2) : "–";
-    if (f.mode === "chain") {
-      const lens = f.slots.map((s) => s.length);
-      q("t-extra-k").textContent = "longest chain";
-      q("t-extra").textContent = lens.length ? Math.max.apply(null, lens) : 0;
-    } else {
-      q("t-extra-k").textContent = "tombstones";
-      q("t-extra").textContent = f.slots.filter((s) => s === TOMB).length;
-    }
   }
 
   function still(note) { const c = Ctx(); c.snap({}, note); player.load(c.frames, false); }
@@ -687,44 +626,6 @@
       formula: "index = (h(k) + i²) mod m   for i = 0, 1, 2, …",
     },
   };
-
-  /* ---------------- worked examples ---------------- */
-  function scripted(setup, ops, intro) {
-    fresh(T.m);
-    setup.forEach((k) => { if (T.mode === "chain") { T.slots[h1(k, T.m)].unshift(k); T.n++; } else { for (let i = 0; i < T.m; i++) { const p = probeAt(k, i); if (T.slots[p] === null) { T.slots[p] = k; T.n++; break; } } } });
-    const c = Ctx(3000);
-    c.snap({}, intro);
-    ops.forEach((o) => {
-      if (o[0] === "put") { T.mode === "chain" ? chainInsert(c, o[1]) : openInsert(c, o[1]); }
-      else if (o[0] === "get") { T.mode === "chain" ? chainSearch(c, o[1]) : openSearch(c, o[1]); }
-      else { T.mode === "chain" ? chainDelete(c, o[1]) : openDelete(c, o[1]); }
-    });
-    player.load(c.frames, true);
-  }
-  function examples() {
-    const setM = (m) => { T.m = m; q("msize").value = m; };
-    if (T.keyType === "str") return [
-      { label: "hash a word, letter by letter", desc: "h = 31·h + code(c) for c, a, t", run: () => { setM(11); scripted([], [["put", "cat"]], "String keys have to be turned into a number first. Watch hash(\"cat\") run."); } },
-      { label: "anagrams land apart", desc: "stop, pots, tops, spot, opts: same letters, five different buckets", run: () => { setM(11); scripted([], [["put", "stop"], ["put", "pots"], ["put", "tops"], ["put", "spot"], ["put", "opts"]], "Same letters in different orders. The multiplier 31 makes the position of each letter matter."); } },
-      { label: "\"Aa\" vs \"BB\": same hash", desc: "Different strings, identical hashCode 2112", run: () => { setM(11); scripted([], [["put", "Aa"], ["put", "BB"], ["get", "BB"]], "A classic Java collision: 31·65 + 97 = 31·66 + 66 = 2112. Only equals() can tell them apart."); } },
-      { label: "a negative hash code", desc: "\"polynomial\" overflows 32 bits", run: () => { setM(11); scripted([], [["put", "polynomial"]], "Long strings overflow the int and can come out negative. floorMod keeps the index in range."); } },
-      { label: "three words collide", desc: "dog, owl and emu all land in bucket 6 when m = 11", run: () => { setM(11); scripted([], [["put", "dog"], ["put", "owl"], ["put", "emu"]], "dog, owl and emu hash to different numbers that are all ≡ 6 (mod 11)."); } },
-    ];
-    const base = [
-      { label: "three keys collide", desc: "12, 23 and 34 all hash to 1 when m = 11", run: () => { setM(11); scripted([], [["put", 12], ["put", 23], ["put", 34]], "12, 23 and 34 are all ≡ 1 (mod 11)."); } },
-      { label: "search a missing key", run: () => { setM(11); scripted([12, 23, 34, 5, 16], [["get", 45]], "Five keys in the table; search for one that isn't there."); } },
-    ];
-    if (T.mode === "chain") return base.concat([
-      { label: "delete from a chain", desc: "No tombstones needed", run: () => { setM(11); scripted([12, 23, 34, 7], [["remove", 23], ["get", 12]], "Remove the middle of a chain, then look up a key behind it."); } },
-    ]);
-    return base.concat([
-      { label: "delete, then search past it", desc: "Why tombstones exist", run: () => { setM(11); scripted([12, 23, 34], [["remove", 23], ["get", 34]], "23 sits between 12 and 34 in one probe sequence. Delete it, then search for 34."); } },
-      { label: "reuse a tombstone", run: () => { setM(11); scripted([12, 23, 34], [["remove", 23], ["put", 45]], "After a delete, a new colliding key can reuse the tombstone."); } },
-      T.mode === "linear"
-        ? { label: "primary clustering", desc: "Runs of occupied slots merge", run: () => { setM(13); scripted([], [["put", 1], ["put", 2], ["put", 3], ["put", 14], ["put", 15], ["put", 27]], "Consecutive home slots 1, 2, 3 form a run, and every later key that lands in the run extends it."); } }
-        : { label: "quadratic probe jumps", desc: "Offsets 0, 1, 4, 9, 16 …", run: () => { setM(13); scripted([], [["put", 1], ["put", 14], ["put", 27], ["put", 40]], "Four keys with the same home slot 1 jump 1, 4, 9 away instead of crawling."); } },
-    ]);
-  }
 
   /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
   const PRACTICE = {
@@ -845,8 +746,8 @@
       });
       q("mode-blurb").innerHTML = MODES[id].blurb;
       q("mode-formula").textContent = MODES[id].formula;
+      shareClass();
       dock.show(listing("put"));
-      D.Examples("#examples", examples());
       D.practiceShow(id);
       still("Switched to <b>" + MODES[id].label + "</b> and reinserted the " + keys.length + " existing key(s).");
     });
@@ -859,8 +760,8 @@
       fresh(T.m); T.probesTotal = 0; T.opsTotal = 0;
       q("key").placeholder = t === "str" ? "cat" : "42";
       q("key").value = "";
+      shareClass();
       dock.show(listing("put"));
-      D.Examples("#examples", examples());
       still(t === "str"
         ? "<b>String keys.</b> A string must become a number before it can pick a slot: every operation now calls <b>hash(s)</b> first, and keys are compared with equals(). The table was cleared — it holds one kind of key."
         : "<b>Integer keys.</b> h(k) = k, so the slot is simply k mod m. The table was cleared.");
@@ -871,7 +772,7 @@
     q("op-rehash").addEventListener("click", () => doOp("rehash"));
     q("auto").addEventListener("change", (e) => { T.auto = e.target.checked; });
     q("msize").addEventListener("change", (e) => {
-      const m = D.clamp(parseInt(e.target.value, 10) || 11, 3, 31);
+      const m = D.clamp(D.readInt(e.target) || 11, 3, 31);
       e.target.value = m;
       fresh(m);
       T.probesTotal = 0; T.opsTotal = 0;

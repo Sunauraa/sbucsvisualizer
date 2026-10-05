@@ -22,25 +22,11 @@
         "  S[t] ← x @@write",
       ],
       java: [
-        "void push(int x) {",
+        "void push(double x) {",
         "  if (t == data.length - 1) throw new IllegalStateException(\"full\"); @@full",
         "  t++; @@inc",
         "  data[t] = x; @@write",
         "}",
-      ],
-      cpp: [
-        "void push(int x) {",
-        "  if (t == CAP - 1) throw overflow_error(\"full\"); @@full",
-        "  t++; @@inc",
-        "  data[t] = x; @@write",
-        "}",
-      ],
-      python: [
-        "def push(self, x):",
-        "  if self.t == len(self.data) - 1: @@full",
-        "    raise OverflowError('full') @@full",
-        "  self.t += 1 @@inc",
-        "  self.data[self.t] = x @@write",
       ],
     },
     st_pop: {
@@ -54,47 +40,25 @@
         "  return x @@ret",
       ],
       java: [
-        "int pop() {",
+        "double pop() {",
         "  if (t == -1) throw new EmptyStackException(); @@empty",
-        "  int x = data[t]; @@save",
+        "  double x = data[t]; @@save",
         "  data[t] = 0; @@clear",
         "  t--; @@dec",
         "  return x; @@ret",
         "}",
-      ],
-      cpp: [
-        "int pop() {",
-        "  if (t == -1) throw underflow_error(\"empty\"); @@empty",
-        "  int x = data[t]; @@save",
-        "  data[t] = 0; @@clear",
-        "  t--; @@dec",
-        "  return x; @@ret",
-        "}",
-      ],
-      python: [
-        "def pop(self):",
-        "  if self.t == -1: @@empty",
-        "    raise IndexError('empty') @@empty",
-        "  x = self.data[self.t] @@save",
-        "  self.data[self.t] = None @@clear",
-        "  self.t -= 1 @@dec",
-        "  return x @@ret",
       ],
     },
     st_top: {
       title: "top() — ArrayStack",
       pseudo: ["top():", "  if t == -1: error \"stack is empty\" @@empty", "  return S[t]            // look, don't remove @@ret"],
-      java: ["int top() {", "  if (t == -1) throw new EmptyStackException(); @@empty", "  return data[t]; @@ret", "}"],
-      cpp: ["int top() const {", "  if (t == -1) throw underflow_error(\"empty\"); @@empty", "  return data[t]; @@ret", "}"],
-      python: ["def top(self):", "  if self.t == -1: @@empty", "    raise IndexError('empty') @@empty", "  return self.data[self.t] @@ret"],
+      java: ["double top() {", "  if (t == -1) throw new EmptyStackException(); @@empty", "  return data[t]; @@ret", "}"],
     },
 
     aq_enqueue: {
       title: "enqueue(x) — plain array, front pinned at 0",
       pseudo: ["enqueue(x):", "  if n == capacity: error \"queue is full\" @@full", "  Q[n] ← x @@write", "  n ← n + 1 @@size"],
-      java: ["void enqueue(int x) {", "  if (n == data.length) throw new IllegalStateException(\"full\"); @@full", "  data[n] = x; @@write", "  n++; @@size", "}"],
-      cpp: ["void enqueue(int x) {", "  if (n == CAP) throw overflow_error(\"full\"); @@full", "  data[n] = x; @@write", "  n++; @@size", "}"],
-      python: ["def enqueue(self, x):", "  if self.n == len(self.data): @@full", "    raise OverflowError('full') @@full", "  self.data[self.n] = x @@write", "  self.n += 1 @@size"],
+      java: ["void enqueue(double x) {", "  if (n == data.length) throw new IllegalStateException(\"full\"); @@full", "  data[n] = x; @@write", "  n++; @@size", "}"],
     },
     aq_dequeue: {
       title: "dequeue() — plain array, front pinned at 0",
@@ -108,43 +72,20 @@
         "  return x @@ret",
       ],
       java: [
-        "int dequeue() {",
+        "double dequeue() {",
         "  if (n == 0) throw new NoSuchElementException(); @@empty",
-        "  int x = data[0]; @@save",
+        "  double x = data[0]; @@save",
         "  for (int k = 1; k < n; k++)   // O(n) @@shift",
         "    data[k - 1] = data[k]; @@shift",
         "  n--;  data[n] = 0; @@size",
         "  return x; @@ret",
         "}",
-      ],
-      cpp: [
-        "int dequeue() {",
-        "  if (n == 0) throw underflow_error(\"empty\"); @@empty",
-        "  int x = data[0]; @@save",
-        "  for (int k = 1; k < n; k++)   // O(n) @@shift",
-        "    data[k - 1] = data[k]; @@shift",
-        "  n--;  data[n] = 0; @@size",
-        "  return x; @@ret",
-        "}",
-      ],
-      python: [
-        "def dequeue(self):",
-        "  if self.n == 0: @@empty",
-        "    raise IndexError('empty') @@empty",
-        "  x = self.data[0] @@save",
-        "  for k in range(1, self.n):   # O(n) @@shift",
-        "    self.data[k - 1] = self.data[k] @@shift",
-        "  self.n -= 1 @@size",
-        "  self.data[self.n] = None @@size",
-        "  return x @@ret",
       ],
     },
     dr_enqueue: {
       title: "enqueue(x) — plain array, no wrap-around",
       pseudo: ["enqueue(x):", "  if rear == capacity: error \"full\"     // even if front > 0! @@full", "  Q[rear] ← x @@write", "  rear ← rear + 1 @@size"],
-      java: ["void enqueue(int x) {", "  if (rear == data.length) throw new IllegalStateException(\"full\"); @@full", "  data[rear] = x; @@write", "  rear++; @@size", "}"],
-      cpp: ["void enqueue(int x) {", "  if (rear == CAP) throw overflow_error(\"full\"); @@full", "  data[rear] = x; @@write", "  rear++; @@size", "}"],
-      python: ["def enqueue(self, x):", "  if self.rear == len(self.data): @@full", "    raise OverflowError('full') @@full", "  self.data[self.rear] = x @@write", "  self.rear += 1 @@size"],
+      java: ["void enqueue(double x) {", "  if (rear == data.length) throw new IllegalStateException(\"full\"); @@full", "  data[rear] = x; @@write", "  rear++; @@size", "}"],
     },
     dr_dequeue: {
       title: "dequeue() — plain array, no wrap-around",
@@ -155,17 +96,7 @@
         "  front ← front + 1           // that slot is never used again @@adv",
         "  return x @@ret",
       ],
-      java: ["int dequeue() {", "  if (front == rear) throw new NoSuchElementException(); @@empty", "  int x = data[front];  data[front] = 0; @@save", "  front++; @@adv", "  return x; @@ret", "}"],
-      cpp: ["int dequeue() {", "  if (front == rear) throw underflow_error(\"empty\"); @@empty", "  int x = data[front];  data[front] = 0; @@save", "  front++; @@adv", "  return x; @@ret", "}"],
-      python: [
-        "def dequeue(self):",
-        "  if self.front == self.rear: @@empty",
-        "    raise IndexError('empty') @@empty",
-        "  x = self.data[self.front] @@save",
-        "  self.data[self.front] = None @@save",
-        "  self.front += 1 @@adv",
-        "  return x @@ret",
-      ],
+      java: ["double dequeue() {", "  if (front == rear) throw new NoSuchElementException(); @@empty", "  double x = data[front];  data[front] = 0; @@save", "  front++; @@adv", "  return x; @@ret", "}"],
     },
 
     cq_enqueue: {
@@ -178,28 +109,12 @@
         "  size ← size + 1 @@size",
       ],
       java: [
-        "void enqueue(int x) {",
+        "void enqueue(double x) {",
         "  if (size == data.length) throw new IllegalStateException(\"full\"); @@full",
         "  int avail = (front + size) % data.length; @@avail",
         "  data[avail] = x; @@write",
         "  size++; @@size",
         "}",
-      ],
-      cpp: [
-        "void enqueue(int x) {",
-        "  if (size == CAP) throw overflow_error(\"full\"); @@full",
-        "  int avail = (front + size) % CAP; @@avail",
-        "  data[avail] = x; @@write",
-        "  size++; @@size",
-        "}",
-      ],
-      python: [
-        "def enqueue(self, x):",
-        "  if self.size == len(self.data): @@full",
-        "    raise OverflowError('full') @@full",
-        "  avail = (self.front + self.size) % len(self.data) @@avail",
-        "  self.data[avail] = x @@write",
-        "  self.size += 1 @@size",
       ],
     },
     cq_dequeue: {
@@ -213,40 +128,19 @@
         "  return x @@ret",
       ],
       java: [
-        "int dequeue() {",
+        "double dequeue() {",
         "  if (size == 0) throw new NoSuchElementException(); @@empty",
-        "  int x = data[front];  data[front] = 0; @@save",
+        "  double x = data[front];  data[front] = 0; @@save",
         "  front = (front + 1) % data.length; @@adv",
         "  size--; @@size",
         "  return x; @@ret",
         "}",
       ],
-      cpp: [
-        "int dequeue() {",
-        "  if (size == 0) throw underflow_error(\"empty\"); @@empty",
-        "  int x = data[front];  data[front] = 0; @@save",
-        "  front = (front + 1) % CAP; @@adv",
-        "  size--; @@size",
-        "  return x; @@ret",
-        "}",
-      ],
-      python: [
-        "def dequeue(self):",
-        "  if self.size == 0: @@empty",
-        "    raise IndexError('empty') @@empty",
-        "  x = self.data[self.front] @@save",
-        "  self.data[self.front] = None @@save",
-        "  self.front = (self.front + 1) % len(self.data) @@adv",
-        "  self.size -= 1 @@size",
-        "  return x @@ret",
-      ],
     },
     cq_first: {
       title: "first() — circular array",
       pseudo: ["first():", "  if size == 0: return null @@empty", "  return Q[front] @@ret"],
-      java: ["Integer first() {", "  if (size == 0) return null; @@empty", "  return data[front]; @@ret", "}"],
-      cpp: ["optional<int> first() const {", "  if (size == 0) return nullopt; @@empty", "  return data[front]; @@ret", "}"],
-      python: ["def first(self):", "  if self.size == 0: @@empty", "    return None @@empty", "  return self.data[self.front] @@ret"],
+      java: ["Double first() {", "  if (size == 0) return null; @@empty", "  return data[front]; @@ret", "}"],
     },
 
     dq_addFirst: {
@@ -259,49 +153,24 @@
         "  size ← size + 1 @@size",
       ],
       java: [
-        "void addFirst(int x) {",
+        "void addFirst(double x) {",
         "  if (size == data.length) throw new IllegalStateException(\"full\"); @@full",
         "  front = (front - 1 + data.length) % data.length; @@idx",
         "  data[front] = x; @@write",
         "  size++; @@size",
         "}",
       ],
-      cpp: [
-        "void addFirst(int x) {",
-        "  if (size == CAP) throw overflow_error(\"full\"); @@full",
-        "  front = (front - 1 + CAP) % CAP; @@idx",
-        "  data[front] = x; @@write",
-        "  size++; @@size",
-        "}",
-      ],
-      python: [
-        "def add_first(self, x):",
-        "  if self.size == len(self.data): @@full",
-        "    raise OverflowError('full') @@full",
-        "  self.front = (self.front - 1) % len(self.data)  # Python % is never negative @@idx",
-        "  self.data[self.front] = x @@write",
-        "  self.size += 1 @@size",
-      ],
     },
     dq_addLast: {
       title: "addLast(x) — circular deque",
       pseudo: ["addLast(x):", "  if size == capacity: error \"full\" @@full", "  avail ← (front + size) mod capacity @@idx", "  D[avail] ← x @@write", "  size ← size + 1 @@size"],
       java: [
-        "void addLast(int x) {",
+        "void addLast(double x) {",
         "  if (size == data.length) throw new IllegalStateException(\"full\"); @@full",
         "  int avail = (front + size) % data.length; @@idx",
         "  data[avail] = x; @@write",
         "  size++; @@size",
         "}",
-      ],
-      cpp: ["void addLast(int x) {", "  if (size == CAP) throw overflow_error(\"full\"); @@full", "  int avail = (front + size) % CAP; @@idx", "  data[avail] = x; @@write", "  size++; @@size", "}"],
-      python: [
-        "def add_last(self, x):",
-        "  if self.size == len(self.data): @@full",
-        "    raise OverflowError('full') @@full",
-        "  avail = (self.front + self.size) % len(self.data) @@idx",
-        "  self.data[avail] = x @@write",
-        "  self.size += 1 @@size",
       ],
     },
     dq_removeFirst: {
@@ -315,32 +184,13 @@
         "  return x @@ret",
       ],
       java: [
-        "int removeFirst() {",
+        "double removeFirst() {",
         "  if (size == 0) throw new NoSuchElementException(); @@empty",
-        "  int x = data[front];  data[front] = 0; @@save",
+        "  double x = data[front];  data[front] = 0; @@save",
         "  front = (front + 1) % data.length; @@adv",
         "  size--; @@size",
         "  return x; @@ret",
         "}",
-      ],
-      cpp: [
-        "int removeFirst() {",
-        "  if (size == 0) throw underflow_error(\"empty\"); @@empty",
-        "  int x = data[front];  data[front] = 0; @@save",
-        "  front = (front + 1) % CAP; @@adv",
-        "  size--; @@size",
-        "  return x; @@ret",
-        "}",
-      ],
-      python: [
-        "def remove_first(self):",
-        "  if self.size == 0: @@empty",
-        "    raise IndexError('empty') @@empty",
-        "  x = self.data[self.front] @@save",
-        "  self.data[self.front] = None @@save",
-        "  self.front = (self.front + 1) % len(self.data) @@adv",
-        "  self.size -= 1 @@size",
-        "  return x @@ret",
       ],
     },
     dq_removeLast: {
@@ -354,32 +204,13 @@
         "  return x @@ret",
       ],
       java: [
-        "int removeLast() {",
+        "double removeLast() {",
         "  if (size == 0) throw new NoSuchElementException(); @@empty",
         "  int back = (front + size - 1) % data.length; @@idx",
-        "  int x = data[back];  data[back] = 0; @@save",
+        "  double x = data[back];  data[back] = 0; @@save",
         "  size--; @@size",
         "  return x; @@ret",
         "}",
-      ],
-      cpp: [
-        "int removeLast() {",
-        "  if (size == 0) throw underflow_error(\"empty\"); @@empty",
-        "  int back = (front + size - 1) % CAP; @@idx",
-        "  int x = data[back];  data[back] = 0; @@save",
-        "  size--; @@size",
-        "  return x; @@ret",
-        "}",
-      ],
-      python: [
-        "def remove_last(self):",
-        "  if self.size == 0: @@empty",
-        "    raise IndexError('empty') @@empty",
-        "  back = (self.front + self.size - 1) % len(self.data) @@idx",
-        "  x = self.data[back] @@save",
-        "  self.data[back] = None @@save",
-        "  self.size -= 1 @@size",
-        "  return x @@ret",
       ],
     },
 
@@ -396,7 +227,7 @@
         "  return S is empty                        // anything left was never closed @@end",
       ],
       java: [
-        "boolean isBalanced(String s) {",
+        "static boolean isBalanced(String s) {",
         "  Deque<Character> st = new ArrayDeque<>(); @@init",
         "  for (char c : s.toCharArray()) { @@loop",
         "    if (\"([{\".indexOf(c) >= 0) st.push(c); @@push",
@@ -407,34 +238,6 @@
         "  }",
         "  return st.isEmpty(); @@end",
         "}",
-      ],
-      cpp: [
-        "bool isBalanced(const string& s) {",
-        "  stack<char> st; @@init",
-        "  const string open = \"([{\", close = \")]}\";",
-        "  for (char c : s) { @@loop",
-        "    if (open.find(c) != string::npos) st.push(c); @@push",
-        "    else if (close.find(c) != string::npos) { @@closer",
-        "      if (st.empty()) return false; @@emptyfail",
-        "      char top = st.top();  st.pop(); @@match",
-        "      if (open.find(top) != close.find(c)) return false; @@match,mismatch",
-        "    }",
-        "  }",
-        "  return st.empty(); @@end",
-        "}",
-      ],
-      python: [
-        "def is_balanced(s):",
-        "  st = [] @@init",
-        "  for c in s: @@loop",
-        "    if c in '([{': @@push",
-        "      st.append(c) @@push",
-        "    elif c in ')]}': @@closer",
-        "      if not st: @@emptyfail",
-        "        return False @@emptyfail",
-        "      if '([{'.index(st.pop()) != ')]}'.index(c): @@match",
-        "        return False @@mismatch",
-        "  return not st @@end",
       ],
     },
     postfix: {
@@ -450,7 +253,7 @@
         "  return S.pop()                       // exactly one value should remain @@end",
       ],
       java: [
-        "double evalPostfix(String[] tokens) {",
+        "static double evalPostfix(String[] tokens) {",
         "  Deque<Double> st = new ArrayDeque<>(); @@init",
         "  for (String t : tokens) { @@loop",
         "    if (isNumber(t)) st.push(Double.parseDouble(t)); @@push",
@@ -462,31 +265,6 @@
         "  return st.pop(); @@end",
         "}",
       ],
-      cpp: [
-        "double evalPostfix(const vector<string>& tokens) {",
-        "  stack<double> st; @@init",
-        "  for (const string& t : tokens) { @@loop",
-        "    if (isNumber(t)) st.push(stod(t)); @@push",
-        "    else { @@op",
-        "      double b = st.top();  st.pop(); @@pop",
-        "      double a = st.top();  st.pop(); @@pop",
-        "      st.push(apply(t, a, b)); @@apply",
-        "    }",
-        "  }",
-        "  return st.top(); @@end",
-        "}",
-      ],
-      python: [
-        "def eval_postfix(tokens):",
-        "  st = [] @@init",
-        "  for t in tokens: @@loop",
-        "    if is_number(t): @@push",
-        "      st.append(float(t)) @@push",
-        "    else: @@op",
-        "      b, a = st.pop(), st.pop() @@pop",
-        "      st.append(apply(t, a, b)) @@apply",
-        "  return st.pop() @@end",
-      ],
     },
   };
 
@@ -494,24 +272,159 @@
      SPECS
      ============================================================ */
   const M = (t) => "<span class='mono'>" + t + "</span>";
+  const O1 = { time: "O(1)", space: "O(1)" };
   D.specs(CODE, {
-    st_push: { does: "Pushes " + M("x") + " onto the top of an array-backed stack.", params: M("x") + " — the value", returns: "nothing", errors: "stack overflow when the array is full (t == capacity − 1)", cost: "O(1)" },
-    st_pop: { does: "Removes and returns the top element — the one pushed most recently (LIFO).", params: "none", returns: "the former top", errors: "stack underflow when empty (t == −1)", cost: "O(1)" },
-    st_top: { does: "Returns the top element without removing it (also called peek).", params: "none", returns: "the top element", errors: "empty-stack error when t == −1", cost: "O(1)" },
-    aq_enqueue: { does: "Adds " + M("x") + " at the rear of a queue whose front is pinned at index 0.", params: M("x") + " — the value", returns: "nothing", errors: "queue is full when n == capacity", cost: "O(1)" },
-    aq_dequeue: { does: "Removes and returns the front, then shifts every other element one slot forward so the front stays at 0.", params: "none", returns: "the former front (FIFO)", errors: "queue is empty when n == 0", cost: "O(n) — the shifting is the problem a circular array solves" },
-    dr_enqueue: { does: "Adds " + M("x") + " at the rear; front and rear only ever move right.", params: M("x") + " — the value", returns: "nothing", errors: "reports full once rear reaches the end, even if the front has freed slots", cost: "O(1)" },
-    dr_dequeue: { does: "Removes and returns the front by moving the front index right — no shifting.", params: "none", returns: "the former front", errors: "queue is empty when front == rear", cost: "O(1), but freed slots are never reused" },
-    cq_enqueue: { does: "Adds " + M("x") + " at the rear of a circular array, at " + M("(front + size) mod capacity") + ".", params: M("x") + " — the value", returns: "nothing", errors: "queue is full when size == capacity", cost: "O(1)" },
-    cq_dequeue: { does: "Removes and returns the front, then advances front with wrap-around.", params: "none", returns: "the former front (FIFO)", errors: "queue is empty when size == 0", cost: "O(1), and every slot gets reused" },
-    cq_first: { does: "Returns the front element without removing it.", params: "none", returns: "the front, or null if the queue is empty", errors: "none (null when empty)", cost: "O(1)" },
-    dq_addFirst: { does: "Adds " + M("x") + " at the front of a circular deque by stepping front back one slot (mod capacity).", params: M("x") + " — the value", returns: "nothing", errors: "deque is full when size == capacity", cost: "O(1)" },
-    dq_addLast: { does: "Adds " + M("x") + " at the back, at " + M("(front + size) mod capacity") + ".", params: M("x") + " — the value", returns: "nothing", errors: "deque is full when size == capacity", cost: "O(1)" },
-    dq_removeFirst: { does: "Removes and returns the front element and advances front.", params: "none", returns: "the former front", errors: "deque is empty when size == 0", cost: "O(1)" },
-    dq_removeLast: { does: "Removes and returns the back element; front does not move.", params: "none", returns: "the former back", errors: "deque is empty when size == 0", cost: "O(1)" },
-    brackets: { does: "Checks that every (, [ and { is closed by the matching bracket in the right order, using a stack of open brackets.", params: M("s") + " — any string; other characters are ignored", returns: "true if balanced, false otherwise", errors: "none — mismatches return false", cost: "O(n) time, O(n) stack space in the worst case", callVals: { s: '"{[()()]}"' } },
-    postfix: { does: "Evaluates a postfix (reverse Polish) expression with a stack of operands.", params: M("tokens") + " — numbers and operators + − × ÷ % ^", returns: "the value of the expression", errors: "malformed if an operator finds fewer than 2 operands, or more than one value is left; division by zero", cost: "O(n)", callVals: { tokens: { pseudo: "[5, 1, 2, +, 4, *, +, 3, −]", java: 'new String[]{"5", "1", "2", "+"}', cpp: '{"5", "1", "2", "+"}', python: '["5", "1", "2", "+"]' } } },
+    st_push: Object.assign({ does: "Pushes " + M("x") + " onto the top of an array-backed stack.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "stack overflow when the array is full (t == capacity − 1)" }, O1),
+    st_pop: Object.assign({ does: "Removes and returns the top element — the one pushed most recently (LIFO).", params: "none", returns: "the former top", errors: "stack underflow when empty (t == −1)" }, O1),
+    st_top: Object.assign({ does: "Returns the top element without removing it (also called peek).", params: "none", returns: "the top element", errors: "empty-stack error when t == −1" }, O1),
+    aq_enqueue: Object.assign({ does: "Adds " + M("x") + " at the rear of a queue whose front is pinned at index 0.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "queue is full when n == capacity" }, O1),
+    aq_dequeue: { does: "Removes and returns the front, then shifts every other element one slot forward so the front stays at 0.", params: "none", returns: "the former front (FIFO)", errors: "queue is empty when n == 0", time: "O(n) — the n − 1 elements behind the front all shift; this is the problem a circular array solves", space: "O(1)" },
+    dr_enqueue: Object.assign({ does: "Adds " + M("x") + " at the rear; front and rear only ever move right.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "reports full once rear reaches the end, even if the front has freed slots" }, O1),
+    dr_dequeue: { does: "Removes and returns the front by moving the front index right — no shifting.", params: "none", returns: "the former front", errors: "queue is empty when front == rear", time: "O(1) — but the freed slot is never reused", space: "O(1)" },
+    cq_enqueue: Object.assign({ does: "Adds " + M("x") + " at the rear of a circular array, at " + M("(front + size) mod capacity") + ".", params: M("x") + " — the value (any number)", returns: "nothing", errors: "queue is full when size == capacity" }, O1),
+    cq_dequeue: { does: "Removes and returns the front, then advances front with wrap-around.", params: "none", returns: "the former front (FIFO)", errors: "queue is empty when size == 0", time: "O(1) — and every slot gets reused", space: "O(1)" },
+    cq_first: Object.assign({ does: "Returns the front element without removing it.", params: "none", returns: "the front, or null if the queue is empty", errors: "none (null when empty)" }, O1),
+    dq_addFirst: Object.assign({ does: "Adds " + M("x") + " at the front of a circular deque by stepping front back one slot (mod capacity).", params: M("x") + " — the value (any number)", returns: "nothing", errors: "deque is full when size == capacity" }, O1),
+    dq_addLast: Object.assign({ does: "Adds " + M("x") + " at the back, at " + M("(front + size) mod capacity") + ".", params: M("x") + " — the value (any number)", returns: "nothing", errors: "deque is full when size == capacity" }, O1),
+    dq_removeFirst: Object.assign({ does: "Removes and returns the front element and advances front.", params: "none", returns: "the former front", errors: "deque is empty when size == 0" }, O1),
+    dq_removeLast: Object.assign({ does: "Removes and returns the back element; front does not move.", params: "none", returns: "the former back", errors: "deque is empty when size == 0" }, O1),
+    brackets: { does: "Checks that every (, [ and { is closed by the matching bracket in the right order, using a stack of open brackets.", params: M("s") + " — any string; other characters are ignored", returns: "true if balanced, false otherwise", errors: "none — mismatches return false", time: "O(n) — one pass over the n characters", space: "O(n) — the stack can end up holding every character", callVals: { s: '"{[()()]}"' } },
+    postfix: { does: "Evaluates a postfix (reverse Polish) expression with a stack of operands.", params: M("tokens") + " — numbers (negative and decimal allowed) and operators + − × ÷ % ^", returns: "the value of the expression", errors: "malformed if an operator finds fewer than 2 operands, or more than one value is left; division by zero", time: "O(n) — one pass over the n tokens", space: "O(n) — the operand stack", callVals: { tokens: { pseudo: "[5, 1, 2, +, 4, *, +, 3, −]", java: 'new String[]{"5", "1", "2", "+"}' } } },
   });
+
+  /* ============================================================
+     CLASSES — the fields each method above reads and writes
+     ============================================================ */
+  D.classes(CODE, [
+    { name: "ArrayStack", keys: /^st_/,
+      note: "This page's stack was created with <span class='mono'>new ArrayStack(8)</span>.",
+      pseudo: [
+        "class ArrayStack:",
+        "  S                        // array of capacity cells holding the elements",
+        "  t                        // index of the top element; -1 means empty",
+        "",
+        "  constructor(capacity):   // runs once, when the stack is created",
+        "    S ← new array of capacity cells",
+        "    t ← -1",
+        "",
+        "  // push, pop and top (below) all use S and t",
+      ],
+      java: [
+        "public class ArrayStack {",
+        "  private double[] data;   // the array holding the elements",
+        "  private int t;           // index of the top element; -1 means empty",
+        "",
+        "  public ArrayStack(int capacity) {   // constructor: runs on new ArrayStack(8)",
+        "    data = new double[capacity];",
+        "    t = -1;",
+        "  }",
+        "",
+        "  // push, pop and top (below) are written here and use data and t",
+        "}",
+      ] },
+    { name: "PinnedArrayQueue", keys: /^aq_/,
+      note: "Made with <span class='mono'>new PinnedArrayQueue(8)</span>. The front is always <span class='mono'>data[0]</span>.",
+      pseudo: [
+        "class PinnedArrayQueue:",
+        "  Q                        // array of capacity cells; the front is always Q[0]",
+        "  n                        // number of elements; the rear is Q[n - 1]",
+        "",
+        "  constructor(capacity):",
+        "    Q ← new array of capacity cells",
+        "    n ← 0",
+      ],
+      java: [
+        "public class PinnedArrayQueue {",
+        "  private double[] data;   // the front is always data[0]",
+        "  private int n;           // number of elements; the rear is data[n - 1]",
+        "",
+        "  public PinnedArrayQueue(int capacity) {",
+        "    data = new double[capacity];",
+        "    n = 0;",
+        "  }",
+        "",
+        "  // enqueue and dequeue (below) use data and n",
+        "}",
+      ] },
+    { name: "DriftingArrayQueue", keys: /^dr_/,
+      note: "Made with <span class='mono'>new DriftingArrayQueue(8)</span>. Both indices only ever move right.",
+      pseudo: [
+        "class DriftingArrayQueue:",
+        "  Q                        // array of capacity cells",
+        "  front                    // index of the front element",
+        "  rear                     // index of the next free slot",
+        "",
+        "  constructor(capacity):",
+        "    Q ← new array of capacity cells",
+        "    front ← 0;  rear ← 0",
+      ],
+      java: [
+        "public class DriftingArrayQueue {",
+        "  private double[] data;",
+        "  private int front;       // index of the front element",
+        "  private int rear;        // index of the next free slot",
+        "",
+        "  public DriftingArrayQueue(int capacity) {",
+        "    data = new double[capacity];",
+        "    front = 0;  rear = 0;",
+        "  }",
+        "",
+        "  // enqueue and dequeue (below) use data, front and rear",
+        "}",
+      ] },
+    { name: "CircularQueue", keys: /^cq_/,
+      note: "Made with <span class='mono'>new CircularQueue(8)</span>.",
+      pseudo: [
+        "class CircularQueue:",
+        "  Q                        // array of capacity cells, used as a ring",
+        "  front                    // index of the front element",
+        "  size                     // number of elements",
+        "",
+        "  constructor(capacity):",
+        "    Q ← new array of capacity cells",
+        "    front ← 0;  size ← 0",
+      ],
+      java: [
+        "public class CircularQueue {",
+        "  private double[] data;   // used as a ring: index capacity - 1 wraps to 0",
+        "  private int front;       // index of the front element",
+        "  private int size;        // number of elements",
+        "",
+        "  public CircularQueue(int capacity) {",
+        "    data = new double[capacity];",
+        "    front = 0;  size = 0;",
+        "  }",
+        "",
+        "  // enqueue, dequeue and first (below) use data, front and size",
+        "}",
+      ] },
+    { name: "CircularDeque", keys: /^dq_/,
+      note: "Made with <span class='mono'>new CircularDeque(8)</span>.",
+      pseudo: [
+        "class CircularDeque:",
+        "  D                        // array of capacity cells, used as a ring",
+        "  front                    // index of the front element",
+        "  size                     // number of elements",
+        "",
+        "  constructor(capacity):",
+        "    D ← new array of capacity cells",
+        "    front ← 0;  size ← 0",
+      ],
+      java: [
+        "public class CircularDeque {",
+        "  private double[] data;   // used as a ring at both ends",
+        "  private int front;       // index of the front element",
+        "  private int size;        // number of elements",
+        "",
+        "  public CircularDeque(int capacity) {",
+        "    data = new double[capacity];",
+        "    front = 0;  size = 0;",
+        "  }",
+        "",
+        "  // the four add / remove methods (below) use data, front and size",
+        "}",
+      ] },
+  ]);
 
   /* ============================================================
      STATE
@@ -833,7 +746,6 @@
     const stage = q("stage");
     stage.innerHTML = "";
     stage.appendChild(view(f));
-    D.stats("#stats", statsOf(f));
   }
 
   function view(f) {
@@ -927,15 +839,6 @@
     return svg;
   }
 
-  function statsOf(f) {
-    if (f.kind === "stack") return [["size", f.t + 1], ["t (top index)", f.t], ["capacity", CAP]];
-    if (f.kind === "aq") return [["size n", f.n], ["capacity", CAP], ["element shifts so far", f.shifts]];
-    if (f.kind === "dr") return [["size", f.n], ["front", f.front], ["rear", f.rear], ["dead slots", f.front], ["usable slots left", CAP - f.rear]];
-    if (f.kind === "cq" || f.kind === "dq") return [["size", f.size], ["capacity", CAP], ["front", f.front], ["rear", f.size ? rearOf(f) : "–"], ["next free", (dataFront(f) + f.size) % CAP]];
-    if (f.kind === "brackets") return [["scanned", Math.max(0, Math.min(f.i + 1, f.toks.length)) + " / " + f.toks.length], ["stack depth", f.stack.length], ["verdict", f.ok == null ? "…" : f.ok ? "balanced" : "not balanced"]];
-    if (f.kind === "postfix") return [["token", Math.max(0, Math.min(f.i + 1, f.toks.length)) + " / " + f.toks.length], ["stack depth", f.stack.length]];
-    return [];
-  }
 
   function renderCompare(f) {
     [["L", f.L, dockL, f.done[0]], ["R", f.R, dockR, f.done[1]]].forEach((s) => {
@@ -945,7 +848,6 @@
       st.innerHTML = "";
       st.appendChild(view(fr));
       q(side + "-note").innerHTML = fr.note || "";
-      D.stats("#" + side + "-stats", statsOf(fr).slice(0, 3));
       q("pane-" + side).classList.toggle("finished", !!s[3] && player.index > 0);
     });
     q("L-title").textContent = CL.mode === "shift" ? "Plain array — front pinned at 0" : "Plain array — front moves, no wrap";
@@ -953,57 +855,17 @@
   }
 
   /* ============================================================
-     TABS / EXAMPLES / INIT
+     TABS / INIT
      ============================================================ */
   const NOTES = {
-    stack: "A <b>stack</b> is LIFO. The array implementation keeps one index, <span class='mono'>t</span>, pointing at the top element (−1 when empty). push, pop and top all touch only <span class='mono'>data[t]</span>, so each is O(1). Nothing ever shifts, because the bottom of the stack never moves.",
-    aqueue: "The obvious array queue keeps the front at index 0. Enqueue writes at the end in O(1), but <b>every dequeue has to slide the remaining n − 1 elements forward</b>, which makes dequeue O(n). Watch the <span class='mono'>element shifts</span> counter.",
-    cqueue: "A <b>circular array queue</b> never shifts. It keeps <span class='mono'>front</span> and <span class='mono'>size</span>, and computes the rear as <span class='mono'>(front + size) mod N</span>. When an index runs off the end it wraps to 0, so the array behaves like the ring on the right. Enqueue and dequeue are both O(1).",
-    deque: "A <b>deque</b> (double-ended queue) is the same circular array, used at both ends. addFirst steps front <em>backwards</em> with <span class='mono'>(front − 1 + N) mod N</span>. Adding N keeps the result non-negative, since in Java and C++ −1 % N is −1. This is how Java's <span class='mono'>ArrayDeque</span> works.",
-    compare: "Both queues get exactly the same operations. The left one is a plain array: either every dequeue shifts, or the front drifts right and the freed slots are wasted. The right one is circular. Try <b>steady traffic</b> and watch the shift counter on the left climb. Then switch the left queue to “front moves, no wrap” and see it report full while it still has empty slots.",
+    stack: "A <b>stack</b> is <b>LIFO — Last In, First Out</b>: the element pushed most recently is the first one popped, like a pile of plates where you only touch the top plate. The array implementation keeps one index, <span class='mono'>t</span>, pointing at the top element (−1 when empty). push, pop and top all touch only <span class='mono'>data[t]</span>, so each is O(1) time and O(1) space. Nothing ever shifts, because the bottom of the stack never moves.",
+    aqueue: "A <b>queue</b> is <b>FIFO — First In, First Out</b>: elements leave in the order they arrived, like a line at a checkout. Elements join at the <b>rear</b> (enqueue) and leave from the <b>front</b> (dequeue). The obvious array queue keeps the front at index 0. Enqueue writes at the end in O(1), but <b>every dequeue has to slide the remaining n − 1 elements forward</b>, which makes dequeue O(n) time. The captions count the shifts.",
+    cqueue: "Still a <b>FIFO</b> queue (First In, First Out), but stored in a <b>circular array</b> that never shifts. It keeps <span class='mono'>front</span> and <span class='mono'>size</span>, and computes the rear as <span class='mono'>(front + size) mod N</span>. When an index runs off the end it wraps to 0, so the array behaves like the ring on the right. Enqueue and dequeue are both O(1) time and O(1) space.",
+    deque: "A <b>deque</b> (double-ended queue, said “deck”) lets you add and remove at <em>both</em> ends, so it can act as a stack (LIFO) or a queue (FIFO). It is the same circular array, used at both ends. addFirst steps front <em>backwards</em> with <span class='mono'>(front − 1 + N) mod N</span>. Adding N keeps the result non-negative, since in Java −1 % N is −1. This is how Java's <span class='mono'>ArrayDeque</span> works.",
+    compare: "This tab is about <b>queues</b> only (stacks never need it, because a stack's bottom never moves). Both queues get exactly the same operations. The left one is a plain array: either every dequeue shifts, or the front drifts right and the freed slots are wasted. The right one is circular. Enqueue a few values, then alternate dequeue and enqueue: the left side's captions count the shifts. Then switch the left queue to “front moves, no wrap” and see it report full while it still has empty slots.",
     app: "Two classic stack applications. Both work because a stack captures <em>nesting</em>: the most recently opened thing is the first one that has to be resolved.",
   };
-  const EXAMPLES = {
-    stack: [
-      { label: "push 3, pop 1 (LIFO)", run: () => { S.a = fresh(); S.t = -1; chain([() => stack.push(10), () => stack.push(20), () => stack.push(30), stack.pop]); } },
-      { label: "overflow", desc: "Push onto a full stack", run: () => { S.a = fresh(); S.t = -1; for (let i = 1; i <= CAP; i++) { S.a[++S.t] = i * 11; } load(stack.push(99)); } },
-      { label: "underflow", desc: "Pop an empty stack", run: () => { S.a = fresh(); S.t = -1; load(stack.pop()); } },
-    ],
-    aqueue: [
-      { label: "dequeue a full queue", desc: "7 shifts for one dequeue", run: () => { AQ.a = fresh(); AQ.n = 0; AQ.shifts = 0; [5, 10, 15, 20, 25, 30, 35, 40].forEach((v, i) => (AQ.a[i] = v)); AQ.n = 8; loadQ(aqRec, (r) => aqDequeue(AQ, r)); } },
-      { label: "enqueue 3, dequeue 3", run: () => { AQ.a = fresh(); AQ.n = 0; AQ.shifts = 0; chain([10, 20, 30].map((v) => () => opQ(aqRec, (r) => aqEnqueue(AQ, r, v))).concat([0, 1, 2].map(() => () => opQ(aqRec, (r) => aqDequeue(AQ, r))))); } },
-    ],
-    cqueue: [
-      { label: "watch it wrap", desc: "Fill, drain 3, fill again", run: () => {
-        CQ.a = fresh(); CQ.front = 0; CQ.size = 0;
-        chain([11, 22, 33, 44, 55].map((v) => () => queue.enqueue(v)).concat([0, 1, 2].map(() => queue.dequeue)).concat([66, 77, 88, 99].map((v) => () => queue.enqueue(v))));
-      } },
-      { label: "full vs empty", desc: "front == next free in both cases", run: () => { CQ.a = fresh(); CQ.front = 3; CQ.size = 0; chain([1, 2, 3, 4, 5, 6, 7, 8, 9].map((v) => () => queue.enqueue(v * 10))); } },
-    ],
-    deque: [
-      { label: "addFirst from index 0", desc: "front wraps to the last slot", run: () => { DQ.a = fresh(); DQ.front = 0; DQ.size = 0; chain([() => deque.addLast(1), () => deque.addFirst(2), () => deque.addFirst(3)]); } },
-      { label: "palindrome check", desc: "Load 1 2 3 4 3 2 1, then remove from both ends in turn: 1 & 1, 2 & 2, 3 & 3 all match", run: () => {
-        DQ.a = fresh(); DQ.front = 0; DQ.size = 0;
-        const w = [1, 2, 3, 4, 3, 2, 1];
-        chain(w.map((v) => () => deque.addLast(v)).concat([deque.removeFirst, deque.removeLast, deque.removeFirst, deque.removeLast, deque.removeFirst, deque.removeLast]));
-      } },
-    ],
-    compare: [
-      { label: "steady traffic", desc: "Enqueue 4 items, then 6 rounds of dequeue + enqueue", run: () => { cmpReset(); const ops = [["enq", 1], ["enq", 2], ["enq", 3], ["enq", 4]]; for (let i = 0; i < 6; i++) ops.push(["deq"], ["enq", 10 + i]); cmpRun(ops); } },
-      { label: "fill, drain 3, refill", desc: "The plain array runs out of room at the end", run: () => { cmpReset(); cmpRun([["enq", 11], ["enq", 22], ["enq", 33], ["enq", 44], ["enq", 55], ["deq"], ["deq"], ["deq"], ["enq", 66], ["enq", 77], ["enq", 88], ["enq", 99]]); } },
-    ],
-    app: [
-      { label: "{[()()]}", run: () => { q("bstr").value = "{[()()]}"; load(brackets("{[()()]}")); } },
-      { label: "([)]", desc: "Crossed brackets", run: () => { q("bstr").value = "([)]"; load(brackets("([)]")); } },
-      { label: "((a)", desc: "Left open", run: () => { q("bstr").value = "((a)"; load(brackets("((a)")); } },
-      { label: "5 1 2 + 4 * + 3 −", run: () => { q("pstr").value = "5 1 2 + 4 * + 3 -"; load(postfix("5 1 2 + 4 * + 3 -")); } },
-      { label: "2 3 4 * +", run: () => { q("pstr").value = "2 3 4 * +"; load(postfix("2 3 4 * +")); } },
-    ],
-  };
-  function opQ(mk, fn) { const r = mk(); fn(r); return r; }
-  function loadQ(mk, fn) { load(opQ(mk, fn)); }
   function load(r) { player.load(r.frames, true); }
-  function chain(fns) { let all = []; fns.forEach((fn) => { all = all.concat(fn().frames); }); player.load(all, true); }
 
   function stillTab(note) {
     if (tab === "compare") return cmpStill(note);
@@ -1022,15 +884,14 @@
     D.showFor(id);
     D.practiceShow(id);
     q("notes").innerHTML = "<p class='blurb'>" + NOTES[id] + "</p>";
-    D.Examples("#examples", EXAMPLES[id]);
     dock.show({ stack: "st_push", aqueue: "aq_dequeue", cqueue: "cq_enqueue", deque: "dq_addFirst", app: "brackets", compare: "st_push" }[id]);
     stillTab({
       stack: "An array-backed stack holding " + (S.t + 1) + " element(s).",
       aqueue: "A plain array queue with the front pinned at index 0.",
       cqueue: "A circular array queue holding " + CQ.size + " element(s).",
       deque: "A circular array deque holding " + DQ.size + " element(s).",
-      compare: "Two queues, the same operations. Press an example or the buttons above.",
-      app: "Type an expression, or pick an example.",
+      compare: "Two queues, the same operations. Use the buttons above.",
+      app: "Type an expression and press a button above.",
     }[id]);
   }
 
@@ -1077,7 +938,7 @@
       "Implement Queue using Stacks",
       "implement-queue-using-stacks",
       "Easy",
-      "Amortised O(1) without shifting."
+      "Two stacks make a queue without shifting."
      ],
      [
       933,
@@ -1207,7 +1068,8 @@
     dockL = D.CodeDock("#L-code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "aq_dequeue", collapsible: false });
     dockR = D.CodeDock("#R-code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "cq_dequeue", collapsible: false });
     player = new D.Player({ mount: "#player", render: render, code: dock });
-    const val = () => { const v = parseInt(q("val").value, 10); return isNaN(v) ? D.randInt(10, 99) : v; };
+    /* any number, negative or decimal; empty means a random one */
+    const val = () => { const t = q("val").value.trim(), v = Number(t); return t === "" || isNaN(v) ? D.randInt(10, 99) : v; };
 
     q("s-push").onclick = () => load(stack.push(val()));
     q("s-pop").onclick = () => load(stack.pop());
@@ -1256,7 +1118,7 @@
       { id: "aqueue", label: "Queue (plain array)" },
       { id: "cqueue", label: "Queue (circular array)" },
       { id: "deque", label: "Deque (circular array)" },
-      { id: "compare", label: "Why circular? plain vs circular" },
+      { id: "compare", label: "Queue: plain vs circular" },
       { id: "app", label: "Applications" },
     ], selectTab);
   });

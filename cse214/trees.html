@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Trees — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=20260926">
+<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>">
 </head>
 <body>
@@ -21,15 +21,22 @@
 <div class="wrap">
   <div class="page-head">
     <h1>Trees</h1>
-    <p>From plain traversals to self-balancing multiway trees. Every rotation, split, transfer and fusion is a separate
-       frame you can step through.</p>
+    <p>From plain traversals to self-balancing multiway trees. Recursive operations show their call stack next to the
+       tree, and every rotation, split, transfer and fusion is a separate frame you can step through.</p>
   </div>
 
   <div id="tabs" class="tabs"></div>
 
   <div class="panel">
     <div class="toolbar">
-      <div class="field"><label for="val">key</label><input type="number" id="val" placeholder="random"></div>
+      <div class="field"><label for="val">key</label><input type="number" step="any" id="val" placeholder="random"></div>
+      <div class="field" id="del-with-wrap" style="display:none">
+        <label for="del-with">two-child delete uses</label>
+        <select id="del-with">
+          <option value="succ">successor</option>
+          <option value="pred">predecessor</option>
+        </select>
+      </div>
       <div class="field" id="bt-order-wrap" style="display:none">
         <label for="bt-order">order m</label><input type="number" id="bt-order" value="5" min="3" max="7" style="width:4rem">
       </div>
@@ -39,6 +46,8 @@
         <button id="tr-in">in-order</button>
         <button id="tr-post">post-order</button>
         <button id="tr-level">level-order</button>
+        <button id="tr-height">height(root)</button>
+        <button id="tr-size">size(root)</button>
         <div class="sep"></div>
         <button id="tr-perfect">perfect tree</button>
         <button id="tr-rand">↻ random</button>
@@ -47,9 +56,12 @@
       </div>
 
       <div class="toolbar" id="tools-bst" style="margin:0;display:none">
+        <div id="bst-style" title="Run insert, search and delete as loops or as recursive calls"></div>
         <button id="bst-insert">insert</button>
         <button id="bst-search">search</button>
         <button id="bst-delete">delete</button>
+        <button id="bst-pred">predecessor</button>
+        <button id="bst-succ">successor</button>
         <div class="sep"></div>
         <button id="bst-rand">↻ random</button>
         <button id="bst-degenerate">insert 10,20,…,60 sorted</button>
@@ -60,6 +72,8 @@
         <button id="avl-insert">insert</button>
         <button id="avl-search">search</button>
         <button id="avl-delete">delete</button>
+        <button id="avl-pred">predecessor</button>
+        <button id="avl-succ">successor</button>
         <div class="sep"></div>
         <button id="avl-rand">↻ random</button>
         <button id="avl-degenerate">insert 10,20,…,60 sorted</button>
@@ -87,19 +101,10 @@
       </div>
     </div>
 
-    <div id="examples"></div>
     <div id="code"></div>
     <div class="stage" id="tree-view"></div>
     <div id="output" style="margin-top:.8rem"></div>
     <div id="player"></div>
-
-    <div class="stats">
-      <div class="stat"><span class="k">nodes</span><span class="v" id="t-nodes">0</span></div>
-      <div class="stat"><span class="k">height</span><span class="v" id="t-height">0</span></div>
-      <div class="stat"><span class="k">comparisons</span><span class="v" id="t-cmp">0</span></div>
-      <div class="stat"><span class="k" id="t-extra-k">rotations</span><span class="v" id="t-extra">0</span></div>
-      <div class="stat"><span class="k" id="t-extra2-k">min possible height</span><span class="v" id="t-extra2">0</span></div>
-    </div>
 
     <div id="legend"></div>
     <p class="blurb" id="blurb"></p>
@@ -120,7 +125,7 @@
             <tr><td>Right-Left</td><td>−2</td><td>&gt; 0</td><td>right on child, then left</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.6rem 0 0">A rotation is a local pointer swap — O(1) — and it never changes
+        <p class="small muted" style="margin:.6rem 0 0">A rotation is a local pointer swap — O(1) time and space — and it never changes
            the in-order sequence, which is why the BST property survives. Insert needs at most one (double counts as
            one); delete may need one at every level.</p>
       </div>
@@ -144,15 +149,18 @@
   </div>
 
   <div class="panel" style="margin-bottom:2rem">
-    <h2>All five, side by side</h2>
+    <h2>All five, side by side: time / space</h2>
+    <p class="small muted" style="margin-top:-.3rem">Each operation cell is <b>time / extra space</b>, worst case, for n keys
+       and height h. The recursive BST versions use O(h) space instead of O(1), for their call stack.</p>
     <div style="overflow-x:auto">
-      <table class="tbl" style="min-width:680px">
-        <tr><th>Structure</th><th>Search</th><th>Insert</th><th>Delete</th><th>Height</th><th>Rebalancing by</th></tr>
-        <tr><td>Binary tree (any shape)</td><td>O(n)</td><td>O(1) if position known</td><td>O(n)</td><td>n−1 … ⌊log₂n⌋</td><td>nothing</td></tr>
-        <tr><td>Binary search tree</td><td>O(h)</td><td>O(h)</td><td>O(h)</td><td>n−1 worst</td><td>nothing</td></tr>
-        <tr><td>AVL tree</td><td class="one">O(log n)</td><td class="one">O(log n)</td><td class="one">O(log n)</td><td>≤ 1.44 log₂n</td><td>rotations</td></tr>
-        <tr><td>(2,4)-tree</td><td class="one">O(log n)</td><td class="one">O(log n)</td><td class="one">O(log n)</td><td>log₄n … log₂n</td><td>split / transfer / fusion</td></tr>
-        <tr><td>B-tree, order m</td><td class="one">O(log n)</td><td class="one">O(log n)</td><td class="one">O(log n)</td><td>≤ log<sub>⌈m/2⌉</sub>n</td><td>split / transfer / fusion</td></tr>
+      <table class="tbl" style="min-width:820px">
+        <tr><th>Structure</th><th>Search</th><th>Insert</th><th>Delete</th><th>Predecessor / successor</th><th>Height</th><th>Rebalancing by</th></tr>
+        <tr><td>Binary tree (any shape)</td><td>O(n) / O(h)</td><td>O(1) / O(1) if position known</td><td>O(n) / O(h)</td><td>O(n) / O(h)</td><td>n−1 … ⌊log₂n⌋</td><td>nothing</td></tr>
+        <tr><td>Binary search tree</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>up to n−1</td><td>nothing</td></tr>
+        <tr><td>AVL tree</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td>≤ 1.44 log₂n</td><td>rotations</td></tr>
+        <tr><td>(2,4)-tree</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td>log₄n … log₂n</td><td>split / transfer / fusion</td></tr>
+        <tr><td>B-tree, order m</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td>≤ log<sub>⌈m/2⌉</sub>n</td><td>split / transfer / fusion</td></tr>
+        <tr><td>Traversal, height, size</td><td colspan="4">O(n) / O(h) for the recursive ones (the call stack); level-order O(n) / O(n) for its queue</td><td></td><td></td></tr>
       </table>
     </div>
     <p class="small muted" style="margin-bottom:0">A (2,4)-tree and a red-black tree are the same thing wearing
@@ -162,7 +170,7 @@
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=20260926"></script>
-<script src="../assets/js/trees.js?v=20260926"></script>
+<script src="../assets/js/core.js?v=202610042131"></script>
+<script src="../assets/js/trees.js?v=202610042131"></script>
 </body>
 </html>

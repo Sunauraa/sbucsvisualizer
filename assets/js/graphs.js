@@ -169,7 +169,7 @@
       line: null, ns: ns(), es: Object.assign({}, tre), queue: [], tags: tags(), order: order.slice(),
       note: "BFS is done. Visit order: <b>" + order.map(name).join(" ") + "</b>. " +
         (unreached.length ? "Never reached: <b>" + unreached.join(", ") + "</b> — they are in different connected components." : "Every vertex was reached, so the graph is connected from " + name(start) + ".") +
-        " The green edges form the <b>BFS tree</b>, and each dist label is a shortest-path length. Total work Θ(V + E).",
+        " The green edges form the <b>BFS tree</b>, and each dist label is a shortest-path length. Total work O(V + E).",
     });
     return c;
   }
@@ -224,7 +224,7 @@
       line: null, ns: ns(), es: Object.assign({}, tre), stack: [], tags: tags(), order: order.slice(),
       note: "DFS complete. Discovery order: <b>" + order.map(name).join(" ") + "</b>. " +
         (unreached.length ? "Unreached: <b>" + unreached.join(", ") + "</b> (try <em>DFS forest</em> to cover them). " : "") +
-        "Every vertex has an interval [disc, fin]; two intervals are either nested or disjoint — never partially overlapping. That is the <b>parenthesis theorem</b>, and it is why sorting by decreasing finish time gives a topological order. Θ(V + E).",
+        "Every vertex has an interval [disc, fin]; two intervals are either nested or disjoint — never partially overlapping. That is the <b>parenthesis theorem</b>, and it is why sorting by decreasing finish time gives a topological order. O(V + E).",
     });
     return c;
   }
@@ -308,12 +308,6 @@
       lv.appendChild(row);
     }
     if (!n) lv.appendChild(D.el("p", { class: "small muted", text: "no vertices" }));
-
-    q("g-v").textContent = n;
-    q("g-e").textContent = edgeCount();
-    q("g-kind").textContent = G.directed ? "directed" : "undirected";
-    q("g-deg").textContent = n ? (G.adj.reduce((s, l) => s + l.length, 0) / n).toFixed(2) : "–";
-    q("g-dense").textContent = n > 1 ? ((edgeCount() / ((n * (n - 1)) / (G.directed ? 1 : 2))) * 100).toFixed(0) + "%" : "–";
   }
 
   function mk(id, color) {
@@ -437,33 +431,6 @@
         "  }",
         "}",
       ],
-      cpp: [
-        "void bfs(int s) {",
-        "  seen[s] = true;  dist[s] = 0; @@init",
-        "  queue<int> q;  q.push(s); @@init",
-        "  while (!q.empty()) { @@loop",
-        "    int u = q.front();  q.pop(); @@deq",
-        "    for (int v : adj[u]) @@nbr",
-        "      if (!seen[v]) { @@check",
-        "        dist[v] = dist[u] + 1;  parent[v] = u; @@set",
-        "        seen[v] = true; @@set",
-        "        q.push(v); @@set",
-        "      }",
-        "  }",
-        "}",
-      ],
-      python: [
-        "def bfs(s):",
-        "  seen[s], dist[s] = True, 0 @@init",
-        "  q = deque([s]) @@init",
-        "  while q: @@loop",
-        "    u = q.popleft() @@deq",
-        "    for v in adj[u]: @@nbr",
-        "      if not seen[v]: @@check",
-        "        dist[v], parent[v] = dist[u] + 1, u @@set",
-        "        seen[v] = True @@set",
-        "        q.append(v) @@set",
-      ],
     },
     dfs: {
       title: "DFS(u) — depth-first search",
@@ -493,40 +460,46 @@
         "    if (color[u] == WHITE) dfs(u); @@forest",
         "}",
       ],
-      cpp: [
-        "void dfs(int u) {",
-        "  color[u] = GREY;  d[u] = ++time; @@disc",
-        "  for (int v : adj[u]) @@nbr",
-        "    if (color[v] == WHITE) @@check",
-        "      dfs(v); @@rec",
-        "  color[u] = BLACK;  f[u] = ++time; @@fin",
-        "}",
-        "",
-        "void dfsForest() {",
-        "  for (int u = 0; u < n; u++) @@forest",
-        "    if (color[u] == WHITE) dfs(u); @@forest",
-        "}",
-      ],
-      python: [
-        "def dfs(u):",
-        "  global time",
-        "  time += 1;  color[u], d[u] = GREY, time @@disc",
-        "  for v in adj[u]: @@nbr",
-        "    if color[v] == WHITE: @@check",
-        "      dfs(v) @@rec",
-        "  time += 1;  color[u], f[u] = BLACK, time @@fin",
-        "",
-        "def dfs_forest():",
-        "  for u in range(n): @@forest",
-        "    if color[u] == WHITE: @@forest",
-        "      dfs(u) @@forest",
-      ],
     },
   };
   D.specs(CODE, {
-    bfs: { does: "Breadth-first search from " + "<span class='mono'>s</span>" + ": visits vertices in order of distance, using a FIFO queue.", params: "<span class='mono'>s</span> — the start vertex", returns: "nothing; fills dist[] (edge counts) and parent[] (the BFS tree)", errors: "none — unreachable vertices keep no distance", cost: "Θ(V + E) with adjacency lists, Θ(V²) with a matrix", callVals: { s: "0" } },
-    dfs: { does: "Depth-first search: goes as deep as possible from " + "<span class='mono'>u</span>" + " before backtracking, recording discovery and finish times.", params: "<span class='mono'>u</span> — the vertex to explore from", returns: "nothing; colours every reachable vertex and records d[] / f[]", errors: "none", cost: "Θ(V + E); recursion depth up to V", callVals: { u: "0" } },
+    bfs: { does: "Breadth-first search from " + "<span class='mono'>s</span>" + ": visits vertices in order of distance, using a FIFO queue.", params: "<span class='mono'>s</span> — the start vertex", returns: "nothing; fills dist[] (edge counts) and parent[] (the BFS tree)", errors: "none — unreachable vertices keep no distance", time: "O(V + E) — every vertex is enqueued once and every edge looked at once (O(V²) with a matrix)", space: "O(V) — the queue, plus dist[], parent[] and seen[]", callVals: { s: "0" } },
+    dfs: { does: "Depth-first search: goes as deep as possible from " + "<span class='mono'>u</span>" + " before backtracking, recording discovery and finish times.", params: "<span class='mono'>u</span> — the vertex to explore from", returns: "nothing; colours every reachable vertex and records d[] / f[]", errors: "none", time: "O(V + E) — every vertex is discovered once and every edge looked at once", space: "O(V) — the recursion can go V calls deep, plus color[], d[] and f[]", callVals: { u: "0" } },
   });
+
+  D.classes(CODE, [{
+    keys: ["bfs", "dfs"], name: "Graph",
+    note: "Vertices are numbered 0 … V − 1 (drawn as A, B, C, …). adj is the adjacency list on the right of the canvas.",
+    pseudo: [
+      "class Graph:",
+      "  V                          // number of vertices, numbered 0 … V-1",
+      "  adj                        // adj[u] = list of u's neighbours",
+      "  // filled in by BFS / DFS:",
+      "  seen, dist, parent         // BFS: discovered?, edges from s, BFS-tree parent",
+      "  color, d, f, time          // DFS: WHITE/GREY/BLACK, discovery and finish times",
+      "",
+      "  constructor(V):",
+      "    adj ← array of V empty lists",
+    ],
+    java: [
+      "public class Graph {",
+      "  private int n;                         // number of vertices V, numbered 0 … n-1",
+      "  private List<List<Integer>> adj;       // adj.get(u) = u's neighbours",
+      "  private boolean[] seen;  private int[] dist, parent;   // used by bfs",
+      "  private int[] color, d, f;  private int time;         // used by dfs",
+      "  static final int WHITE = 0, GREY = 1, BLACK = 2;",
+      "",
+      "  public Graph(int n) {                  // constructor: new Graph(9)",
+      "    this.n = n;",
+      "    adj = new ArrayList<>();",
+      "    for (int u = 0; u < n; u++) adj.add(new ArrayList<>());",
+      "    seen = new boolean[n];  dist = new int[n];  parent = new int[n];",
+      "    color = new int[n];  d = new int[n];  f = new int[n];",
+      "  }",
+      "  void addEdge(int u, int v) { adj.get(u).add(v);  adj.get(v).add(u); }   // undirected",
+      "}",
+    ],
+  }]);
 
   /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
   const PRACTICE = {
@@ -588,7 +561,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     D.Practice(PRACTICE);
-    const dock = D.CodeDock("#code", CODE);
+    const dock = D.CodeDock("#code", CODE, { recv: "graph" });
     player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock });
     wireHost(q("gr-canvas"));
 
@@ -628,23 +601,9 @@
     q("btn-dfs").addEventListener("click", () => go("dfs"));
     q("btn-forest").addEventListener("click", () => go("forest"));
 
-    const example = (preset, directed, start, kind) => () => {
-      q("directed").checked = directed;
-      G.directed = directed;
-      q("preset").value = preset;
-      PRESETS[preset]();
-      syncStart();
-      q("start").value = start;
-      go(kind);
-    };
     D.practiceShow("graphs");
-    D.Examples("#examples", [
-      { label: "BFS on a grid: shortest paths", desc: "dist labels grow level by level", run: example("grid", false, 0, "bfs") },
-      { label: "DFS finds a cycle (back edge)", run: example("cycle", false, 0, "dfs") },
-      { label: "BFS vs DFS on a tree", desc: "Run BFS, then DFS, on the same tree", run: example("tree", false, 0, "bfs") },
-      { label: "count components with a DFS forest", run: example("disconnected", false, 0, "forest") },
-      { label: "directed DFS: tree / back / cross edges", run: example("sample", true, 0, "dfs") },
-    ]);
+    /* Play before any search has run: run BFS from the chosen start vertex */
+    player.onIdle = () => go("bfs");
 
     D.legend("#legend", [
       { color: "var(--c-idle)", label: "undiscovered (white)" },
@@ -664,11 +623,11 @@
       "<b>BFS</b> uses a queue and explores by distance: it finishes every vertex at distance k before touching " +
       "distance k+1, which is why it finds shortest paths in unweighted graphs. <b>DFS</b> uses a stack (usually the " +
       "call stack) and dives as deep as possible before backtracking, which is why it exposes cycles, components and " +
-      "topological order. Both visit every vertex and every edge exactly once: <b>Θ(V + E)</b> with adjacency lists.",
+      "topological order. Both visit every vertex and every edge exactly once: <b>O(V + E)</b> with adjacency lists.",
     bfs:
       "<b>BFS invariant:</b> the queue always holds vertices from at most two consecutive levels. Each vertex is " +
       "enqueued once (it is marked discovered the moment it enters, not when it leaves), and each edge is examined once " +
-      "from each endpoint — so the running time is Θ(V + E). The <span style='color:#4ade80'>green tree edges</span> " +
+      "from each endpoint — so the running time is O(V + E). The <span style='color:#4ade80'>green tree edges</span> " +
       "form a shortest-path tree: following parents from any vertex back to the source gives a path of exactly " +
       "<span class='mono'>dist</span> edges, and no shorter one exists.",
     dfs:

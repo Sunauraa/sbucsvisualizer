@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sorting Algorithms — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=20260926">
+<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 </head>
 <body>
@@ -22,7 +22,8 @@
   <div class="page-head">
     <h1>Sorting Algorithms</h1>
     <p>Pick an algorithm, feed it an array, and watch every comparison and every write. The code above the bars
-       highlights the line responsible for the current frame, in pseudocode, Java, C++ or Python.</p>
+       highlights the line responsible for the current frame, in pseudocode or Java. Negative and decimal values work
+       too.</p>
   </div>
 
   <div id="algo-tabs" class="tabs"></div>
@@ -42,17 +43,17 @@
           <option value="reverse">reversed</option>
           <option value="nearly">nearly sorted</option>
           <option value="few">few unique</option>
+          <option value="mixed">negatives &amp; decimals</option>
         </select>
       </div>
       <button id="btn-new">↻ New array</button>
       <div class="sep"></div>
-      <input type="text" id="custom" class="wide" placeholder="42, 7, 19, ..." aria-label="custom values">
+      <input type="text" id="custom" class="wide" placeholder="42, -7, 19.5, ..." aria-label="custom values">
       <button id="btn-load">Load</button>
       <div class="sep"></div>
-      <button class="primary" id="btn-run">▶ Run sort</button>
+      <button class="primary" id="btn-run" title="The sort is already loaded below; this starts it from the beginning">▶ Run sort</button>
     </div>
 
-    <div id="examples"></div>
     <div id="code"></div>
     <div class="stage">
       <div class="bars" id="bars"></div>
@@ -61,12 +62,6 @@
     </div>
 
     <div id="player"></div>
-
-    <div class="stats">
-      <div class="stat"><span class="k">Comparisons</span><span class="v" id="s-cmp">0</span></div>
-      <div class="stat"><span class="k">Writes / swaps</span><span class="v" id="s-mov">0</span></div>
-      <div class="stat"><span class="k">Frames</span><span class="v" id="s-frames">0</span></div>
-    </div>
 
     <div id="legend"></div>
 
@@ -81,24 +76,25 @@
     <h2>Cheat sheet</h2>
     <div style="overflow-x:auto">
       <table class="tbl" style="min-width:640px">
-        <tr><th>Algorithm</th><th>Best</th><th>Average</th><th>Worst</th><th>Space</th><th>Stable</th><th>Notes</th></tr>
-        <tr><td>Bubble</td><td>Ω(n)</td><td>Θ(n²)</td><td>O(n²)</td><td>O(1)</td><td class="one">yes</td><td>early exit on sorted input</td></tr>
-        <tr><td>Selection</td><td>Ω(n²)</td><td>Θ(n²)</td><td>O(n²)</td><td>O(1)</td><td>no</td><td>only n−1 swaps</td></tr>
-        <tr><td>Insertion</td><td>Ω(n)</td><td>Θ(n²)</td><td>O(n²)</td><td>O(1)</td><td class="one">yes</td><td>best for small / nearly sorted</td></tr>
-        <tr><td>Heap</td><td>Ω(n log n)</td><td>Θ(n log n)</td><td>O(n log n)</td><td>O(1)</td><td>no</td><td>in-place, no worst case blowup</td></tr>
-        <tr><td>Merge</td><td>Ω(n log n)</td><td>Θ(n log n)</td><td>O(n log n)</td><td>O(n)</td><td class="one">yes</td><td>needs a scratch buffer</td></tr>
-        <tr><td>Quick</td><td>Ω(n log n)</td><td>Θ(n log n)</td><td>O(n²)</td><td>O(log n)</td><td>no</td><td>fastest in practice</td></tr>
-        <tr><td>Two-third</td><td>Θ(n<sup>2.71</sup>)</td><td>Θ(n<sup>2.71</sup>)</td><td>Θ(n<sup>2.71</sup>)</td><td>O(log n)</td><td>no</td><td>3T(2n/3)+O(1)</td></tr>
-        <tr><td>Counting</td><td>Θ(n+k)</td><td>Θ(n+k)</td><td>Θ(n+k)</td><td>O(n+k)</td><td class="one">yes</td><td>keys must be small ints</td></tr>
+        <tr><th>Algorithm</th><th>Time (worst)</th><th>Space (worst)</th><th>Best-case time</th><th>Stable</th><th>Notes</th></tr>
+        <tr><td>Bubble</td><td>O(n²)</td><td>O(1)</td><td>O(n)</td><td class="one">yes</td><td>early exit on sorted input</td></tr>
+        <tr><td>Selection</td><td>O(n²)</td><td>O(1)</td><td>O(n²)</td><td>no</td><td>only n−1 swaps</td></tr>
+        <tr><td>Insertion</td><td>O(n²)</td><td>O(1)</td><td>O(n)</td><td class="one">yes</td><td>best for small / nearly sorted</td></tr>
+        <tr><td>Heap</td><td class="one">O(n log n)</td><td>O(1)</td><td>O(n log n)</td><td>no</td><td>in-place, no worst case blowup</td></tr>
+        <tr><td>Merge</td><td class="one">O(n log n)</td><td>O(n)</td><td>O(n log n)</td><td class="one">yes</td><td>needs a scratch buffer</td></tr>
+        <tr><td>Quick</td><td>O(n²)</td><td>O(n)</td><td>O(n log n)</td><td>no</td><td>average O(n log n) time and O(log n) stack; fastest in practice</td></tr>
+        <tr><td>Two-third</td><td>O(n<sup>2.71</sup>)</td><td>O(log n)</td><td>O(n<sup>2.71</sup>)</td><td>no</td><td>3T(2n/3)+O(1)</td></tr>
+        <tr><td>Counting</td><td class="one">O(n+k)</td><td>O(n+k)</td><td>O(n+k)</td><td class="one">yes</td><td>integer keys only; k = max − min</td></tr>
       </table>
     </div>
-    <p class="small muted" style="margin-bottom:0">Every comparison sort needs Ω(n log n) comparisons in the worst
-       case — counting sort escapes that bound only because it never compares two keys.</p>
+    <p class="small muted" style="margin-bottom:0">Every bound here is written with O and means the worst case unless
+       the column says otherwise. Every comparison sort needs at least about n log₂ n comparisons in the worst case;
+       counting sort escapes that limit only because it never compares two keys.</p>
   </div>
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=20260926"></script>
-<script src="../assets/js/sorting.js?v=20260926"></script>
+<script src="../assets/js/core.js?v=202610042131"></script>
+<script src="../assets/js/sorting.js?v=202610042131"></script>
 </body>
 </html>

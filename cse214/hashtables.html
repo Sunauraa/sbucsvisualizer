@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hash Tables — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=20260926">
+<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
 </head>
 <body>
@@ -43,20 +43,10 @@
       <button class="danger" id="op-clear">clear</button>
     </div>
 
-    <div id="examples"></div>
     <div id="code"></div>
     <div class="mono small muted" style="margin-bottom:.4rem" id="mode-formula"></div>
     <div class="stage" id="table-view"></div>
     <div id="player"></div>
-
-    <div class="stats">
-      <div class="stat"><span class="k">keys n</span><span class="v" id="t-n">0</span></div>
-      <div class="stat"><span class="k">slots m</span><span class="v" id="t-m">11</span></div>
-      <div class="stat"><span class="k">load α = n/m</span><span class="v" id="t-alpha">0.00</span></div>
-      <div class="stat"><span class="k">probes, this op</span><span class="v" id="t-probes">0</span></div>
-      <div class="stat"><span class="k">avg probes / op</span><span class="v" id="t-avg">–</span></div>
-      <div class="stat"><span class="k" id="t-extra-k">longest chain</span><span class="v" id="t-extra">0</span></div>
-    </div>
 
     <div id="legend"></div>
     <p class="blurb" id="mode-blurb"></p>
@@ -65,7 +55,21 @@
   <div class="row" style="margin-bottom:2rem">
     <div class="col">
       <div class="panel" style="height:100%">
-        <h2>Expected probes vs load factor</h2>
+        <h2>Time and space of every operation</h2>
+        <p class="small muted" style="margin-top:-.3rem">Each cell is <b>time / extra space</b>, worst case (every key colliding),
+           for n keys in m slots. The expected time while the load factor α = n/m stays small is in brackets.</p>
+        <div style="overflow-x:auto;margin-bottom:1rem">
+          <table class="tbl" style="min-width:460px">
+            <tr><th></th><th>separate chaining</th><th>linear / quadratic probing</th></tr>
+            <tr><td>put(k)</td><td>O(n) / O(1)<br><span class="small muted">(O(1 + α))</span></td><td>O(m) / O(1)<br><span class="small muted">(O(1))</span></td></tr>
+            <tr><td>get(k)</td><td>O(n) / O(1)<br><span class="small muted">(O(1 + α))</span></td><td>O(m) / O(1)<br><span class="small muted">(O(1))</span></td></tr>
+            <tr><td>remove(k)</td><td>O(n) / O(1)<br><span class="small muted">(O(1 + α))</span></td><td>O(m) / O(1)<br><span class="small muted">(O(1))</span></td></tr>
+            <tr><td>rehash()</td><td>O(n + m) / O(n + m)</td><td>O(n + m) / O(n + m)</td></tr>
+            <tr><td>hash(s), String keys</td><td colspan="2">O(length of s) / O(1)</td></tr>
+            <tr><td>memory for the table</td><td>O(n + m)</td><td>O(m)</td></tr>
+          </table>
+        </div>
+        <h3 style="font-size:1rem">Expected probes vs load factor</h3>
         <div style="overflow-x:auto">
           <table class="tbl" style="min-width:460px">
             <tr><th>α</th><th>chaining<br>(successful)</th><th>linear<br>(unsuccessful)</th><th>ideal uniform hashing<br>(unsuccessful)</th></tr>
@@ -90,7 +94,7 @@
           <dt>tombstone build-up</dt><dd>searches slow down even though n is small; rehash to clear them</dd>
           <dt>bad hash</dt><dd>e.g. summing characters — "cat" and "act" collide; multiply by 31 instead</dd>
           <dt>mutable keys</dt><dd>change a key after inserting and it is unfindable, since its hash moved</dd>
-          <dt>rehash cost</dt><dd>Θ(n) and unavoidable — every index depends on m</dd>
+          <dt>rehash cost</dt><dd>O(n + m) time and O(n + m) space — every index depends on m</dd>
         </dl>
         <p class="small muted" style="margin:.7rem 0 0">Try this: switch to <b>linear probing</b>, press <em>random
            keys</em> a few times, then delete two or three keys and search for something that is not there. You can
@@ -101,7 +105,7 @@
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=20260926"></script>
-<script src="../assets/js/hashtables.js?v=20260926"></script>
+<script src="../assets/js/core.js?v=202610042131"></script>
+<script src="../assets/js/hashtables.js?v=202610042131"></script>
 </body>
 </html>

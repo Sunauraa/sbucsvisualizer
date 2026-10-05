@@ -23,30 +23,16 @@
       "  return A[i]      // address = base + i · cellSize @@ret",
     ],
     java: [
-      "int get(int i) {",
+      "double get(int i) {",
       "  if (i < 0 || i >= n) throw new IndexOutOfBoundsException(); @@check",
       "  return a[i];     // address = base + i * 4 bytes @@ret",
       "}",
-    ],
-    cpp: [
-      "int get(int i) const {",
-      "  if (i < 0 || i >= n) throw out_of_range(\"get\"); @@check",
-      "  return a[i];     // address = base + i * sizeof(int) @@ret",
-      "}",
-    ],
-    python: [
-      "def get(self, i):",
-      "  if i < 0 or i >= self.n: @@check",
-      "    raise IndexError(i) @@check",
-      "  return self.a[i]   # one address computation @@ret",
     ],
   };
   CODE.set = {
     title: "set(i, x)",
     pseudo: ["set(i, x):", "  if i < 0 or i ≥ n: error @@check", "  A[i] ← x          // overwrite in place, O(1) @@write"],
-    java: ["void set(int i, int x) {", "  if (i < 0 || i >= n) throw new IndexOutOfBoundsException(); @@check", "  a[i] = x; @@write", "}"],
-    cpp: ["void set(int i, int x) {", "  if (i < 0 || i >= n) throw out_of_range(\"set\"); @@check", "  a[i] = x; @@write", "}"],
-    python: ["def set(self, i, x):", "  if i < 0 or i >= self.n: @@check", "    raise IndexError(i) @@check", "  self.a[i] = x @@write"],
+    java: ["void set(int i, double x) {", "  if (i < 0 || i >= n) throw new IndexOutOfBoundsException(); @@check", "  a[i] = x; @@write", "}"],
   };
   CODE.remove = {
     title: "remove(i)",
@@ -61,45 +47,21 @@
       "  return x @@ret",
     ],
     java: [
-      "int remove(int i) {",
+      "double remove(int i) {",
       "  if (i < 0 || i >= n) throw new IndexOutOfBoundsException(); @@check",
-      "  int x = a[i]; @@save",
+      "  double x = a[i]; @@save",
       "  for (int k = i; k < n - 1; k++)   // close the gap @@shift",
       "    a[k] = a[k + 1]; @@shift",
       "  a[n - 1] = 0; @@clear",
       "  n--; @@clear",
       "  return x; @@ret",
       "}",
-    ],
-    cpp: [
-      "int remove(int i) {",
-      "  if (i < 0 || i >= n) throw out_of_range(\"remove\"); @@check",
-      "  int x = a[i]; @@save",
-      "  for (int k = i; k < n - 1; k++)   // close the gap @@shift",
-      "    a[k] = a[k + 1]; @@shift",
-      "  a[n - 1] = 0; @@clear",
-      "  n--; @@clear",
-      "  return x; @@ret",
-      "}",
-    ],
-    python: [
-      "def remove(self, i):",
-      "  if i < 0 or i >= self.n: @@check",
-      "    raise IndexError(i) @@check",
-      "  x = self.a[i] @@save",
-      "  for k in range(i, self.n - 1):   # close the gap @@shift",
-      "    self.a[k] = self.a[k + 1] @@shift",
-      "  self.a[self.n - 1] = None @@clear",
-      "  self.n -= 1 @@clear",
-      "  return x @@ret",
     ],
   };
   CODE.indexOf = {
     title: "indexOf(x)",
     pseudo: ["indexOf(x):", "  for i ← 0 to n-1: @@loop", "    if A[i] == x: return i @@cmp", "  return -1          // not found @@miss"],
-    java: ["int indexOf(int x) {", "  for (int i = 0; i < n; i++) @@loop", "    if (a[i] == x) return i; @@cmp", "  return -1; @@miss", "}"],
-    cpp: ["int indexOf(int x) const {", "  for (int i = 0; i < n; i++) @@loop", "    if (a[i] == x) return i; @@cmp", "  return -1; @@miss", "}"],
-    python: ["def index_of(self, x):", "  for i in range(self.n): @@loop", "    if self.a[i] == x: @@cmp", "      return i @@cmp", "  return -1 @@miss"],
+    java: ["int indexOf(double x) {", "  for (int i = 0; i < n; i++) @@loop", "    if (a[i] == x) return i; @@cmp", "  return -1; @@miss", "}"],
   };
 
   /* ---------- fixed array ---------- */
@@ -107,14 +69,12 @@
     title: "add(x) — fixed capacity",
     pseudo: ["add(x):", "  if n == capacity: error \"array is full\" @@full", "  A[n] ← x @@write", "  n ← n + 1 @@size"],
     java: [
-      "void add(int x) {",
+      "void add(double x) {",
       "  if (n == a.length) throw new IllegalStateException(\"full\"); @@full",
       "  a[n] = x; @@write",
       "  n++; @@size",
       "}",
     ],
-    cpp: ["void add(int x) {", "  if (n == CAP) throw overflow_error(\"full\"); @@full", "  a[n] = x; @@write", "  n++; @@size", "}"],
-    python: ["def add(self, x):", "  if self.n == len(self.a): @@full", "    raise OverflowError('full') @@full", "  self.a[self.n] = x @@write", "  self.n += 1 @@size"],
   };
   CODE.fa_insert = {
     title: "insert(i, x) — fixed capacity",
@@ -128,7 +88,7 @@
       "  n ← n + 1 @@size",
     ],
     java: [
-      "void insert(int i, int x) {",
+      "void insert(int i, double x) {",
       "  if (i < 0 || i > n) throw new IndexOutOfBoundsException(); @@check",
       "  if (n == a.length) throw new IllegalStateException(\"full\"); @@full",
       "  for (int k = n - 1; k >= i; k--)   // open a gap @@shift",
@@ -136,27 +96,6 @@
       "  a[i] = x; @@write",
       "  n++; @@size",
       "}",
-    ],
-    cpp: [
-      "void insert(int i, int x) {",
-      "  if (i < 0 || i > n) throw out_of_range(\"insert\"); @@check",
-      "  if (n == CAP) throw overflow_error(\"full\"); @@full",
-      "  for (int k = n - 1; k >= i; k--)   // open a gap @@shift",
-      "    a[k + 1] = a[k]; @@shift",
-      "  a[i] = x; @@write",
-      "  n++; @@size",
-      "}",
-    ],
-    python: [
-      "def insert(self, i, x):",
-      "  if i < 0 or i > self.n: @@check",
-      "    raise IndexError(i) @@check",
-      "  if self.n == len(self.a): @@full",
-      "    raise OverflowError('full') @@full",
-      "  for k in range(self.n - 1, i - 1, -1):   # open a gap @@shift",
-      "    self.a[k + 1] = self.a[k] @@shift",
-      "  self.a[i] = x @@write",
-      "  self.n += 1 @@size",
     ],
   };
 
@@ -174,28 +113,11 @@
       java: [
         "",
         "private void resize(int newCap) {",
-        "  int[] b = new int[newCap]; @@alloc",
+        "  double[] b = new double[newCap]; @@alloc",
         "  for (int k = 0; k < n; k++) @@copy",
         "    b[k] = a[k]; @@copy",
         "  a = b; @@swap",
         "}",
-      ],
-      cpp: [
-        "",
-        "void resize(int newCap) {",
-        "  int* b = new int[newCap]; @@alloc",
-        "  for (int k = 0; k < n; k++) @@copy",
-        "    b[k] = a[k]; @@copy",
-        "  delete[] a;  a = b;  cap = newCap; @@swap",
-        "}",
-      ],
-      python: [
-        "",
-        "def _resize(self, new_cap):",
-        "  b = [None] * new_cap @@alloc",
-        "  for k in range(self.n): @@copy",
-        "    b[k] = self.a[k] @@copy",
-        "  self.a = b @@swap",
       ],
     }[lang];
   }
@@ -203,8 +125,6 @@
     return {
       pseudo: geo ? "2 · capacity" : "capacity + 2",
       java: geo ? "2 * a.length" : "a.length + 2",
-      cpp: geo ? "2 * cap" : "cap + 2",
-      python: geo ? "2 * len(self.a)" : "len(self.a) + 2",
     }[lang];
   }
   function daAddCode(geo) {
@@ -219,28 +139,13 @@
         "  n ← n + 1 @@size",
       ].concat(resizeLines("pseudo")),
       java: [
-        "void add(int x) {",
+        "void add(double x) {",
         "  if (n == a.length) @@full",
         "    resize(" + growExpr("java", geo) + ");   // " + why + " @@grow",
         "  a[n] = x; @@write",
         "  n++; @@size",
         "}",
       ].concat(resizeLines("java")),
-      cpp: [
-        "void add(int x) {",
-        "  if (n == cap) @@full",
-        "    resize(" + growExpr("cpp", geo) + ");   // " + why + " @@grow",
-        "  a[n] = x; @@write",
-        "  n++; @@size",
-        "}",
-      ].concat(resizeLines("cpp")),
-      python: [
-        "def add(self, x):",
-        "  if self.n == len(self.a): @@full",
-        "    self._resize(" + growExpr("python", geo) + ")   # " + why + " @@grow",
-        "  self.a[self.n] = x @@write",
-        "  self.n += 1 @@size",
-      ].concat(resizeLines("python")),
     };
   }
   function daInsertCode(geo) {
@@ -256,7 +161,7 @@
         "  n ← n + 1 @@size",
       ].concat(resizeLines("pseudo")),
       java: [
-        "void insert(int i, int x) {",
+        "void insert(int i, double x) {",
         "  if (i < 0 || i > n) throw new IndexOutOfBoundsException(); @@check",
         "  if (n == a.length) resize(" + growExpr("java", geo) + "); @@full,grow",
         "  for (int k = n - 1; k >= i; k--)   // open a gap @@shift",
@@ -265,27 +170,6 @@
         "  n++; @@size",
         "}",
       ].concat(resizeLines("java")),
-      cpp: [
-        "void insert(int i, int x) {",
-        "  if (i < 0 || i > n) throw out_of_range(\"insert\"); @@check",
-        "  if (n == cap) resize(" + growExpr("cpp", geo) + "); @@full,grow",
-        "  for (int k = n - 1; k >= i; k--)   // open a gap @@shift",
-        "    a[k + 1] = a[k]; @@shift",
-        "  a[i] = x; @@write",
-        "  n++; @@size",
-        "}",
-      ].concat(resizeLines("cpp")),
-      python: [
-        "def insert(self, i, x):",
-        "  if i < 0 or i > self.n: @@check",
-        "    raise IndexError(i) @@check",
-        "  if self.n == len(self.a): @@full,grow",
-        "    self._resize(" + growExpr("python", geo) + ") @@grow",
-        "  for k in range(self.n - 1, i - 1, -1):   # open a gap @@shift",
-        "    self.a[k + 1] = self.a[k] @@shift",
-        "  self.a[i] = x @@write",
-        "  self.n += 1 @@size",
-      ].concat(resizeLines("python")),
     };
   }
   CODE.da_add_geo = daAddCode(true);
@@ -303,25 +187,11 @@
       "  return M[k]                      // one memory access @@ret",
     ],
     java: [
-      "int get(int[][] m, int r, int c) {",
+      "static double get(double[][] m, int r, int c) {",
       "  if (r < 0 || r >= m.length || c < 0 || c >= m[r].length) throw new IndexOutOfBoundsException(); @@check",
-      "  int[] row = m[r];   // Java: an array of row arrays @@flat",
+      "  double[] row = m[r];   // Java: an array of row arrays @@flat",
       "  return row[c]; @@ret",
       "}",
-    ],
-    cpp: [
-      "int get(int r, int c) {           // int m[ROWS][COLS]",
-      "  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) throw out_of_range(\"get\"); @@check",
-      "  // one block: address = base + (r * COLS + c) * sizeof(int) @@flat",
-      "  return m[r][c]; @@ret",
-      "}",
-    ],
-    python: [
-      "def get(m, r, c):",
-      "  if not (0 <= r < len(m) and 0 <= c < len(m[r])):   # negatives would wrap @@check",
-      "    raise IndexError((r, c)) @@check",
-      "  row = m[r]          # list of lists: m[r] is a row list @@flat",
-      "  return row[c] @@ret",
     ],
   };
   CODE.g_set = {
@@ -332,15 +202,7 @@
       "  k ← r · cols + c @@flat",
       "  M[k] ← x @@write",
     ],
-    java: ["void set(int[][] m, int r, int c, int x) {", "  if (r < 0 || r >= m.length || c < 0 || c >= m[r].length) throw new IndexOutOfBoundsException(); @@check", "  int[] row = m[r]; @@flat", "  row[c] = x; @@write", "}"],
-    cpp: [
-      "void set(int r, int c, int x) {",
-      "  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) throw out_of_range(\"set\"); @@check",
-      "  // address = base + (r * COLS + c) * sizeof(int) @@flat",
-      "  m[r][c] = x; @@write",
-      "}",
-    ],
-    python: ["def set(m, r, c, x):", "  if not (0 <= r < len(m) and 0 <= c < len(m[r])): @@check", "    raise IndexError((r, c)) @@check", "  row = m[r] @@flat", "  row[c] = x @@write"],
+    java: ["static void set(double[][] m, int r, int c, double x) {", "  if (r < 0 || r >= m.length || c < 0 || c >= m[r].length) throw new IndexOutOfBoundsException(); @@check", "  double[] row = m[r]; @@flat", "  row[c] = x; @@write", "}"],
   };
   CODE.g_rowmajor = {
     title: "row-major traversal",
@@ -351,20 +213,12 @@
       "      visit(M[r][c])      // memory: consecutive cells @@visit",
     ],
     java: [
-      "void traverseRowMajor(int[][] m) {",
+      "static void traverseRowMajor(double[][] m) {",
       "  for (int r = 0; r < m.length; r++) @@outer",
       "    for (int c = 0; c < m[r].length; c++) @@inner",
       "      visit(m[r][c]); @@visit",
       "}",
     ],
-    cpp: [
-      "void traverseRowMajor() {",
-      "  for (int r = 0; r < ROWS; r++) @@outer",
-      "    for (int c = 0; c < COLS; c++) @@inner",
-      "      visit(m[r][c]); @@visit",
-      "}",
-    ],
-    python: ["def traverse_row_major(m):", "  for r in range(len(m)): @@outer", "    for c in range(len(m[r])): @@inner", "      visit(m[r][c]) @@visit"],
   };
   CODE.g_colmajor = {
     title: "column-major traversal",
@@ -375,27 +229,17 @@
       "      visit(M[r][c])      // memory: jumps by cols @@visit",
     ],
     java: [
-      "void traverseColumnMajor(int[][] m) {",
+      "static void traverseColumnMajor(double[][] m) {",
       "  for (int c = 0; c < m[0].length; c++) @@outer",
       "    for (int r = 0; r < m.length; r++) @@inner",
       "      visit(m[r][c]); @@visit",
       "}",
     ],
-    cpp: [
-      "void traverseColumnMajor() {",
-      "  for (int c = 0; c < COLS; c++) @@outer",
-      "    for (int r = 0; r < ROWS; r++) @@inner",
-      "      visit(m[r][c]); @@visit",
-      "}",
-    ],
-    python: ["def traverse_column_major(m):", "  for c in range(len(m[0])): @@outer", "    for r in range(len(m)): @@inner", "      visit(m[r][c]) @@visit"],
   };
   CODE.g_rowsum = {
     title: "rowSum(r)",
     pseudo: ["rowSum(r):", "  if r ∉ [0, rows): error @@check", "  s ← 0 @@init", "  for c ← 0 to cols-1: @@loop", "    s ← s + M[r][c] @@add", "  return s @@ret"],
-    java: ["int rowSum(int[][] m, int r) {", "  if (r < 0 || r >= m.length) throw new IndexOutOfBoundsException(); @@check", "  int s = 0; @@init", "  for (int c = 0; c < m[r].length; c++) @@loop", "    s += m[r][c]; @@add", "  return s; @@ret", "}"],
-    cpp: ["int rowSum(int r) {", "  if (r < 0 || r >= ROWS) throw out_of_range(\"rowSum\"); @@check", "  int s = 0; @@init", "  for (int c = 0; c < COLS; c++) @@loop", "    s += m[r][c]; @@add", "  return s; @@ret", "}"],
-    python: ["def row_sum(m, r):", "  if not 0 <= r < len(m): @@check", "    raise IndexError(r) @@check", "  s = 0 @@init", "  for c in range(len(m[r])): @@loop", "    s += m[r][c] @@add", "  return s @@ret"],
+    java: ["static double rowSum(double[][] m, int r) {", "  if (r < 0 || r >= m.length) throw new IndexOutOfBoundsException(); @@check", "  double s = 0; @@init", "  for (int c = 0; c < m[r].length; c++) @@loop", "    s += m[r][c]; @@add", "  return s; @@ret", "}"],
   };
   CODE.g_find = {
     title: "find(x)",
@@ -407,28 +251,12 @@
       "  return (-1, -1) @@miss",
     ],
     java: [
-      "int[] find(int[][] m, int x) {",
+      "static int[] find(double[][] m, double x) {",
       "  for (int r = 0; r < m.length; r++) @@outer",
       "    for (int c = 0; c < m[r].length; c++) @@inner",
       "      if (m[r][c] == x) return new int[]{r, c}; @@cmp",
       "  return new int[]{-1, -1}; @@miss",
       "}",
-    ],
-    cpp: [
-      "pair<int, int> find(int x) {",
-      "  for (int r = 0; r < ROWS; r++) @@outer",
-      "    for (int c = 0; c < COLS; c++) @@inner",
-      "      if (m[r][c] == x) return {r, c}; @@cmp",
-      "  return {-1, -1}; @@miss",
-      "}",
-    ],
-    python: [
-      "def find(m, x):",
-      "  for r in range(len(m)): @@outer",
-      "    for c in range(len(m[r])): @@inner",
-      "      if m[r][c] == x: @@cmp",
-      "        return (r, c) @@cmp",
-      "  return (-1, -1) @@miss",
     ],
   };
 
@@ -444,31 +272,13 @@
       "  size ← size + 1 @@size",
     ],
     java: [
-      "void addFirst(int x) {",
+      "void addFirst(double x) {",
       "  Node node = new Node(x); @@alloc",
       "  node.next = head; @@link",
       "  head = node; @@head",
       "  if (tail == null) tail = node; @@tail",
       "  size++; @@size",
       "}",
-    ],
-    cpp: [
-      "void addFirst(int x) {",
-      "  Node* node = new Node(x); @@alloc",
-      "  node->next = head; @@link",
-      "  head = node; @@head",
-      "  if (tail == nullptr) tail = node; @@tail",
-      "  size++; @@size",
-      "}",
-    ],
-    python: [
-      "def add_first(self, x):",
-      "  node = Node(x) @@alloc",
-      "  node.next = self.head @@link",
-      "  self.head = node @@head",
-      "  if self.tail is None: @@tail",
-      "    self.tail = node @@tail",
-      "  self.size += 1 @@size",
     ],
   };
   CODE.s_addLast = {
@@ -482,32 +292,13 @@
       "  size ← size + 1 @@size",
     ],
     java: [
-      "void addLast(int x) {",
+      "void addLast(double x) {",
       "  Node node = new Node(x); @@alloc",
       "  if (head == null) head = node; @@empty",
       "  else tail.next = node; @@link",
       "  tail = node; @@tail",
       "  size++; @@size",
       "}",
-    ],
-    cpp: [
-      "void addLast(int x) {",
-      "  Node* node = new Node(x); @@alloc",
-      "  if (head == nullptr) head = node; @@empty",
-      "  else tail->next = node; @@link",
-      "  tail = node; @@tail",
-      "  size++; @@size",
-      "}",
-    ],
-    python: [
-      "def add_last(self, x):",
-      "  node = Node(x) @@alloc",
-      "  if self.head is None: @@empty",
-      "    self.head = node @@empty",
-      "  else: @@link",
-      "    self.tail.next = node @@link",
-      "  self.tail = node @@tail",
-      "  self.size += 1 @@size",
     ],
   };
   CODE.s_insert = {
@@ -524,7 +315,7 @@
       "  size ← size + 1 @@size",
     ],
     java: [
-      "void insert(int i, int x) {",
+      "void insert(int i, double x) {",
       "  if (i < 1 || i > size) throw new IndexOutOfBoundsException(); @@check",
       "  Node prev = head; @@start",
       "  for (int k = 1; k < i; k++) prev = prev.next; @@walk",
@@ -534,32 +325,6 @@
       "  if (node.next == null) tail = node; @@tail",
       "  size++; @@size",
       "}",
-    ],
-    cpp: [
-      "void insert(int i, int x) {",
-      "  if (i < 1 || i > size) throw out_of_range(\"insert\"); @@check",
-      "  Node* prev = head; @@start",
-      "  for (int k = 1; k < i; k++) prev = prev->next; @@walk",
-      "  Node* node = new Node(x); @@alloc",
-      "  node->next = prev->next; @@link",
-      "  prev->next = node; @@splice",
-      "  if (node->next == nullptr) tail = node; @@tail",
-      "  size++; @@size",
-      "}",
-    ],
-    python: [
-      "def insert(self, i, x):",
-      "  if not 1 <= i <= self.size: @@check",
-      "    raise IndexError(i) @@check",
-      "  prev = self.head @@start",
-      "  for _ in range(i - 1): @@walk",
-      "    prev = prev.next @@walk",
-      "  node = Node(x) @@alloc",
-      "  node.next = prev.next @@link",
-      "  prev.next = node @@splice",
-      "  if node.next is None: @@tail",
-      "    self.tail = node @@tail",
-      "  self.size += 1 @@size",
     ],
   };
   CODE.s_removeFirst = {
@@ -574,35 +339,14 @@
       "  return x @@ret",
     ],
     java: [
-      "int removeFirst() {",
+      "double removeFirst() {",
       "  if (head == null) throw new NoSuchElementException(); @@check",
-      "  int x = head.data; @@save",
+      "  double x = head.data; @@save",
       "  head = head.next; @@head",
       "  if (head == null) tail = null; @@tail",
       "  size--; @@size",
       "  return x; @@ret",
       "}",
-    ],
-    cpp: [
-      "int removeFirst() {",
-      "  if (head == nullptr) throw runtime_error(\"empty\"); @@check",
-      "  Node* old = head;  int x = old->data; @@save",
-      "  head = head->next; @@head",
-      "  if (head == nullptr) tail = nullptr; @@tail",
-      "  delete old;  size--; @@size",
-      "  return x; @@ret",
-      "}",
-    ],
-    python: [
-      "def remove_first(self):",
-      "  if self.head is None: @@check",
-      "    raise IndexError('empty') @@check",
-      "  x = self.head.data @@save",
-      "  self.head = self.head.next @@head",
-      "  if self.head is None: @@tail",
-      "    self.tail = None @@tail",
-      "  self.size -= 1 @@size",
-      "  return x @@ret",
     ],
   };
   CODE.s_removeLast = {
@@ -619,41 +363,16 @@
       "  return x @@ret",
     ],
     java: [
-      "int removeLast() {",
+      "double removeLast() {",
       "  if (head == tail) return removeFirst(); @@one",
       "  Node prev = head; @@start",
       "  while (prev.next != tail) prev = prev.next; @@walk",
-      "  int x = tail.data; @@save",
+      "  double x = tail.data; @@save",
       "  prev.next = null; @@unlink",
       "  tail = prev; @@tail",
       "  size--; @@size",
       "  return x; @@ret",
       "}",
-    ],
-    cpp: [
-      "int removeLast() {",
-      "  if (head == tail) return removeFirst(); @@one",
-      "  Node* prev = head; @@start",
-      "  while (prev->next != tail) prev = prev->next; @@walk",
-      "  int x = tail->data; @@save",
-      "  delete tail;  prev->next = nullptr; @@unlink",
-      "  tail = prev; @@tail",
-      "  size--; @@size",
-      "  return x; @@ret",
-      "}",
-    ],
-    python: [
-      "def remove_last(self):",
-      "  if self.head is self.tail: @@one",
-      "    return self.remove_first() @@one",
-      "  prev = self.head @@start",
-      "  while prev.next is not self.tail: @@walk",
-      "    prev = prev.next @@walk",
-      "  x = self.tail.data @@save",
-      "  prev.next = None @@unlink",
-      "  self.tail = prev @@tail",
-      "  self.size -= 1 @@size",
-      "  return x @@ret",
     ],
   };
   CODE.s_remove = {
@@ -670,7 +389,7 @@
       "  return cur.data @@ret",
     ],
     java: [
-      "int remove(int i) {",
+      "double remove(int i) {",
       "  if (i < 1 || i >= size) throw new IndexOutOfBoundsException(); @@check",
       "  Node prev = head; @@start",
       "  for (int k = 1; k < i; k++) prev = prev.next; @@walk",
@@ -680,32 +399,6 @@
       "  size--; @@size",
       "  return cur.data; @@ret",
       "}",
-    ],
-    cpp: [
-      "int remove(int i) {",
-      "  if (i < 1 || i >= size) throw out_of_range(\"remove\"); @@check",
-      "  Node* prev = head; @@start",
-      "  for (int k = 1; k < i; k++) prev = prev->next; @@walk",
-      "  Node* cur = prev->next; @@cur",
-      "  prev->next = cur->next; @@unlink",
-      "  if (cur == tail) tail = prev; @@tail",
-      "  int x = cur->data;  delete cur;  size--; @@size",
-      "  return x; @@ret",
-      "}",
-    ],
-    python: [
-      "def remove(self, i):",
-      "  if not 1 <= i < self.size: @@check",
-      "    raise IndexError(i) @@check",
-      "  prev = self.head @@start",
-      "  for _ in range(i - 1): @@walk",
-      "    prev = prev.next @@walk",
-      "  cur = prev.next @@cur",
-      "  prev.next = cur.next @@unlink",
-      "  if cur is self.tail: @@tail",
-      "    self.tail = prev @@tail",
-      "  self.size -= 1 @@size",
-      "  return cur.data @@ret",
     ],
   };
   CODE.l_indexOf = {
@@ -719,7 +412,7 @@
       "  return -1 @@miss",
     ],
     java: [
-      "int indexOf(int x) {",
+      "int indexOf(double x) {",
       "  Node cur = head;  int i = 0; @@start",
       "  while (cur != null) { @@loop",
       "    if (cur.data == x) return i; @@cmp",
@@ -727,25 +420,6 @@
       "  }",
       "  return -1; @@miss",
       "}",
-    ],
-    cpp: [
-      "int indexOf(int x) const {",
-      "  Node* cur = head;  int i = 0; @@start",
-      "  while (cur != nullptr) { @@loop",
-      "    if (cur->data == x) return i; @@cmp",
-      "    cur = cur->next;  i++; @@next",
-      "  }",
-      "  return -1; @@miss",
-      "}",
-    ],
-    python: [
-      "def index_of(self, x):",
-      "  cur, i = self.head, 0 @@start",
-      "  while cur is not None: @@loop",
-      "    if cur.data == x: @@cmp",
-      "      return i @@cmp",
-      "    cur, i = cur.next, i + 1 @@next",
-      "  return -1 @@miss",
     ],
   };
   CODE.s_reverse = {
@@ -770,27 +444,6 @@
       "  head = prev; @@head",
       "}",
     ],
-    cpp: [
-      "void reverse() {",
-      "  Node *prev = nullptr, *cur = head;  tail = head; @@init",
-      "  while (cur != nullptr) { @@loop",
-      "    Node* next = cur->next; @@save",
-      "    cur->next = prev; @@flip",
-      "    prev = cur;  cur = next; @@advance",
-      "  }",
-      "  head = prev; @@head",
-      "}",
-    ],
-    python: [
-      "def reverse(self):",
-      "  prev, cur = None, self.head @@init",
-      "  self.tail = self.head @@init",
-      "  while cur is not None: @@loop",
-      "    nxt = cur.next @@save",
-      "    cur.next = prev @@flip",
-      "    prev, cur = cur, nxt @@advance",
-      "  self.head = prev @@head",
-    ],
   };
 
   /* ---------- doubly linked list ---------- */
@@ -806,7 +459,7 @@
       "  size ← size + 1 @@size",
     ],
     java: [
-      "void addFirst(int x) {",
+      "void addFirst(double x) {",
       "  Node node = new Node(x); @@alloc",
       "  node.next = head; @@link",
       "  if (head != null) head.prev = node; @@back",
@@ -814,27 +467,6 @@
       "  head = node; @@head",
       "  size++; @@size",
       "}",
-    ],
-    cpp: [
-      "void addFirst(int x) {",
-      "  Node* node = new Node(x); @@alloc",
-      "  node->next = head; @@link",
-      "  if (head != nullptr) head->prev = node; @@back",
-      "  else tail = node; @@backElse",
-      "  head = node; @@head",
-      "  size++; @@size",
-      "}",
-    ],
-    python: [
-      "def add_first(self, x):",
-      "  node = Node(x) @@alloc",
-      "  node.next = self.head @@link",
-      "  if self.head is not None: @@back",
-      "    self.head.prev = node @@back",
-      "  else: @@backElse",
-      "    self.tail = node @@backElse",
-      "  self.head = node @@head",
-      "  self.size += 1 @@size",
     ],
   };
   CODE.d_addLast = {
@@ -849,7 +481,7 @@
       "  size ← size + 1 @@size",
     ],
     java: [
-      "void addLast(int x) {",
+      "void addLast(double x) {",
       "  Node node = new Node(x); @@alloc",
       "  node.prev = tail; @@link",
       "  if (tail != null) tail.next = node; @@back",
@@ -857,27 +489,6 @@
       "  tail = node; @@tail",
       "  size++; @@size",
       "}",
-    ],
-    cpp: [
-      "void addLast(int x) {",
-      "  Node* node = new Node(x); @@alloc",
-      "  node->prev = tail; @@link",
-      "  if (tail != nullptr) tail->next = node; @@back",
-      "  else head = node; @@backElse",
-      "  tail = node; @@tail",
-      "  size++; @@size",
-      "}",
-    ],
-    python: [
-      "def add_last(self, x):",
-      "  node = Node(x) @@alloc",
-      "  node.prev = self.tail @@link",
-      "  if self.tail is not None: @@back",
-      "    self.tail.next = node @@back",
-      "  else: @@backElse",
-      "    self.head = node @@backElse",
-      "  self.tail = node @@tail",
-      "  self.size += 1 @@size",
     ],
   };
   CODE.d_insert = {
@@ -894,7 +505,7 @@
       "  size ← size + 1 @@size",
     ],
     java: [
-      "void insert(int i, int x) {",
+      "void insert(int i, double x) {",
       "  if (i < 1 || i >= size) throw new IndexOutOfBoundsException(); @@check",
       "  Node cur = head; @@start",
       "  for (int k = 1; k <= i; k++) cur = cur.next; @@walk",
@@ -904,31 +515,6 @@
       "  cur.prev = node; @@back",
       "  size++; @@size",
       "}",
-    ],
-    cpp: [
-      "void insert(int i, int x) {",
-      "  if (i < 1 || i >= size) throw out_of_range(\"insert\"); @@check",
-      "  Node* cur = head; @@start",
-      "  for (int k = 1; k <= i; k++) cur = cur->next; @@walk",
-      "  Node* node = new Node(x); @@alloc",
-      "  node->prev = cur->prev;  node->next = cur; @@link",
-      "  cur->prev->next = node; @@fwd",
-      "  cur->prev = node; @@back",
-      "  size++; @@size",
-      "}",
-    ],
-    python: [
-      "def insert(self, i, x):",
-      "  if not 1 <= i < self.size: @@check",
-      "    raise IndexError(i) @@check",
-      "  cur = self.head @@start",
-      "  for _ in range(i): @@walk",
-      "    cur = cur.next @@walk",
-      "  node = Node(x) @@alloc",
-      "  node.prev, node.next = cur.prev, cur @@link",
-      "  cur.prev.next = node @@fwd",
-      "  cur.prev = node @@back",
-      "  self.size += 1 @@size",
     ],
   };
   CODE.d_removeFirst = {
@@ -944,39 +530,15 @@
       "  return x @@ret",
     ],
     java: [
-      "int removeFirst() {",
+      "double removeFirst() {",
       "  if (head == null) throw new NoSuchElementException(); @@check",
-      "  int x = head.data; @@save",
+      "  double x = head.data; @@save",
       "  head = head.next; @@head",
       "  if (head == null) tail = null; @@tail",
       "  else head.prev = null; @@tailElse",
       "  size--; @@size",
       "  return x; @@ret",
       "}",
-    ],
-    cpp: [
-      "int removeFirst() {",
-      "  if (head == nullptr) throw runtime_error(\"empty\"); @@check",
-      "  Node* old = head;  int x = old->data; @@save",
-      "  head = head->next; @@head",
-      "  if (head == nullptr) tail = nullptr; @@tail",
-      "  else head->prev = nullptr; @@tailElse",
-      "  delete old;  size--; @@size",
-      "  return x; @@ret",
-      "}",
-    ],
-    python: [
-      "def remove_first(self):",
-      "  if self.head is None: @@check",
-      "    raise IndexError('empty') @@check",
-      "  x = self.head.data @@save",
-      "  self.head = self.head.next @@head",
-      "  if self.head is None: @@tail",
-      "    self.tail = None @@tail",
-      "  else: @@tailElse",
-      "    self.head.prev = None @@tailElse",
-      "  self.size -= 1 @@size",
-      "  return x @@ret",
     ],
   };
   CODE.d_removeLast = {
@@ -992,39 +554,15 @@
       "  return x @@ret",
     ],
     java: [
-      "int removeLast() {",
+      "double removeLast() {",
       "  if (tail == null) throw new NoSuchElementException(); @@check",
-      "  int x = tail.data; @@save",
+      "  double x = tail.data; @@save",
       "  tail = tail.prev; @@tail",
       "  if (tail == null) head = null; @@unlink",
       "  else tail.next = null; @@unlinkElse",
       "  size--; @@size",
       "  return x; @@ret",
       "}",
-    ],
-    cpp: [
-      "int removeLast() {",
-      "  if (tail == nullptr) throw runtime_error(\"empty\"); @@check",
-      "  Node* old = tail;  int x = old->data; @@save",
-      "  tail = tail->prev; @@tail",
-      "  if (tail == nullptr) head = nullptr; @@unlink",
-      "  else tail->next = nullptr; @@unlinkElse",
-      "  delete old;  size--; @@size",
-      "  return x; @@ret",
-      "}",
-    ],
-    python: [
-      "def remove_last(self):",
-      "  if self.tail is None: @@check",
-      "    raise IndexError('empty') @@check",
-      "  x = self.tail.data @@save",
-      "  self.tail = self.tail.prev @@tail",
-      "  if self.tail is None: @@unlink",
-      "    self.head = None @@unlink",
-      "  else: @@unlinkElse",
-      "    self.tail.next = None @@unlinkElse",
-      "  self.size -= 1 @@size",
-      "  return x @@ret",
     ],
   };
   CODE.d_remove = {
@@ -1040,7 +578,7 @@
       "  return cur.data @@ret",
     ],
     java: [
-      "int remove(int i) {",
+      "double remove(int i) {",
       "  if (i < 1 || i >= size - 1) throw new IndexOutOfBoundsException(); @@check",
       "  Node cur = head; @@start",
       "  for (int k = 1; k <= i; k++) cur = cur.next; @@walk",
@@ -1050,36 +588,11 @@
       "  return cur.data; @@ret",
       "}",
     ],
-    cpp: [
-      "int remove(int i) {",
-      "  if (i < 1 || i >= size - 1) throw out_of_range(\"remove\"); @@check",
-      "  Node* cur = head; @@start",
-      "  for (int k = 1; k <= i; k++) cur = cur->next; @@walk",
-      "  cur->prev->next = cur->next; @@fwd",
-      "  cur->next->prev = cur->prev; @@back",
-      "  int x = cur->data;  delete cur;  size--; @@size",
-      "  return x; @@ret",
-      "}",
-    ],
-    python: [
-      "def remove(self, i):",
-      "  if not 1 <= i < self.size - 1: @@check",
-      "    raise IndexError(i) @@check",
-      "  cur = self.head @@start",
-      "  for _ in range(i): @@walk",
-      "    cur = cur.next @@walk",
-      "  cur.prev.next = cur.next @@fwd",
-      "  cur.next.prev = cur.prev @@back",
-      "  self.size -= 1 @@size",
-      "  return cur.data @@ret",
-    ],
   };
   CODE.d_backward = {
     title: "walk backward — doubly linked",
     pseudo: ["printBackward():", "  cur ← tail @@start", "  while cur ≠ null: @@loop", "    visit(cur.data) @@visit", "    cur ← cur.prev          // only possible with prev links @@next"],
     java: ["void printBackward() {", "  Node cur = tail; @@start", "  while (cur != null) { @@loop", "    visit(cur.data); @@visit", "    cur = cur.prev; @@next", "  }", "}"],
-    cpp: ["void printBackward() const {", "  Node* cur = tail; @@start", "  while (cur != nullptr) { @@loop", "    visit(cur->data); @@visit", "    cur = cur->prev; @@next", "  }", "}"],
-    python: ["def print_backward(self):", "  cur = self.tail @@start", "  while cur is not None: @@loop", "    visit(cur.data) @@visit", "    cur = cur.prev @@next"],
   };
 
   /* ---------- circularly linked list (tail only; head = tail.next) ---------- */
@@ -1096,7 +609,7 @@
       "  size ← size + 1 @@size",
     ],
     java: [
-      "void addFirst(int x) {",
+      "void addFirst(double x) {",
       "  Node node = new Node(x); @@alloc",
       "  if (tail == null) { @@empty",
       "    tail = node;  node.next = node; @@empty",
@@ -1107,29 +620,6 @@
       "  size++; @@size",
       "}",
     ],
-    cpp: [
-      "void addFirst(int x) {",
-      "  Node* node = new Node(x); @@alloc",
-      "  if (tail == nullptr) { @@empty",
-      "    tail = node;  node->next = node; @@empty",
-      "  } else {",
-      "    node->next = tail->next; @@link",
-      "    tail->next = node; @@splice",
-      "  }",
-      "  size++; @@size",
-      "}",
-    ],
-    python: [
-      "def add_first(self, x):",
-      "  node = Node(x) @@alloc",
-      "  if self.tail is None: @@empty",
-      "    self.tail = node @@empty",
-      "    node.next = node @@empty",
-      "  else:",
-      "    node.next = self.tail.next @@link",
-      "    self.tail.next = node @@splice",
-      "  self.size += 1 @@size",
-    ],
   };
   CODE.c_addLast = {
     title: "addLast(x) — circularly linked",
@@ -1138,9 +628,7 @@
       "  addFirst(x)             // new node sits right after tail @@first",
       "  tail ← tail.next        // …so make it the tail @@tail",
     ],
-    java: ["void addLast(int x) {", "  addFirst(x); @@first", "  tail = tail.next; @@tail", "}"],
-    cpp: ["void addLast(int x) {", "  addFirst(x); @@first", "  tail = tail->next; @@tail", "}"],
-    python: ["def add_last(self, x):", "  self.add_first(x) @@first", "  self.tail = self.tail.next @@tail"],
+    java: ["void addLast(double x) {", "  addFirst(x); @@first", "  tail = tail.next; @@tail", "}"],
   };
   CODE.c_removeFirst = {
     title: "removeFirst() — circularly linked",
@@ -1154,7 +642,7 @@
       "  return head.data @@ret",
     ],
     java: [
-      "int removeFirst() {",
+      "double removeFirst() {",
       "  if (tail == null) throw new NoSuchElementException(); @@check",
       "  Node head = tail.next; @@save",
       "  if (head == tail) tail = null; @@one",
@@ -1163,35 +651,11 @@
       "  return head.data; @@ret",
       "}",
     ],
-    cpp: [
-      "int removeFirst() {",
-      "  if (tail == nullptr) throw runtime_error(\"empty\"); @@check",
-      "  Node* head = tail->next; @@save",
-      "  if (head == tail) tail = nullptr; @@one",
-      "  else tail->next = head->next; @@unlink",
-      "  int x = head->data;  delete head;  size--; @@size",
-      "  return x; @@ret",
-      "}",
-    ],
-    python: [
-      "def remove_first(self):",
-      "  if self.tail is None: @@check",
-      "    raise IndexError('empty') @@check",
-      "  head = self.tail.next @@save",
-      "  if head is self.tail: @@one",
-      "    self.tail = None @@one",
-      "  else: @@unlink",
-      "    self.tail.next = head.next @@unlink",
-      "  self.size -= 1 @@size",
-      "  return head.data @@ret",
-    ],
   };
   CODE.c_rotate = {
     title: "rotate() — circularly linked",
     pseudo: ["rotate():                  // front element moves to the back", "  if tail ≠ null: @@check", "    tail ← tail.next        // one pointer move, O(1) @@rot"],
     java: ["void rotate() {", "  if (tail != null) @@check", "    tail = tail.next; @@rot", "}"],
-    cpp: ["void rotate() {", "  if (tail != nullptr) @@check", "    tail = tail->next; @@rot", "}"],
-    python: ["def rotate(self):", "  if self.tail is not None: @@check", "    self.tail = self.tail.next @@rot"],
   };
   CODE.c_indexOf = {
     title: "indexOf(x) — circularly linked",
@@ -1206,7 +670,7 @@
       "  return -1 @@miss",
     ],
     java: [
-      "int indexOf(int x) {",
+      "int indexOf(double x) {",
       "  if (tail == null) return -1; @@check",
       "  Node cur = tail.next;  int i = 0; @@start",
       "  do {",
@@ -1216,29 +680,6 @@
       "  return -1; @@miss",
       "}",
     ],
-    cpp: [
-      "int indexOf(int x) const {",
-      "  if (tail == nullptr) return -1; @@check",
-      "  Node* cur = tail->next;  int i = 0; @@start",
-      "  do {",
-      "    if (cur->data == x) return i; @@cmp",
-      "    cur = cur->next;  i++; @@next",
-      "  } while (cur != tail->next); @@loop",
-      "  return -1; @@miss",
-      "}",
-    ],
-    python: [
-      "def index_of(self, x):",
-      "  if self.tail is None: @@check",
-      "    return -1 @@check",
-      "  cur, i = self.tail.next, 0 @@start",
-      "  while True:",
-      "    if cur.data == x: @@cmp",
-      "      return i @@cmp",
-      "    cur, i = cur.next, i + 1 @@next",
-      "    if cur is self.tail.next: @@loop",
-      "      return -1 @@miss",
-    ],
   };
 
   /* ============================================================
@@ -1246,43 +687,236 @@
      ============================================================ */
   const M = (t) => "<span class='mono'>" + t + "</span>";
   D.specs(CODE, {
-    get: { does: "Returns the element at index " + M("i") + ".", params: M("i") + " — an index in [0, n)", returns: "the element " + M("A[i]"), errors: "index out of bounds if " + M("i < 0") + " or " + M("i ≥ n"), cost: "O(1) — one address calculation, no scanning" },
-    set: { does: "Overwrites the element at index " + M("i") + " with " + M("x") + ".", params: M("i") + " — an index in [0, n) · " + M("x") + " — the new value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n)"), cost: "O(1)" },
-    remove: { does: "Removes and returns the element at index " + M("i") + ", shifting everything after it one slot left.", params: M("i") + " — an index in [0, n)", returns: "the removed element", errors: "index out of bounds if " + M("i ∉ [0, n)"), cost: "O(n − i) shifts, so O(n) worst case (i = 0); O(1) extra space" },
-    indexOf: { does: "Finds the first index holding " + M("x") + ".", params: M("x") + " — the value to look for", returns: "its index, or −1 if absent", errors: "none", cost: "O(n) — linear search, no order to exploit" },
-    fa_add: { does: "Appends " + M("x") + " after the last element of a fixed-capacity array.", params: M("x") + " — the value to append", returns: "nothing", errors: "array is full when " + M("n == capacity") + " — a fixed array cannot grow", cost: "O(1)" },
-    fa_insert: { does: "Inserts " + M("x") + " at index " + M("i") + ", shifting " + M("A[i..n−1]") + " one slot right.", params: M("i") + " — a position in [0, n] (n = append) · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]") + "; array is full if " + M("n == capacity"), cost: "O(n − i) shifts, so O(n) worst case (i = 0)" },
-    da_add_geo: { does: "Appends " + M("x") + "; when the array is full it first grows to <b>double</b> the capacity.", params: M("x") + " — the value to append", returns: "nothing", errors: "none — the array grows instead of failing", cost: "O(1) amortised; one add in a resize costs O(n)" },
-    da_add_arith: { does: "Appends " + M("x") + "; when the array is full it first grows by a <b>constant 2</b> slots.", params: M("x") + " — the value to append", returns: "nothing", errors: "none", cost: "O(n) amortised — resizes happen every 2 adds, which is why real libraries double instead" },
-    da_insert_geo: { does: "Inserts " + M("x") + " at index " + M("i") + ", doubling the capacity first if the array is full.", params: M("i") + " — a position in [0, n] · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]"), cost: "O(n) — shifting dominates whatever the growth rule" },
-    da_insert_arith: { does: "Inserts " + M("x") + " at index " + M("i") + ", growing by 2 slots first if the array is full.", params: M("i") + " — a position in [0, n] · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]"), cost: "O(n)" },
-    g_get: { does: "Reads the cell at row " + M("r") + ", column " + M("c") + ".", params: M("r") + " — row in [0, rows) · " + M("c") + " — column in [0, cols)", returns: M("M[r][c]"), errors: "index out of bounds if either index is out of range", cost: "O(1) — the address is r · cols + c" },
-    g_set: { does: "Writes " + M("x") + " into row " + M("r") + ", column " + M("c") + ".", params: M("r") + ", " + M("c") + " — cell position · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if either index is out of range", cost: "O(1)" },
-    g_rowmajor: { does: "Visits every cell row by row — the order the cells sit in memory.", params: M("m") + " — the 2-D array", returns: "nothing (visits each cell)", errors: "none", cost: "Θ(rows · cols); cache-friendly because each step is the next address" },
-    g_colmajor: { does: "Visits every cell column by column, jumping a whole row ahead in memory each step.", params: M("m") + " — the 2-D array", returns: "nothing (visits each cell)", errors: "none", cost: "Θ(rows · cols), but each step jumps " + M("cols") + " cells, so it is slower on large arrays" },
-    g_rowsum: { does: "Adds up the values in row " + M("r") + ".", params: M("r") + " — a row in [0, rows)", returns: "the sum of the row", errors: "index out of bounds if " + M("r ∉ [0, rows)"), cost: "O(cols)" },
-    g_find: { does: "Searches every cell, row by row, for " + M("x") + ".", params: M("x") + " — the value to look for", returns: "its (row, column), or (−1, −1) if absent", errors: "none", cost: "O(rows · cols)" },
-    s_addFirst: { does: "Puts a new node holding " + M("x") + " at the front of a singly linked list.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1) — two pointer writes, no traversal" },
-    s_addLast: { does: "Puts a new node holding " + M("x") + " at the back, using the tail reference.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1) thanks to the tail pointer" },
-    s_insert: { does: "Inserts " + M("x") + " so that it ends up at index " + M("i") + ", by walking to the node before it.", params: M("i") + " — a position in [1, size] (0 is addFirst) · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [1, size]"), cost: "O(i) for the walk; the splice itself is O(1)" },
-    s_removeFirst: { does: "Unlinks and returns the first node's value.", params: "none", returns: "the removed value", errors: "list is empty if " + M("head == null"), cost: "O(1)" },
-    s_removeLast: { does: "Unlinks and returns the last node's value. A singly linked list must walk to find the node before the tail.", params: "none", returns: "the removed value", errors: "list is empty (via removeFirst when there are 0 nodes)", cost: "O(n) — the walk to the second-to-last node" },
-    s_remove: { does: "Removes the node at index " + M("i") + " by walking to its predecessor and bypassing it.", params: M("i") + " — a position in [1, size) (0 is removeFirst)", returns: "the removed value", errors: "index out of bounds if " + M("i ∉ [1, size)"), cost: "O(i)" },
-    l_indexOf: { does: "Follows next pointers from the head until it finds " + M("x") + ".", params: M("x") + " — the value to look for", returns: "its index, or −1 if absent", errors: "none", cost: "O(n)" },
-    s_reverse: { does: "Reverses the list in place by flipping every next pointer.", params: "none", returns: "nothing (head and tail swap roles)", errors: "none — works for 0 or 1 nodes too", cost: "O(n) time, O(1) extra space" },
-    d_addFirst: { does: "Puts a new node at the front of a doubly linked list, linking it both ways.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1)" },
-    d_addLast: { does: "Puts a new node at the back, linking it both ways.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1)" },
-    d_insert: { does: "Splices " + M("x") + " in before the node currently at index " + M("i") + ".", params: M("i") + " — a position in [1, size) (0 is addFirst, size is addLast) · " + M("x") + " — the value", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [1, size)"), cost: "O(i) for the walk; four pointer writes" },
-    d_removeFirst: { does: "Unlinks and returns the first node's value.", params: "none", returns: "the removed value", errors: "list is empty if " + M("head == null"), cost: "O(1)" },
-    d_removeLast: { does: "Unlinks and returns the last node's value using " + M("tail.prev") + " — no walk.", params: "none", returns: "the removed value", errors: "list is empty if " + M("tail == null"), cost: "O(1)" },
-    d_remove: { does: "Removes the node at index " + M("i") + " by making its neighbours point past it.", params: M("i") + " — a position in [1, size − 1)", returns: "the removed value", errors: "index out of bounds if " + M("i ∉ [1, size − 1)"), cost: "O(i) for the walk; O(1) if you already hold the node" },
-    d_backward: { does: "Visits every value from the tail back to the head using prev links.", params: "none", returns: "nothing (visits each value)", errors: "none", cost: "O(n)" },
-    c_addFirst: { does: "Adds " + M("x") + " as the new head of a circular list — the node right after the tail.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1)" },
-    c_addLast: { does: "Adds " + M("x") + " at the back: addFirst, then move the tail one step forward.", params: M("x") + " — the value", returns: "nothing", errors: "none", cost: "O(1)" },
-    c_removeFirst: { does: "Removes and returns the head (the node after the tail) and closes the ring past it.", params: "none", returns: "the removed value", errors: "list is empty if " + M("tail == null"), cost: "O(1)" },
-    c_rotate: { does: "Moves the front element to the back by advancing the tail pointer — nothing is unlinked.", params: "none", returns: "nothing", errors: "none — does nothing on an empty ring", cost: "O(1)" },
-    c_indexOf: { does: "Walks once around the ring looking for " + M("x") + ", stopping after a full lap.", params: M("x") + " — the value to look for", returns: "its index, or −1 if absent", errors: "none", cost: "O(n)" },
+    get: { does: "Returns the element at index " + M("i") + ".", params: M("i") + " — an index in [0, n)", returns: "the element " + M("A[i]"), errors: "index out of bounds if " + M("i < 0") + " or " + M("i ≥ n"), time: "O(1) — one address calculation, no scanning", space: "O(1)" },
+    set: { does: "Overwrites the element at index " + M("i") + " with " + M("x") + ".", params: M("i") + " — an index in [0, n) · " + M("x") + " — the new value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n)"), time: "O(1)", space: "O(1)" },
+    remove: { does: "Removes and returns the element at index " + M("i") + ", shifting everything after it one slot left.", params: M("i") + " — an index in [0, n)", returns: "the removed element", errors: "index out of bounds if " + M("i ∉ [0, n)"), time: "O(n) — n − i − 1 shifts, worst at i = 0", space: "O(1)" },
+    indexOf: { does: "Finds the first index holding " + M("x") + ".", params: M("x") + " — the value to look for", returns: "its index, or −1 if absent", errors: "none", time: "O(n) — linear search, no order to exploit", space: "O(1)" },
+    fa_add: { does: "Appends " + M("x") + " after the last element of a fixed-capacity array.", params: M("x") + " — the value to append (any number)", returns: "nothing", errors: "array is full when " + M("n == capacity") + " — a fixed array cannot grow", time: "O(1)", space: "O(1)" },
+    fa_insert: { does: "Inserts " + M("x") + " at index " + M("i") + ", shifting " + M("A[i..n−1]") + " one slot right.", params: M("i") + " — a position in [0, n] (n = append) · " + M("x") + " — the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]") + "; array is full if " + M("n == capacity"), time: "O(n) — n − i shifts, worst at i = 0", space: "O(1)" },
+    da_add_geo: { does: "Appends " + M("x") + "; when the array is full it first grows to <b>double</b> the capacity.", params: M("x") + " — the value to append (any number)", returns: "nothing", errors: "none — the array grows instead of failing", time: "O(n) — when the array is full every element is copied into the new one; any other add is O(1)", space: "O(n) — the new array made by a resize" },
+    da_add_arith: { does: "Appends " + M("x") + "; when the array is full it first grows by a <b>constant 2</b> slots.", params: M("x") + " — the value to append (any number)", returns: "nothing", errors: "none", time: "O(n) — when the array is full every element is copied; with +2 growth that happens every other add", space: "O(n) — the new array made by a resize" },
+    da_insert_geo: { does: "Inserts " + M("x") + " at index " + M("i") + ", doubling the capacity first if the array is full.", params: M("i") + " — a position in [0, n] · " + M("x") + " — the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]"), time: "O(n) — shifting, plus copying when it resizes", space: "O(n) — the new array made by a resize" },
+    da_insert_arith: { does: "Inserts " + M("x") + " at index " + M("i") + ", growing by 2 slots first if the array is full.", params: M("i") + " — a position in [0, n] · " + M("x") + " — the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]"), time: "O(n) — shifting, plus copying when it resizes", space: "O(n) — the new array made by a resize" },
+    g_get: { does: "Reads the cell at row " + M("r") + ", column " + M("c") + ".", params: M("r") + " — row in [0, rows) · " + M("c") + " — column in [0, cols)", returns: M("M[r][c]"), errors: "index out of bounds if either index is out of range", time: "O(1) — the address is r · cols + c", space: "O(1)" },
+    g_set: { does: "Writes " + M("x") + " into row " + M("r") + ", column " + M("c") + ".", params: M("r") + ", " + M("c") + " — cell position · " + M("x") + " — the value (any number)", returns: "nothing", errors: "index out of bounds if either index is out of range", time: "O(1)", space: "O(1)" },
+    g_rowmajor: { does: "Visits every cell row by row — the order the cells sit in memory.", params: M("m") + " — the 2-D array", returns: "nothing (visits each cell)", errors: "none", time: "O(rows · cols) — and cache-friendly, because each step is the next address", space: "O(1)" },
+    g_colmajor: { does: "Visits every cell column by column, jumping a whole row ahead in memory each step.", params: M("m") + " — the 2-D array", returns: "nothing (visits each cell)", errors: "none", time: "O(rows · cols) — but each step jumps cols cells in memory, so it is slower on large arrays", space: "O(1)" },
+    g_rowsum: { does: "Adds up the values in row " + M("r") + ".", params: M("r") + " — a row in [0, rows)", returns: "the sum of the row", errors: "index out of bounds if " + M("r ∉ [0, rows)"), time: "O(cols)", space: "O(1)" },
+    g_find: { does: "Searches every cell, row by row, for " + M("x") + ".", params: M("x") + " — the value to look for", returns: "its (row, column), or (−1, −1) if absent", errors: "none", time: "O(rows · cols)", space: "O(1)" },
+    s_addFirst: { does: "Puts a new node holding " + M("x") + " at the front of a singly linked list.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "none", time: "O(1) — two pointer writes, no traversal", space: "O(1) — one new node" },
+    s_addLast: { does: "Puts a new node holding " + M("x") + " at the back, using the tail reference.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "none", time: "O(1) — thanks to the tail pointer", space: "O(1) — one new node" },
+    s_insert: { does: "Inserts " + M("x") + " so that it ends up at index " + M("i") + ", by walking to the node before it.", params: M("i") + " — a position in [1, size] (0 is addFirst) · " + M("x") + " — the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [1, size]"), time: "O(n) — the walk to node i − 1; the splice itself is O(1)", space: "O(1) — one new node" },
+    s_removeFirst: { does: "Unlinks and returns the first node's value.", params: "none", returns: "the removed value", errors: "list is empty if " + M("head == null"), time: "O(1)", space: "O(1)" },
+    s_removeLast: { does: "Unlinks and returns the last node's value. A singly linked list must walk to find the node before the tail.", params: "none", returns: "the removed value", errors: "list is empty (via removeFirst when there are 0 nodes)", time: "O(n) — the walk to the second-to-last node", space: "O(1)" },
+    s_remove: { does: "Removes the node at index " + M("i") + " by walking to its predecessor and bypassing it.", params: M("i") + " — a position in [1, size) (0 is removeFirst)", returns: "the removed value", errors: "index out of bounds if " + M("i ∉ [1, size)"), time: "O(n) — the walk to node i − 1", space: "O(1)" },
+    l_indexOf: { does: "Follows next pointers from the head until it finds " + M("x") + ".", params: M("x") + " — the value to look for", returns: "its index, or −1 if absent", errors: "none", time: "O(n)", space: "O(1)" },
+    s_reverse: { does: "Reverses the list in place by flipping every next pointer.", params: "none", returns: "nothing (head and tail swap roles)", errors: "none — works for 0 or 1 nodes too", time: "O(n) — one pass", space: "O(1) — three pointers, no copy of the list" },
+    d_addFirst: { does: "Puts a new node at the front of a doubly linked list, linking it both ways.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "none", time: "O(1)", space: "O(1) — one new node" },
+    d_addLast: { does: "Puts a new node at the back, linking it both ways.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "none", time: "O(1)", space: "O(1) — one new node" },
+    d_insert: { does: "Splices " + M("x") + " in before the node currently at index " + M("i") + ".", params: M("i") + " — a position in [1, size) (0 is addFirst, size is addLast) · " + M("x") + " — the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [1, size)"), time: "O(n) — the walk; then four pointer writes", space: "O(1) — one new node" },
+    d_removeFirst: { does: "Unlinks and returns the first node's value.", params: "none", returns: "the removed value", errors: "list is empty if " + M("head == null"), time: "O(1)", space: "O(1)" },
+    d_removeLast: { does: "Unlinks and returns the last node's value using " + M("tail.prev") + " — no walk.", params: "none", returns: "the removed value", errors: "list is empty if " + M("tail == null"), time: "O(1) — tail.prev, no walk", space: "O(1)" },
+    d_remove: { does: "Removes the node at index " + M("i") + " by making its neighbours point past it.", params: M("i") + " — a position in [1, size − 1)", returns: "the removed value", errors: "index out of bounds if " + M("i ∉ [1, size − 1)"), time: "O(n) — the walk; O(1) if you already hold the node", space: "O(1)" },
+    d_backward: { does: "Visits every value from the tail back to the head using prev links.", params: "none", returns: "nothing (visits each value)", errors: "none", time: "O(n)", space: "O(1)" },
+    c_addFirst: { does: "Adds " + M("x") + " as the new head of a circular list — the node right after the tail.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "none", time: "O(1)", space: "O(1) — one new node" },
+    c_addLast: { does: "Adds " + M("x") + " at the back: addFirst, then move the tail one step forward.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "none", time: "O(1)", space: "O(1) — one new node" },
+    c_removeFirst: { does: "Removes and returns the head (the node after the tail) and closes the ring past it.", params: "none", returns: "the removed value", errors: "list is empty if " + M("tail == null"), time: "O(1)", space: "O(1)" },
+    c_rotate: { does: "Moves the front element to the back by advancing the tail pointer — nothing is unlinked.", params: "none", returns: "nothing", errors: "none — does nothing on an empty ring", time: "O(1)", space: "O(1)" },
+    c_indexOf: { does: "Walks once around the ring looking for " + M("x") + ", stopping after a full lap.", params: M("x") + " — the value to look for", returns: "its index, or −1 if absent", errors: "none", time: "O(n)", space: "O(1)" },
   });
+
+  /* ============================================================
+     CLASSES — the fields each method reads and writes. get, set, remove,
+     indexOf and the linked-list indexOf are shared by two tabs, so
+     selectTab() points them at the class of the tab on screen.
+     ============================================================ */
+  const NODE1 = {
+    pseudo: [
+      "  class Node:                // one box in the chain",
+      "    data                     // the value stored in this node",
+      "    next                     // the next node, or null at the end",
+      "    constructor(x):          // new Node(x) makes a node holding x",
+      "      data ← x",
+      "      next ← null",
+    ],
+    java: [
+      "  private static class Node {   // one box in the chain",
+      "    double data;                // the value stored in this node",
+      "    Node next;                  // the next node, or null at the end",
+      "    Node(double data) {         // constructor: new Node(5) makes a node holding 5",
+      "      this.data = data;         // this.data is the field, data is the parameter",
+      "      this.next = null;",
+      "    }",
+      "  }",
+    ],
+  };
+  const NODE2 = {
+    pseudo: [
+      "  class Node:                // one box in the chain",
+      "    data                     // the value stored in this node",
+      "    next                     // the next node, or null at the end",
+      "    prev                     // the previous node, or null at the front",
+      "    constructor(x):          // new Node(x) makes a node holding x",
+      "      data ← x",
+      "      next ← null;  prev ← null",
+    ],
+    java: [
+      "  private static class Node {   // one box in the chain",
+      "    double data;                // the value stored in this node",
+      "    Node next;                  // the next node, or null at the end",
+      "    Node prev;                  // the previous node, or null at the front",
+      "    Node(double data) {         // constructor: new Node(5) makes a node holding 5",
+      "      this.data = data;         // this.data is the field, data is the parameter",
+      "      this.next = null;",
+      "      this.prev = null;",
+      "    }",
+      "  }",
+    ],
+  };
+  const CLS = {
+    fixed: { name: "FixedArray",
+      note: "This page's array was created with <span class='mono'>new FixedArray(8)</span>.",
+      pseudo: [
+        "class FixedArray:",
+        "  A                        // array of capacity cells; capacity never changes",
+        "  n                        // how many cells are in use: A[0] … A[n-1]",
+        "",
+        "  constructor(capacity):   // runs once, when the array is created",
+        "    A ← new array of capacity cells",
+        "    n ← 0",
+      ],
+      java: [
+        "public class FixedArray {",
+        "  private double[] a;      // the cells; a.length is the capacity and never changes",
+        "  private int n;           // how many cells are in use: a[0] … a[n-1]",
+        "",
+        "  public FixedArray(int capacity) {   // constructor: runs on new FixedArray(8)",
+        "    a = new double[capacity];",
+        "    n = 0;",
+        "  }",
+        "",
+        "  // the methods below use a and n",
+        "}",
+      ] },
+    dynamic: { name: "DynamicArray",
+      note: "Created with <span class='mono'>new DynamicArray()</span>, which starts with capacity 4.",
+      pseudo: [
+        "class DynamicArray:",
+        "  A                        // the current backing array; replaced when it fills up",
+        "  n                        // how many cells are in use: A[0] … A[n-1]",
+        "",
+        "  constructor():",
+        "    A ← new array of 4 cells",
+        "    n ← 0",
+      ],
+      java: [
+        "public class DynamicArray {",
+        "  private double[] a;      // the current backing array; resize() replaces it",
+        "  private int n;           // how many cells are in use: a[0] … a[n-1]",
+        "",
+        "  public DynamicArray() {  // constructor: runs on new DynamicArray()",
+        "    a = new double[4];",
+        "    n = 0;",
+        "  }",
+        "",
+        "  // the methods below use a and n",
+        "}",
+      ] },
+    single: { name: "SinglyLinkedList",
+      note: "Each <span class='mono'>Node</span> object is one box on the stage; <span class='mono'>next</span> is its arrow.",
+      pseudo: [
+        "class SinglyLinkedList:",
+      ].concat(NODE1.pseudo, [
+        "",
+        "  head                     // the first node, or null when the list is empty",
+        "  tail                     // the last node, or null when the list is empty",
+        "  size                     // number of nodes",
+        "",
+        "  constructor():",
+        "    head ← null;  tail ← null;  size ← 0",
+      ]),
+      java: [
+        "public class SinglyLinkedList {",
+      ].concat(NODE1.java, [
+        "",
+        "  private Node head;       // the first node, or null when the list is empty",
+        "  private Node tail;       // the last node, or null when the list is empty",
+        "  private int size;        // number of nodes",
+        "",
+        "  public SinglyLinkedList() {",
+        "    head = null;  tail = null;  size = 0;",
+        "  }",
+        "",
+        "  // the methods below use head, tail and size",
+        "}",
+      ]) },
+    double: { name: "DoublyLinkedList",
+      note: "Each <span class='mono'>Node</span> object is one box on the stage, with an arrow each way.",
+      pseudo: [
+        "class DoublyLinkedList:",
+      ].concat(NODE2.pseudo, [
+        "",
+        "  head                     // the first node, or null when the list is empty",
+        "  tail                     // the last node, or null when the list is empty",
+        "  size                     // number of nodes",
+        "",
+        "  constructor():",
+        "    head ← null;  tail ← null;  size ← 0",
+      ]),
+      java: [
+        "public class DoublyLinkedList {",
+      ].concat(NODE2.java, [
+        "",
+        "  private Node head;       // the first node, or null when the list is empty",
+        "  private Node tail;       // the last node, or null when the list is empty",
+        "  private int size;        // number of nodes",
+        "",
+        "  public DoublyLinkedList() {",
+        "    head = null;  tail = null;  size = 0;",
+        "  }",
+        "",
+        "  // the methods below use head, tail and size",
+        "}",
+      ]) },
+    circular: { name: "CircularlyLinkedList",
+      note: "There is no head field: the head is always <span class='mono'>tail.next</span>.",
+      pseudo: [
+        "class CircularlyLinkedList:",
+      ].concat(NODE1.pseudo, [
+        "",
+        "  tail                     // the last node (its next is the head), or null when empty",
+        "  size                     // number of nodes",
+        "",
+        "  constructor():",
+        "    tail ← null;  size ← 0",
+      ]),
+      java: [
+        "public class CircularlyLinkedList {",
+      ].concat(NODE1.java, [
+        "",
+        "  private Node tail;       // the last node (tail.next is the head), or null when empty",
+        "  private int size;        // number of nodes",
+        "",
+        "  public CircularlyLinkedList() {",
+        "    tail = null;  size = 0;",
+        "  }",
+        "",
+        "  // the methods below use tail and size",
+        "}",
+      ]) },
+  };
+  D.classes(CODE, [
+    Object.assign({ keys: /^fa_/ }, CLS.fixed),
+    Object.assign({ keys: /^da_/ }, CLS.dynamic),
+    Object.assign({ keys: /^s_/ }, CLS.single),
+    Object.assign({ keys: /^d_/ }, CLS.double),
+    Object.assign({ keys: /^c_/ }, CLS.circular),
+  ]);
+  /* the listings two tabs share follow the tab on screen */
+  function shareClass(tabId) {
+    const c = CLS[tabId] || null;
+    ["get", "set", "remove", "indexOf", "l_indexOf"].forEach((k) => (CODE[k].cls = c));
+  }
 
   /* ============================================================
      STATE
@@ -1309,7 +943,7 @@
       const r = faRec().code("fa_add");
       r.snap({ note: "<b>add(" + v + ")</b> — append after the last element. n = " + FA.n + ", capacity = " + FA.cap + " (fixed when the array was created)." });
       if (FA.n === FA.cap) {
-        r.at("full").snap({ marks: allMarks(FA.n, "swap"), note: "<b>The array is full.</b> A fixed array can never grow: its size was decided at <span class='mono'>new int[" + FA.cap + "]</span>. The only options are to fail or copy everything into a bigger array — which is exactly what a <b>dynamic array</b> automates." });
+        r.at("full").snap({ marks: allMarks(FA.n, "swap"), note: "<b>The array is full.</b> A fixed array can never grow: its size was decided at <span class='mono'>new double[" + FA.cap + "]</span>. The only options are to fail or copy everything into a bigger array — which is exactly what a <b>dynamic array</b> automates." });
         return r;
       }
       r.at("full^").snap({ note: "n = " + FA.n + " &lt; " + FA.cap + ", so there is room." });
@@ -1473,7 +1107,7 @@
   }
   const key2 = (r, c) => r + "," + c;
   const g2In = (r, c) => r >= 0 && r < G2.rows && c >= 0 && c < G2.cols;
-  const g2Why = (r, c) => (r < 0 || r >= G2.rows ? "row " + r + " is outside [0, " + G2.rows + ")" : "column " + c + " is outside [0, " + G2.cols + ")") + ". (In Python, a negative index would silently wrap around to the other end — that is why the check is written out.)";
+  const g2Why = (r, c) => (r < 0 || r >= G2.rows ? "row " + r + " is outside [0, " + G2.rows + ")" : "column " + c + " is outside [0, " + G2.cols + ")") + ". (Some languages let a negative index wrap around to the other end. Java throws instead, and the check makes that explicit.)";
   const g2 = {
     get(r0, c0) {
       const r = g2Rec().code("g_get");
@@ -1481,7 +1115,7 @@
       r.snap({ note: "<b>get(" + r0 + ", " + c0 + ")</b> on a " + G2.rows + " × " + G2.cols + " array." });
       if (!g2In(r0, c0)) return fail(r, "check", g2Why(r0, c0));
       r.at("check^").snap({ marks: { ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, note: "Row " + r0 + " is in [0, " + G2.rows + ") and column " + c0 + " is in [0, " + G2.cols + ")." });
-      r.at("flat").snap({ marks: { [key2(r0, c0)]: "cmp", ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, flat: { [k]: "cmp" }, note: "Find the cell. In pseudocode and C++ the array is one row-major block, so the flat index is <span class='mono'>r · cols + c = " + r0 + " · " + G2.cols + " + " + c0 + " = " + k + "</span>. In Java and Python, <span class='mono'>m[" + r0 + "]</span> first fetches row " + r0 + "'s own array, and <span class='mono'>[" + c0 + "]</span> then indexes into it." });
+      r.at("flat").snap({ marks: { [key2(r0, c0)]: "cmp", ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, flat: { [k]: "cmp" }, note: "Find the cell. In the pseudocode the array is one row-major block, so the flat index is <span class='mono'>r · cols + c = " + r0 + " · " + G2.cols + " + " + c0 + " = " + k + "</span>. In Java, <span class='mono'>m[" + r0 + "]</span> first fetches row " + r0 + "'s own array, and <span class='mono'>[" + c0 + "]</span> then indexes into it." });
       r.at("ret").snap({ marks: { [key2(r0, c0)]: "target" }, flat: { [k]: "target" }, note: "One read: <b>M[" + r0 + "][" + c0 + "] = " + G2.m[r0][c0] + "</b>. Still O(1). A 2-D array is just a 1-D array plus a little arithmetic." });
       return r;
     },
@@ -1491,7 +1125,7 @@
       r.snap({ note: "<b>set(" + r0 + ", " + c0 + ", " + v + ")</b>." });
       if (!g2In(r0, c0)) return fail(r, "check", g2Why(r0, c0));
       r.at("check^").snap({ marks: { ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, note: "Both indices are in range." });
-      r.at("flat").snap({ marks: { [key2(r0, c0)]: "cmp" }, flat: { [k]: "cmp" }, note: "Locate the cell: flat index " + r0 + " · " + G2.cols + " + " + c0 + " = " + k + " (C++ / pseudocode), or row " + r0 + "'s array then column " + c0 + " (Java / Python)." });
+      r.at("flat").snap({ marks: { [key2(r0, c0)]: "cmp" }, flat: { [k]: "cmp" }, note: "Locate the cell: flat index " + r0 + " · " + G2.cols + " + " + c0 + " = " + k + " (pseudocode), or row " + r0 + "'s array then column " + c0 + " (Java)." });
       G2.m[r0][c0] = v;
       r.at("write").snap({ marks: { [key2(r0, c0)]: "done" }, flat: { [k]: "done" }, note: "Write " + v + ". <b>O(1)</b>." });
       return r;
@@ -1533,7 +1167,7 @@
       const done = {};
       for (let c = 0; c < G2.cols; c++) {
         r.at("loop").snap({ marks: Object.assign({ ["r" + r0]: "active", [key2(r0, c)]: "cmp" }, done), acc: s, note: "c = " + c + "." });
-        s += G2.m[r0][c];
+        s = Math.round((s + G2.m[r0][c]) * 100) / 100;   /* keep decimal sums tidy (0.1 + 0.2 shows as 0.3) */
         done[key2(r0, c)] = "done";
         r.at("add").snap({ marks: Object.assign({ ["r" + r0]: "active" }, done), acc: s, note: "s += M[" + r0 + "][" + c + "] = " + G2.m[r0][c] + " → s = " + s + "." });
       }
@@ -1893,9 +1527,8 @@
   function renderFA(stage, f) {
     stage.appendChild(D.cells(f.a, {
       marks: f.marks, live: (v) => v != null, ptrs: f.n < f.cap ? { [f.n]: "n" } : {}, roomBelow: true,
-      label: "int[" + f.cap + "] — capacity fixed at creation",
+      label: "double[" + f.cap + "] — capacity fixed at creation",
     }));
-    D.stats("#stats", [["n (size)", f.n], ["capacity", f.cap], ["free slots", f.cap - f.n], ["full?", f.n === f.cap ? "yes" : "no"]]);
   }
 
   function renderDA(stage, f) {
@@ -1909,10 +1542,6 @@
       stage.appendChild(old);
     }
     stage.appendChild(D.el("div", { class: "small mono muted", style: "margin-top:.3rem", html: "capacity history: " + f.history.join(" → ") + (f.history.length > 1 ? (f.geo ? "   <span style='color:var(--c-done)'>(×2 each time — geometric)</span>" : "   <span style='color:var(--c-warn)'>(+2 each time — arithmetic)</span>") : "") }));
-    D.stats("#stats", [
-      ["n (size)", f.n], ["capacity", f.cap], ["load", f.cap ? Math.round((f.n / f.cap) * 100) + "%" : "–"],
-      ["element copies", f.copies], ["resizes", f.grows], ["copies per add", f.n ? (f.copies / Math.max(1, f.n)).toFixed(2) : "–"],
-    ]);
   }
 
   function renderG2(stage, f) {
@@ -1928,7 +1557,7 @@
     left.appendChild(D.el("div", { class: "cells-cap", text: "logical view — M[r][c]" }));
     left.appendChild(grid);
     wrap.appendChild(left);
-    if (f.acc != null) wrap.appendChild(D.el("div", { class: "stat", style: "align-self:center", html: "<span class='k'>s (running sum)</span><span class='v'>" + f.acc + "</span>" }));
+    if (f.acc != null) wrap.appendChild(D.el("div", { class: "var-box", style: "align-self:center", html: "local variable <span class='mono'>s = " + f.acc + "</span>" }));
     stage.appendChild(wrap);
 
     const flat = [];
@@ -1941,7 +1570,6 @@
     const strip = D.cells(flat, { marks: fm, ptrs: ptrs, w: 38, h: 34, label: "physical memory — one contiguous block, row after row (row-major)" });
     strip.style.marginTop = ".8rem";
     stage.appendChild(strip);
-    D.stats("#stats", [["rows", f.rows], ["cols", f.cols], ["cells", f.rows * f.cols], ["address of M[r][c]", "base + (r·" + f.cols + " + c)·size"]]);
   }
 
   /* ---- linked list drawing ---- */
@@ -2037,9 +1665,6 @@
     if (!n && !circ) svg.appendChild(D.sText(w / 2, 40, "empty list", { class: "lbl-s", "font-size": 13 }));
     stage.appendChild(svg);
     if (f.out) stage.appendChild(D.el("div", { class: "small mono", style: "color:var(--c-done);margin-top:.3rem", text: "output: " + (f.out.join(", ") || "—") }));
-
-    const kindName = { single: "singly linked", double: "doubly linked", circular: "circularly linked" }[f.lk];
-    D.stats("#stats", [["size", n], ["kind", kindName], ["pointers / node", dbl ? 2 : 1], [circ ? "head" : "tail", n ? (circ ? f.vals[0] + " (tail.next)" : f.vals[n - 1]) : "null"]]);
   }
 
   function marker(id, color) {
@@ -2060,26 +1685,26 @@
   }
 
   /* ============================================================
-     TABS, NOTES, EXAMPLES
+     TABS, NOTES
      ============================================================ */
   const NOTES = {
     fixed:
-      "<p class='blurb'>A <b>fixed array</b> is one contiguous block whose capacity is decided once, at <span class='mono'>new int[8]</span>, and can " +
+      "<p class='blurb'>A <b>fixed array</b> is one contiguous block whose capacity is decided once, at <span class='mono'>new double[8]</span>, and can " +
       "never change. You track how many slots are in use (<span class='mono'>n</span>) yourself. Reads and writes by index are O(1). " +
       "Inserting or removing in the middle means shifting, and when every slot is used there is simply no room left.</p>",
     dynamic:
       "<div class='callout' style='margin-top:.9rem'><b>Growth is a geometric progression.</b> When the array is full, a dynamic array allocates a new one of " +
-      "<b>twice</b> the capacity and copies everything across. The capacities form the geometric sequence 1, 2, 4, 8, …, 2<sup>k</sup> (ratio 2). " +
-      "The copying cost is its sum: 1 + 2 + 4 + … + 2<sup>k−1</sup> = 2<sup>k</sup> − 1 &lt; 2n. So after n adds you have made fewer than 2n copies, " +
-      "which is <b>O(1) amortised</b> per add, even though one unlucky add costs O(n).<br><br>" +
-      "Compare <b>arithmetic</b> growth (+c each time). Copies are c + 2c + 3c + … ≈ n²/2c, which is <b>O(n) per add</b>. " +
-      "Switch <em>growth</em> to “+2”, run the same example, and compare the <span class='mono'>element copies</span> counter. " +
-      "Java's <span class='mono'>ArrayList</span> grows ×1.5 and C++'s <span class='mono'>vector</span> usually ×2. Any ratio &gt; 1 gives the same O(1) bound.</div>",
+      "<b>twice</b> the capacity and copies everything across. That one add costs <b>O(n) time and O(n) space</b> (the new array), which is its worst case; " +
+      "every other add is O(1). The capacities form the geometric sequence 4, 8, 16, …, and the total copying is their sum, " +
+      "less than 2n for n adds, so resizes stay rare.<br><br>" +
+      "Compare <b>arithmetic</b> growth (+2 each time): the array fills up again after just 2 more adds, so resizes happen constantly and " +
+      "the total copying grows like n². Switch <em>growth</em> to “+2”, keep adding, and watch the capacity history under the array. " +
+      "Java's <span class='mono'>ArrayList</span> grows ×1.5; any ratio &gt; 1 keeps resizes rare.</div>",
     grid:
-      "<p class='blurb'>A <b>2-D array</b> is a grid addressed by (row, column), but memory is one-dimensional. In C and C++, " +
-      "<span class='mono'>int m[R][C]</span> is laid out <b>row-major</b>: row 0, then row 1, … so M[r][c] lives at flat index r·C + c. In Java, " +
-      "<span class='mono'>int[][]</span> is an <em>array of references to row arrays</em>. Each row is contiguous, but rows can live apart and can even have different " +
-      "lengths (a “jagged” array). Python's list of lists works the same way. Either way the big-O is the same: O(1) access, O(R·C) to visit everything.</p>",
+      "<p class='blurb'>A <b>2-D array</b> is a grid addressed by (row, column), but memory is one-dimensional. In memory, " +
+      "a grid is laid out <b>row-major</b>: row 0, then row 1, … so M[r][c] lives at flat index r·C + c (the pseudocode works this way). In Java, " +
+      "<span class='mono'>double[][]</span> is an <em>array of references to row arrays</em>. Each row is contiguous, but rows can live apart and can even have different " +
+      "lengths (a “jagged” array). Either way the big-O is the same: O(1) access, O(R·C) to visit everything.</p>",
     single:
       "<p class='blurb'>A <b>singly linked list</b> stores <span class='mono'>next</span> only. We keep both <span class='mono'>head</span> and " +
       "<span class='mono'>tail</span>, so addFirst, addLast and removeFirst are O(1). Anything that needs a <em>predecessor</em> has to walk from the head, " +
@@ -2087,7 +1712,7 @@
     double:
       "<p class='blurb'>A <b>doubly linked list</b> also stores <span class='mono'>prev</span>. That costs one more pointer per node, but every node can reach its " +
       "predecessor in O(1). removeLast becomes O(1), you can traverse backwards, and removing a node you already hold never needs a walk. " +
-      "Java's <span class='mono'>LinkedList</span> and C++'s <span class='mono'>std::list</span> are doubly linked.</p>",
+      "Java's <span class='mono'>LinkedList</span> is doubly linked.</p>",
     circular:
       "<p class='blurb'>A <b>circularly linked list</b> is a singly linked list whose last node points back to the first. You only need to store " +
       "<span class='mono'>tail</span>, because the head is always <span class='mono'>tail.next</span>. That one pointer gives O(1) access to both ends, and " +
@@ -2103,58 +1728,9 @@
     else if (tab === "grid") still(g2Rec, note);
     else still(() => llRec(tab), note);
   }
-  /** run several ops back to back as one animation */
-  function chain(fns) {
-    const all = [];
-    fns.forEach((fn) => fn().frames.forEach((f) => all.push(f)));
-    player.load(all, true);
-  }
 
-  const EXAMPLES = {
-    fixed: [
-      { label: "insert at the front", desc: "Every element shifts right", run: () => { faFill([12, 25, 37, 48, 56]); load(fa.insert(0, 5)); } },
-      { label: "fill until full", desc: "Watch the fixed capacity run out", run: () => { faFill([3, 14, 15, 92, 65, 35]); chain([() => fa.add(89), () => fa.add(79), () => fa.add(32)]); } },
-      { label: "remove from the middle", desc: "The tail shifts left", run: () => { faFill([10, 20, 30, 40, 50, 60, 70]); load(fa.remove(2)); } },
-      { label: "search that misses", desc: "Linear search must check everything", run: () => { faFill([8, 3, 9, 1, 7, 4]); load(fa.indexOf(42)); } },
-      { label: "get past the end", desc: "get(5) with n = 5: the slot exists but the bounds check throws", run: () => { faFill([12, 25, 37, 48, 56]); load(fa.get(5)); } },
-    ],
-    dynamic: [
-      { label: "grow from empty ×2", desc: "16 adds starting at capacity 1: geometric growth", run: () => { q("growth").value = "geo"; setGrowth(); growDemo(); } },
-      { label: "grow from empty +2", desc: "The same 16 adds with arithmetic growth: count the copies", run: () => { q("growth").value = "arith"; setGrowth(); growDemo(); } },
-      { label: "insert at 0 when full", desc: "Resize and shift in one operation", run: () => { daReset(4); [11, 22, 33, 44].forEach((v) => da.add(v)); DA.copies = 0; DA.grows = 0; DA.history = [4]; load(da.insert(0, 5)); } },
-    ],
-    grid: [
-      { label: "address of M[2][3]", desc: "Row-major address arithmetic", run: () => { load(g2.get(Math.min(2, G2.rows - 1), Math.min(3, G2.cols - 1))); } },
-      { label: "row-major vs column-major", desc: "Row-major first, then column-major on the same grid", run: () => chain([() => g2.traverse(true), () => g2.traverse(false)]) },
-      { label: "sum of the last row", desc: "One loop over a single row", run: () => load(g2.rowSum(G2.rows - 1)) },
-      { label: "column out of range", desc: "get(0, cols) fails the bounds check", run: () => load(g2.get(0, G2.cols)) },
-    ],
-    single: [
-      { label: "build with addFirst", desc: "addFirst 3, 2, 1 → the list reads 1, 2, 3", run: () => { LL.single = []; chain([() => sll.addFirst(3), () => sll.addFirst(2), () => sll.addFirst(1)]); } },
-      { label: "removeLast walks O(n)", desc: "Even with a tail pointer", run: () => { LL.single = [4, 8, 15, 16, 23, 42]; load(sll.removeLast()); } },
-      { label: "reverse the list", desc: "Three pointers, one pass", run: () => { LL.single = [1, 2, 3, 4, 5]; load(sll.reverse()); } },
-      { label: "insert in the middle", desc: "Walk, then two pointer writes", run: () => { LL.single = [10, 20, 40, 50]; load(sll.insert(2, 30)); } },
-      { label: "removeLast on an empty list", desc: "head == tail == null, so removeFirst throws", run: () => { LL.single = []; load(sll.removeLast()); } },
-    ],
-    double: [
-      { label: "removeLast in O(1)", desc: "tail.prev means no walk", run: () => { LL.double = [4, 8, 15, 16, 23, 42]; load(dll.removeLast()); } },
-      { label: "insert in the middle", desc: "Four pointer writes", run: () => { LL.double = [10, 20, 40, 50]; load(dll.insert(2, 30)); } },
-      { label: "walk backward", desc: "Only possible with prev links", run: () => { LL.double = [1, 2, 3, 4, 5]; load(dll.backward()); } },
-    ],
-    circular: [
-      { label: "round-robin: rotate ×3", desc: "Each process gets a turn", run: () => { LL.circular = [1, 2, 3, 4]; chain([cll.rotate, cll.rotate, cll.rotate]); } },
-      { label: "addLast = addFirst + move tail", desc: "The tail trick", run: () => { LL.circular = [10, 20, 30]; load(cll.addLast(40)); } },
-      { label: "search wraps once", desc: "Stop after one full lap", run: () => { LL.circular = [5, 9, 2, 7]; load(cll.indexOf(99)); } },
-      { label: "ring of one", desc: "A single node points to itself", run: () => { LL.circular = []; load(cll.addFirst(7)); } },
-    ],
-  };
+
   function faFill(vals) { FA.a = new Array(FA.cap).fill(null); vals.forEach((v, i) => (FA.a[i] = v)); FA.n = vals.length; }
-  function growDemo() {
-    daReset(1);
-    const all = [];
-    for (let k = 0; k < 16; k++) da.add(D.randInt(10, 99)).frames.forEach((f) => all.push(f));
-    player.load(all, true);
-  }
   function setGrowth() {
     const geo = q("growth").value === "geo";
     if (geo === DA.geo) return;
@@ -2167,7 +1743,7 @@
     D.showFor(id);
     D.practiceShow(id);
     q("notes").innerHTML = NOTES[id];
-    D.Examples("#examples", EXAMPLES[id]);
+    shareClass(id);
     const first = {
       fixed: "fa_insert", dynamic: DA.geo ? "da_add_geo" : "da_add_arith", grid: "g_get",
       single: "s_addFirst", double: "d_addFirst", circular: "c_addFirst",
@@ -2181,7 +1757,7 @@
       double: "A doubly linked list with " + LL.double.length + " node(s).",
       circular: "A circularly linked list with " + LL.circular.length + " node(s). There is no null at the end: the tail points back to the head.",
     }[id];
-    stillTab(msg + " Pick an operation or try an example.");
+    stillTab(msg + " Pick an operation above.");
   }
 
   /* ============================================================
@@ -2415,11 +1991,12 @@
     dock = D.CodeDock("#code", CODE, { recv: (k) => (/^(s|d|c|l)_/.test(k) ? "list" : "arr") });
     player = new D.Player({ mount: "#player", render: render, code: dock });
 
-    const num = (id) => parseInt(q(id).value, 10);
-    const val = () => { const v = num("val"); return isNaN(v) ? D.randInt(10, 99) : v; };
+    const num = (id) => D.readInt(q(id));
+    /* values may be negative or decimal; empty means random */
+    const val = () => D.readNum(q("val"), () => D.randInt(10, 99));
     const need = (ok, msg) => { if (!ok) D.toast(msg, true); return ok; };
     /* only reject input that is not a number: out-of-range indices run, so the code's own check can fail on screen */
-    const idx = () => { const i = num("idx"); return need(!isNaN(i), "Type an index first.") ? i : null; };
+    const idx = () => { const i = num("idx"); return need(!isNaN(i), "Type a whole-number index first (an index can be negative, but not a decimal).") ? i : null; };
 
     /* fixed */
     q("fa-add").onclick = () => load(fa.add(val()));
@@ -2431,7 +2008,7 @@
     q("fa-clear").onclick = () => { faFill([]); stillTab("Cleared: n = 0. The capacity is still " + FA.cap + "."); };
 
     /* dynamic */
-    q("growth").onchange = () => { setGrowth(); stillTab("Growth rule: <b>" + (DA.geo ? "×2 (geometric)" : "+2 (arithmetic)") + "</b>. Try the “grow from empty” example."); };
+    q("growth").onchange = () => { setGrowth(); stillTab("Growth rule: <b>" + (DA.geo ? "×2 (geometric)" : "+2 (arithmetic)") + "</b>. Keep pressing add and watch the capacity history."); };
     q("da-add").onclick = () => load(da.add(val()));
     q("da-insert").onclick = () => { const i = idx(); if (i != null) load(da.insert(i, val())); };
     q("da-remove").onclick = () => { const i = idx(); if (i != null) load(da.remove(i)); };
@@ -2442,13 +2019,13 @@
     /* 2-D */
     const rc = () => {
       const r = num("g-r"), c = num("g-c");
-      if (!need(!isNaN(r) && !isNaN(c), "Type a row and a column first.")) return null;
+      if (!need(!isNaN(r) && !isNaN(c), "Type a whole-number row and column first.")) return null;
       return [r, c];
     };
-    const gval = () => { const v = num("g-v"); return isNaN(v) ? D.randInt(1, 99) : v; };
+    const gval = () => D.readNum(q("g-v"), () => D.randInt(1, 99));
     q("g-get").onclick = () => { const p = rc(); if (p) load(g2.get(p[0], p[1])); };
     q("g-set").onclick = () => { const p = rc(); if (p) load(g2.set(p[0], p[1], gval())); };
-    q("g-rowsum").onclick = () => { const r = num("g-r"); if (need(!isNaN(r), "Type a row first.")) load(g2.rowSum(r)); };
+    q("g-rowsum").onclick = () => { const r = num("g-r"); if (need(!isNaN(r), "Type a whole-number row first.")) load(g2.rowSum(r)); };
     q("g-find").onclick = () => load(g2.find(gval()));
     q("g-rowmajor").onclick = () => load(g2.traverse(true));
     q("g-colmajor").onclick = () => load(g2.traverse(false));
