@@ -3,31 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hash Tables — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
+<title>Hash Tables · CSE 214</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202610111800">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
 </head>
 <body>
 
-<div class="topbar">
+<header class="topbar">
   <div class="wrap topbar-in">
-    <a class="brand" href="../index.html"><span class="logo">D</span> DSA Visualizer</a>
-    <div class="crumbs"><a href="../index.html">Home</a> / <a href="index.html">CSE 214</a> / <span>Hash Tables</span></div>
+    <a class="back" href="index.html" title="Back to CSE 214" aria-label="Back to CSE 214">&lsaquo;</a>
+    <h1 class="title">Hash Tables</h1>
     <div class="spacer"></div>
-    <span class="pill">3 strategies</span>
   </div>
-</div>
+</header>
 
 <div class="wrap">
-  <div class="page-head">
-    <h1>Hash Tables</h1>
-    <p>A hash function turns a key into an index, which would give O(1) access if two keys never landed on the same
-       index. They do — so the whole subject is really about handling collisions.</p>
-  </div>
-
   <div id="tabs" class="tabs"></div>
 
-  <div class="panel">
+  <div class="panel main">
     <div class="toolbar">
       <div class="field"><label>keys</label><div id="keytype"></div></div>
       <div class="field"><label for="key">key</label><input type="text" id="key" placeholder="42" style="width:7rem"></div>
@@ -49,9 +42,15 @@
     <div id="player"></div>
 
     <div id="legend"></div>
-    <p class="blurb" id="mode-blurb"></p>
   </div>
 
+
+  <details class="about" id="about">
+    <summary>About this topic</summary>
+    <div class="about-body">
+    <p class="intro">A hash function turns a key into an index, which would give O(1) access if two keys never landed on the same
+       index. They do, so the whole subject is really about handling collisions.</p>
+    <p class="blurb" id="mode-blurb"></p>
   <div class="row" style="margin-bottom:2rem">
     <div class="col">
       <div class="panel" style="height:100%">
@@ -90,11 +89,11 @@
         <h2>Things that bite people</h2>
         <dl class="kv">
           <dt>composite m</dt><dd>clusters keys; use a prime, or a power of two with a well-mixed hash</dd>
-          <dt>deleting by blanking</dt><dd>breaks probe chains — you must use tombstones</dd>
+          <dt>deleting by blanking</dt><dd>breaks probe chains; you must use tombstones</dd>
           <dt>tombstone build-up</dt><dd>searches slow down even though n is small; rehash to clear them</dd>
-          <dt>bad hash</dt><dd>e.g. summing characters — "cat" and "act" collide; multiply by 31 instead</dd>
+          <dt>bad hash</dt><dd>e.g. summing characters: "cat" and "act" collide; multiply by 31 instead</dd>
           <dt>mutable keys</dt><dd>change a key after inserting and it is unfindable, since its hash moved</dd>
-          <dt>rehash cost</dt><dd>O(n + m) time and O(n + m) space — every index depends on m</dd>
+          <dt>rehash cost</dt><dd>O(n + m) time and O(n + m) space, since every index depends on m</dd>
         </dl>
         <p class="small muted" style="margin:.7rem 0 0">Try this: switch to <b>linear probing</b>, press <em>random
            keys</em> a few times, then delete two or three keys and search for something that is not there. You can
@@ -102,10 +101,13 @@
       </div>
     </div>
   </div>
+    </div>
+  </details>
+
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=202610042131"></script>
-<script src="../assets/js/hashtables.js?v=202610042131"></script>
+<script src="../assets/js/core.js?v=202610111800"></script>
+<script src="../assets/js/hashtables.js?v=202610111800"></script>
 </body>
 </html>

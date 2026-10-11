@@ -3,31 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Arrays &amp; Lists — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
+<title>Arrays &amp; Lists · CSE 214</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202610111800">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧱</text></svg>">
 </head>
 <body>
 
-<div class="topbar">
+<header class="topbar">
   <div class="wrap topbar-in">
-    <a class="brand" href="../index.html"><span class="logo">D</span> DSA Visualizer</a>
-    <div class="crumbs"><a href="../index.html">Home</a> / <a href="index.html">CSE 214</a> / <span>Arrays &amp; Lists</span></div>
+    <a class="back" href="index.html" title="Back to CSE 214" aria-label="Back to CSE 214">&lsaquo;</a>
+    <h1 class="title">Arrays &amp; Lists</h1>
     <div class="spacer"></div>
-    <span class="pill">6 structures</span>
   </div>
-</div>
+</header>
 
 <div class="wrap">
-  <div class="page-head">
-    <h1>Arrays &amp; Lists</h1>
-    <p>The same abstract list, built two very different ways. An array gives you O(1) random access but pays for
-       insertions by shifting. A linked list splices in O(1) but has to walk to reach anything.</p>
-  </div>
-
   <div id="tabs" class="tabs"></div>
 
-  <div class="panel">
+  <div class="panel main">
     <div class="toolbar">
       <div class="field" data-tab="fixed dynamic single double circular"><label for="val">value</label><input type="number" step="any" id="val" placeholder="random"></div>
       <div class="field" data-tab="fixed dynamic single double"><label for="idx">index</label><input type="number" id="idx" value="2" style="width:4.5rem"></div>
@@ -104,9 +97,15 @@
     <div class="stage" id="stage"></div>
     <div id="player"></div>
     <div id="legend"></div>
-    <div id="notes"></div>
   </div>
 
+
+  <details class="about" id="about">
+    <summary>About this topic</summary>
+    <div class="about-body">
+    <p class="intro">The same abstract list, built two very different ways. An array gives you O(1) random access but pays for
+       insertions by shifting. A linked list splices in O(1) but has to walk to reach anything.</p>
+    <div id="notes"></div>
   <div class="panel" style="margin-bottom:2rem">
     <h2>Arrays vs linked lists: time / space of every operation</h2>
     <p class="small muted" style="margin-top:-.3rem">Each cell is <b>time / extra space</b>, worst case, for a list of n elements.</p>
@@ -130,10 +129,13 @@
        <em>every</em> structure here: the array pays to shift, the list pays to walk. A linked list only wins when you
        already hold a reference to the node, or when you work only at the ends.</p>
   </div>
+    </div>
+  </details>
+
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=202610042131"></script>
-<script src="../assets/js/arrays.js?v=202610042131"></script>
+<script src="../assets/js/core.js?v=202610111800"></script>
+<script src="../assets/js/arrays.js?v=202610111800"></script>
 </body>
 </html>

@@ -3,32 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stacks, Queues &amp; Deques — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
+<title>Stacks, Queues &amp; Deques · CSE 214</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202610111800">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥞</text></svg>">
 </head>
 <body>
 
-<div class="topbar">
+<header class="topbar">
   <div class="wrap topbar-in">
-    <a class="brand" href="../index.html"><span class="logo">D</span> DSA Visualizer</a>
-    <div class="crumbs"><a href="../index.html">Home</a> / <a href="index.html">CSE 214</a> / <span>Stacks &amp; Queues</span></div>
+    <a class="back" href="index.html" title="Back to CSE 214" aria-label="Back to CSE 214">&lsaquo;</a>
+    <h1 class="title">Stacks, Queues &amp; Deques</h1>
     <div class="spacer"></div>
-    <span class="pill">LIFO / FIFO</span>
   </div>
-</div>
+</header>
 
 <div class="wrap">
-  <div class="page-head">
-    <h1>Stacks, Queues &amp; Deques</h1>
-    <p>Three lists that only let you work at their ends. A <b>stack</b> is <b>LIFO</b> (Last In, First Out), a
-       <b>queue</b> is <b>FIFO</b> (First In, First Out), and a <b>deque</b> allows both. Each one is built on a plain
-       array here, and limiting access to the ends is what makes every operation O(1) time.</p>
-  </div>
-
   <div id="tabs" class="tabs"></div>
 
-  <div class="panel">
+  <div class="panel main">
     <div class="toolbar">
       <div class="field" data-tab="stack aqueue cqueue deque compare"><label for="val">value</label><input type="number" step="any" id="val" placeholder="random"></div>
       <div class="sep" data-tab="stack aqueue cqueue deque compare"></div>
@@ -101,9 +93,16 @@
 
     <div id="player"></div>
     <div id="legend"></div>
-    <div id="notes"></div>
   </div>
 
+
+  <details class="about" id="about">
+    <summary>About this topic</summary>
+    <div class="about-body">
+    <p class="intro">Three lists that only let you work at their ends. A <b>stack</b> is <b>LIFO</b> (Last In, First Out), a
+       <b>queue</b> is <b>FIFO</b> (First In, First Out), and a <b>deque</b> allows both. Each one is built on a plain
+       array here, and limiting access to the ends is what makes every operation O(1) time.</p>
+    <div id="notes"></div>
   <div class="row" style="margin-bottom:2rem">
     <div class="col">
       <div class="panel" style="height:100%">
@@ -166,10 +165,13 @@
       </div>
     </div>
   </div>
+    </div>
+  </details>
+
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=202610042131"></script>
-<script src="../assets/js/stacks.js?v=202610042131"></script>
+<script src="../assets/js/core.js?v=202610111800"></script>
+<script src="../assets/js/stacks.js?v=202610111800"></script>
 </body>
 </html>

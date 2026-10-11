@@ -1,5 +1,5 @@
 /* ============================================================
-   graphs.js — build a graph by clicking, then run BFS / DFS
+   graphs.js: build a graph by clicking, then run BFS / DFS
    with a live queue or stack, adjacency matrix and adjacency list
    ============================================================ */
 (function () {
@@ -143,16 +143,16 @@
     c.snap({ line: null, ns: ns(), note: "<b>BFS from " + name(start) + ".</b> Every vertex is <em>undiscovered</em>; the queue is empty.", queue: [], tags: tags() });
     state[start] = 1; dist[start] = 0; Q.push(start);
     c.snap({ line: "init", ns: Object.assign(ns(), { [start]: "active" }), note: "Discover " + name(start) + " with dist 0 and <b>enqueue</b> it. Marking it discovered <em>now</em> (not when it is dequeued) is what stops a vertex entering the queue twice.", queue: Q.slice(), tags: tags(), es: Object.assign({}, tre) });
-    c.snap({ line: "loop", ns: Object.assign(ns(), { [start]: "active" }), note: "The queue holds " + name(start) + ", so it is not empty — enter the loop.", queue: Q.slice(), tags: tags(), es: Object.assign({}, tre) });
+    c.snap({ line: "loop", ns: Object.assign(ns(), { [start]: "active" }), note: "The queue holds " + name(start) + ", so it is not empty: enter the loop.", queue: Q.slice(), tags: tags(), es: Object.assign({}, tre) });
     while (Q.length) {
       const u = Q.shift();
       order.push(u);
-      c.snap({ line: "deq", ns: Object.assign(ns(), { [u]: "active" }), note: "<b>Dequeue " + name(u) + "</b> (dist " + dist[u] + "). Everything in the queue is at distance " + dist[u] + " or " + (dist[u] + 1) + " — BFS never mixes more than two levels.", queue: Q.slice(), tags: tags(), es: Object.assign({}, tre), lhl: u, order: order.slice() });
+      c.snap({ line: "deq", ns: Object.assign(ns(), { [u]: "active" }), note: "<b>Dequeue " + name(u) + "</b> (dist " + dist[u] + "). Everything in the queue is at distance " + dist[u] + " or " + (dist[u] + 1) + ": BFS never mixes more than two levels.", queue: Q.slice(), tags: tags(), es: Object.assign({}, tre), lhl: u, order: order.slice() });
       for (const v of G.adj[u]) {
         const nsx = ns();
         nsx[u] = "active";
         if (!state[v]) nsx[v] = "target";
-        c.snap({ line: ["nbr", "check"], ns: nsx, es: Object.assign({}, tre, { [ekey(u, v)]: "on" }), note: "Next neighbour of " + name(u) + " is " + name(v) + ": " + (state[v] ? "already discovered, so <b>skip</b> it — this edge is not part of the BFS tree." : "<b>undiscovered</b>."), queue: Q.slice(), tags: tags(), mhl: { r: u, c: v }, lhl: u, order: order.slice() });
+        c.snap({ line: ["nbr", "check"], ns: nsx, es: Object.assign({}, tre, { [ekey(u, v)]: "on" }), note: "Next neighbour of " + name(u) + " is " + name(v) + ": " + (state[v] ? "already discovered, so <b>skip</b> it. This edge is not part of the BFS tree." : "<b>undiscovered</b>."), queue: Q.slice(), tags: tags(), mhl: { r: u, c: v }, lhl: u, order: order.slice() });
         if (!state[v]) {
           state[v] = 1; dist[v] = dist[u] + 1; parent[v] = u;
           tre[ekey(u, v)] = "tree";
@@ -168,7 +168,7 @@
     c.snap({
       line: null, ns: ns(), es: Object.assign({}, tre), queue: [], tags: tags(), order: order.slice(),
       note: "BFS is done. Visit order: <b>" + order.map(name).join(" ") + "</b>. " +
-        (unreached.length ? "Never reached: <b>" + unreached.join(", ") + "</b> — they are in different connected components." : "Every vertex was reached, so the graph is connected from " + name(start) + ".") +
+        (unreached.length ? "Never reached: <b>" + unreached.join(", ") + "</b>. They are in different connected components." : "Every vertex was reached, so the graph is connected from " + name(start) + ".") +
         " The green edges form the <b>BFS tree</b>, and each dist label is a shortest-path length. Total work O(V + E).",
     });
     return c;
@@ -200,21 +200,21 @@
         c.snap({
           line: !color[v] ? ["nbr", "check", "rec"] : ["nbr", "check"], ns: Object.assign(ns(), { [u]: "active" }), es: Object.assign({}, tre, { [ekey(u, v)]: "on" }), stack: stack.slice(), tags: tags(), mhl: { r: u, c: v }, lhl: u, order: order.slice(),
           note: "Edge " + name(u) + "→" + name(v) + ": " + name(v) + " is " +
-            (!color[v] ? "<b>white</b>, so this is a <b>tree edge</b> — call DFS(" + name(v) + ") and go deeper. " + name(u) + " waits on the stack." :
-              color[v] === 1 ? "<b>grey</b> (still on the stack), so this is a <b>back edge</b> — it closes a cycle." :
-                G.directed ? "<b>black</b>, so this is a <b>" + kind + " edge</b> (no new information)." : "already finished — in an undirected graph this is just the edge we came in on, seen from the other side."),
+            (!color[v] ? "<b>white</b>, so this is a <b>tree edge</b>: call DFS(" + name(v) + ") and go deeper. " + name(u) + " waits on the stack." :
+              color[v] === 1 ? "<b>grey</b> (still on the stack), so this is a <b>back edge</b>: it closes a cycle." :
+                G.directed ? "<b>black</b>, so this is a <b>" + kind + " edge</b> (no new information)." : "already finished: in an undirected graph this is just the edge we came in on, seen from the other side."),
         });
-        if (!color[v]) { tre[ekey(u, v)] = "tree"; visit(v); c.snap({ line: "rec", ns: Object.assign(ns(), { [u]: "active" }), es: Object.assign({}, tre), stack: stack.slice(), tags: tags(), lhl: u, order: order.slice(), note: "Back at " + name(u) + " after finishing that subtree — continue with its remaining neighbours." }); }
+        if (!color[v]) { tre[ekey(u, v)] = "tree"; visit(v); c.snap({ line: "rec", ns: Object.assign(ns(), { [u]: "active" }), es: Object.assign({}, tre), stack: stack.slice(), tags: tags(), lhl: u, order: order.slice(), note: "Back at " + name(u) + " after finishing that subtree. Continue with its remaining neighbours." }); }
       }
       color[u] = 2; fin[u] = ++time; stack.pop();
-      c.snap({ line: "fin", ns: ns(), es: Object.assign({}, tre), stack: stack.slice(), tags: tags(), order: order.slice(), note: (G.adj[u].length ? "The neighbour loop is done" : name(u) + " has no neighbours") + " — no unexplored edges left at " + name(u) + " — <b>finish</b> it at time " + fin[u] + " and pop. Its whole subtree is done." });
+      c.snap({ line: "fin", ns: ns(), es: Object.assign({}, tre), stack: stack.slice(), tags: tags(), order: order.slice(), note: (G.adj[u].length ? "The neighbour loop is done" : name(u) + " has no neighbours") + ", so no unexplored edges are left at " + name(u) + ". <b>Finish</b> it at time " + fin[u] + " and pop. Its whole subtree is done." });
     }
 
     visit(start);
     if (forest) {
       for (let i = 0; i < n; i++)
         if (!color[i]) {
-          c.snap({ line: "forest", ns: ns(), es: Object.assign({}, tre), stack: [], tags: tags(), order: order.slice(), note: "The stack is empty but " + name(i) + " is still white — it is in another component. Start a <b>new DFS tree</b> there. Repeating this over all vertices is how you count connected components." });
+          c.snap({ line: "forest", ns: ns(), es: Object.assign({}, tre), stack: [], tags: tags(), order: order.slice(), note: "The stack is empty but " + name(i) + " is still white: it is in another component. Start a <b>new DFS tree</b> there. Repeating this over all vertices is how you count connected components." });
           visit(i);
         }
     }
@@ -224,7 +224,7 @@
       line: null, ns: ns(), es: Object.assign({}, tre), stack: [], tags: tags(), order: order.slice(),
       note: "DFS complete. Discovery order: <b>" + order.map(name).join(" ") + "</b>. " +
         (unreached.length ? "Unreached: <b>" + unreached.join(", ") + "</b> (try <em>DFS forest</em> to cover them). " : "") +
-        "Every vertex has an interval [disc, fin]; two intervals are either nested or disjoint — never partially overlapping. That is the <b>parenthesis theorem</b>, and it is why sorting by decreasing finish time gives a topological order. O(V + E).",
+        "Every vertex has an interval [disc, fin]; two intervals are either nested or disjoint, never partially overlapping. That is the <b>parenthesis theorem</b>, and it is why sorting by decreasing finish time gives a topological order. O(V + E).",
     });
     return c;
   }
@@ -234,7 +234,7 @@
     const host = q("gr-canvas");
     host.innerHTML = "";
     const svg = D.svg("svg", { class: "canvas", viewBox: "0 0 " + VW + " " + VH, width: VW, height: VH, style: "max-width:100%;height:auto;margin:0 auto;cursor:" + (tool === "add" ? "crosshair" : "pointer") });
-    svg.appendChild(D.svg("defs", {}, [mk("gArw", "#5b6a92"), mk("gArwOn", "#6ea8fe"), mk("gArwTree", "#4ade80")]));
+    svg.appendChild(D.svg("defs", {}, [mk("gArw", "#666666"), mk("gArwOn", "#2563eb"), mk("gArwTree", "#16a34a")]));
     svg.appendChild(D.svg("rect", { x: 0, y: 0, width: VW, height: VH, fill: "transparent" }));
 
     edgeList().forEach((e) => {
@@ -254,7 +254,7 @@
       const g = D.svg("g", { style: "cursor:grab", "data-node": i });
       g.appendChild(D.svg("circle", { cx: p.x, cy: p.y, r: R, class: "node-c " + cls + (pendingEdge === i ? " target" : "") }));
       g.appendChild(D.sText(p.x, p.y, name(i), { "font-size": 13 }));
-      if (f.tags && f.tags[i]) g.appendChild(D.sText(p.x, p.y + R + 11, f.tags[i], { class: "lbl-s", fill: "#ffc14d", "font-size": 11 }));
+      if (f.tags && f.tags[i]) g.appendChild(D.sText(p.x, p.y + R + 11, f.tags[i], { class: "lbl-s", fill: "#b45309", "font-size": 11 }));
       svg.appendChild(g);
     }
     if (!nCount()) svg.appendChild(D.sText(VW / 2, VH / 2, "click anywhere to add a vertex", { class: "lbl-s", "font-size": 14 }));
@@ -265,7 +265,7 @@
     const list = f.queue || f.stack;
     fr.innerHTML = "";
     if (list) {
-      fr.appendChild(D.el("div", { class: "small muted", text: f.queue ? "queue (FIFO — dequeue from the left)" : "stack (LIFO — the current DFS path)", style: "margin-bottom:.35rem" }));
+      fr.appendChild(D.el("div", { class: "small muted", text: f.queue ? "queue (FIFO, dequeue from the left)" : "stack (LIFO, the current DFS path)", style: "margin-bottom:.35rem" }));
       const row = D.el("div", { class: "cells" });
       if (!list.length) row.appendChild(D.el("div", { class: "small muted", text: "(empty)" }));
       list.forEach((i, k) =>
@@ -302,7 +302,7 @@
     for (let i = 0; i < n; i++) {
       const row = D.el("div", {
         class: "mono small",
-        style: "padding:.16rem .4rem;border-radius:6px;" + (f.lhl === i ? "background:#6ea8fe22;color:#fff" : "color:var(--muted)"),
+        style: "padding:.16rem .4rem;border:2px solid " + (f.lhl === i ? "var(--line);background:var(--hi);color:var(--txt);font-weight:700" : "transparent;color:var(--muted)"),
         text: name(i) + " → " + (G.adj[i].length ? G.adj[i].map(name).join(", ") : "∅"),
       });
       lv.appendChild(row);
@@ -403,7 +403,7 @@
   /* ---------- the two traversals, side by side in four languages ---------- */
   const CODE = {
     bfs: {
-      title: "BFS(s) — breadth-first search",
+      title: "BFS(s) · breadth-first search",
       pseudo: [
         "BFS(s):",
         "  mark s discovered;  dist[s] ← 0 @@init",
@@ -433,7 +433,7 @@
       ],
     },
     dfs: {
-      title: "DFS(u) — depth-first search",
+      title: "DFS(u) · depth-first search",
       pseudo: [
         "DFS(u):",
         "  color[u] ← GREY;  d[u] ← ++time        // discover @@disc",
@@ -463,8 +463,8 @@
     },
   };
   D.specs(CODE, {
-    bfs: { does: "Breadth-first search from " + "<span class='mono'>s</span>" + ": visits vertices in order of distance, using a FIFO queue.", params: "<span class='mono'>s</span> — the start vertex", returns: "nothing; fills dist[] (edge counts) and parent[] (the BFS tree)", errors: "none — unreachable vertices keep no distance", time: "O(V + E) — every vertex is enqueued once and every edge looked at once (O(V²) with a matrix)", space: "O(V) — the queue, plus dist[], parent[] and seen[]", callVals: { s: "0" } },
-    dfs: { does: "Depth-first search: goes as deep as possible from " + "<span class='mono'>u</span>" + " before backtracking, recording discovery and finish times.", params: "<span class='mono'>u</span> — the vertex to explore from", returns: "nothing; colours every reachable vertex and records d[] / f[]", errors: "none", time: "O(V + E) — every vertex is discovered once and every edge looked at once", space: "O(V) — the recursion can go V calls deep, plus color[], d[] and f[]", callVals: { u: "0" } },
+    bfs: { does: "Breadth-first search from " + "<span class='mono'>s</span>" + ": visits vertices in order of distance, using a FIFO queue.", params: "<span class='mono'>s</span>: the start vertex", returns: "nothing; fills dist[] (edge counts) and parent[] (the BFS tree)", errors: "none: unreachable vertices keep no distance", time: "O(V + E): every vertex is enqueued once and every edge looked at once (O(V²) with a matrix)", space: "O(V): the queue, plus dist[], parent[] and seen[]", callVals: { s: "0" } },
+    dfs: { does: "Depth-first search: goes as deep as possible from " + "<span class='mono'>u</span>" + " before backtracking, recording discovery and finish times.", params: "<span class='mono'>u</span>: the vertex to explore from", returns: "nothing; colours every reachable vertex and records d[] / f[]", errors: "none", time: "O(V + E): every vertex is discovered once and every edge looked at once", space: "O(V): the recursion can go V calls deep, plus color[], d[] and f[]", callVals: { u: "0" } },
   });
 
   D.classes(CODE, [{
@@ -582,14 +582,14 @@
         for (let u = 0; u < nCount(); u++) G.adj[u].forEach((v) => { if (G.adj[v].indexOf(u) < 0) G.adj[v].push(u); });
         G.adj.forEach((l) => l.sort((a, b) => a - b));
       }
-      refresh(G.directed ? "Now <b>directed</b> — each edge points one way, so the adjacency matrix no longer has to be symmetric." : "Now <b>undirected</b> — every edge was mirrored, so the matrix is symmetric and each edge appears in two lists.");
+      refresh(G.directed ? "Now <b>directed</b>: each edge points one way, so the adjacency matrix no longer has to be symmetric." : "Now <b>undirected</b>: every edge was mirrored, so the matrix is symmetric and each edge appears in two lists.");
     });
     q("preset").addEventListener("change", (e) => {
       if (!PRESETS[e.target.value]) return;
       PRESETS[e.target.value]();
       refresh("Loaded the <b>" + e.target.value + "</b> graph: " + nCount() + " vertices, " + edgeCount() + " edges.");
     });
-    q("btn-clear").addEventListener("click", () => { G.pos = []; G.adj = []; refresh("Empty graph — click to start building."); });
+    q("btn-clear").addEventListener("click", () => { G.pos = []; G.adj = []; refresh("Empty graph: click to start building."); });
     const go = (kind) => {
       if (!nCount()) return D.toast("Add some vertices first.", true);
       const st = +q("start").value || 0;
@@ -614,7 +614,7 @@
     ]);
 
     PRESETS.sample();
-    refresh("A sample graph. Pick a start vertex and press <b>BFS</b> or <b>DFS</b> — or click the canvas to build your own.");
+    refresh("A sample graph. Pick a start vertex and press <b>BFS</b> or <b>DFS</b>, or click the canvas to build your own.");
     q("algo-explain").innerHTML = EXPL.intro;
   });
 
@@ -627,18 +627,18 @@
     bfs:
       "<b>BFS invariant:</b> the queue always holds vertices from at most two consecutive levels. Each vertex is " +
       "enqueued once (it is marked discovered the moment it enters, not when it leaves), and each edge is examined once " +
-      "from each endpoint — so the running time is O(V + E). The <span style='color:#4ade80'>green tree edges</span> " +
+      "from each endpoint, so the running time is O(V + E). The <span style='color:#16a34a'>green tree edges</span> " +
       "form a shortest-path tree: following parents from any vertex back to the source gives a path of exactly " +
       "<span class='mono'>dist</span> edges, and no shorter one exists.",
     dfs:
       "<b>DFS timestamps:</b> each vertex gets a discovery and a finish time, so it owns the interval [d, f]. The " +
       "<b>parenthesis theorem</b> says two such intervals are either nested or disjoint. A <b>back edge</b> (an edge to " +
-      "a vertex still on the stack) exists if and only if the graph has a cycle — that is the standard cycle test. " +
+      "a vertex still on the stack) exists if and only if the graph has a cycle; that is the standard cycle test. " +
       "Sorting vertices by <em>decreasing finish time</em> gives a topological order of a DAG.",
     forest:
       "<b>DFS forest:</b> restarting the search from every still-white vertex covers the whole graph, and each restart " +
       "begins a new tree. For an undirected graph the number of trees is exactly the number of <b>connected " +
-      "components</b> — the standard linear-time way to count them. On a directed graph the same idea, run twice " +
+      "components</b>: the standard linear-time way to count them. On a directed graph the same idea, run twice " +
       "(once on the reverse graph, in decreasing finish order), gives strongly connected components: Kosaraju's algorithm.",
   };
 })();

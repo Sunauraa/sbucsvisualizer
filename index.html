@@ -3,89 +3,45 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DSA Visualizer — CSE 214 &amp; CSE 373</title>
+<title>DSA Visualizer · CSE 214 &amp; CSE 373</title>
 <meta name="description" content="Interactive data structure and algorithm visualizers for CSE 214 and CSE 373.">
-<link rel="stylesheet" href="assets/css/style.css?v=202610042131">
+<link rel="stylesheet" href="assets/css/style.css?v=202610111800">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌲</text></svg>">
 </head>
 <body>
 
-<div class="topbar">
+<header class="topbar">
   <div class="wrap topbar-in">
-    <a class="brand" href="index.html"><span class="logo">D</span> DSA Visualizer</a>
+    <h1 class="title">DSA Visualizer</h1>
     <div class="spacer"></div>
-    <span class="pill">pick a course</span>
   </div>
-</div>
+</header>
 
-<div class="wrap">
-
-  <section class="hero">
-    <h1>Data Structures &amp; Algorithms<br><span class="grad">Visualizer</span></h1>
-    <p>Step through every insert, rotation, probe and swap — one frame at a time. Scrub backwards, change the speed,
-       and feed the structures your own data.</p>
-  </section>
-
-  <section class="grid cols-2" style="margin-bottom:2rem">
-    <a class="card course-card" href="cse214/index.html">
-      <span class="code">CSE 214</span>
-      <h2>Data Structures</h2>
-      <p>Lists, recursion, stacks &amp; queues, every flavour of tree, priority queues, hash tables, graphs and eight
-         sorting algorithms — all interactive.</p>
-      <div class="tags">
-        <span class="tag">Arrays / Lists</span>
-        <span class="tag">Recursion</span>
-        <span class="tag">Stacks / Queues</span>
-        <span class="tag">Trees</span>
-        <span class="tag">Priority Queues</span>
-        <span class="tag">Hash Tables</span>
-        <span class="tag">Graphs</span>
-        <span class="tag">Sorting</span>
-      </div>
-      <p style="margin-top:.9rem;color:var(--accent)">Open the 8 modules &rarr;</p>
+<main class="wrap">
+  <div class="tiles">
+    <a class="tile" href="cse214/index.html">
+      <svg class="pic" viewBox="0 0 160 90" aria-hidden="true">
+        <line x1="80" y1="18" x2="45" y2="48"/><line x1="80" y1="18" x2="115" y2="48"/>
+        <line x1="45" y1="48" x2="28" y2="76"/><line x1="45" y1="48" x2="62" y2="76"/><line x1="115" y1="48" x2="98" y2="76"/>
+        <circle cx="80" cy="18" r="11"/><circle cx="45" cy="48" r="11"/><circle cx="115" cy="48" r="11"/>
+        <circle cx="28" cy="76" r="10"/><circle cx="62" cy="76" r="10"/><circle cx="98" cy="76" r="10"/>
+      </svg>
+      <span>CSE 214 &middot; Data Structures</span>
     </a>
-
-    <a class="card course-card soon" href="cse373/index.html">
-      <span class="badge-soon">coming next</span>
-      <span class="code">CSE 373</span>
-      <h2>Analysis of Algorithms</h2>
-      <p>Will be added when I've taken this course or when someone gives me the syllabus hehe</p>
+    <a class="tile soon" href="cse373/index.html">
+      <svg class="pic" viewBox="0 0 160 90" aria-hidden="true">
+        <line x1="20" y1="80" x2="145" y2="80"/><line x1="20" y1="80" x2="20" y2="8"/>
+        <path class="curve" d="M20 78 L140 66"/><path class="curve" d="M20 78 Q90 74 140 40"/><path class="curve" d="M20 78 Q70 72 105 10"/>
+      </svg>
+      <span>CSE 373 &middot; Analysis of Algorithms <small>coming later</small></span>
     </a>
-  </section>
+  </div>
 
-  <section class="panel">
-    <h2>How the visualizers work</h2>
-    <div class="grid cols-3">
-      <div>
-        <h3 style="margin:.2rem 0 .3rem;font-size:.95rem">1 &middot; Give it data</h3>
-        <p class="small muted">Type your own values, or hit <em>Random</em>. Every module accepts custom input so you can
-           replay an exam question exactly.</p>
-      </div>
-      <div>
-        <h3 style="margin:.2rem 0 .3rem;font-size:.95rem">2 &middot; Run an operation</h3>
-        <p class="small muted">The algorithm runs and records every step. Nothing is thrown away, so you can scrub the
-           timeline like a video.</p>
-      </div>
-      <div>
-        <h3 style="margin:.2rem 0 .3rem;font-size:.95rem">3 &middot; Read the caption</h3>
-        <p class="small muted">Each frame explains itself in words, and the counters track comparisons, swaps, probes,
-           rotations and heights.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="panel contrib">
-    <div class="contrib-ico" aria-hidden="true">🤝</div>
-    <div>
-      <h2>Help SBU CS students</h2>
-      <p>Want to contribute, or help Stony Brook CS students with more courses? Please email
-         <a href="mailto:tuanson.dao@stonybrook.edu">tuanson.dao@stonybrook.edu</a>.</p>
-    </div>
-  </section>
-
-</div>
+  <p class="small muted">Want to help Stony Brook CS students with more courses? Email
+     <a href="mailto:tuanson.dao@stonybrook.edu">tuanson.dao@stonybrook.edu</a>.</p>
+</main>
 
 <footer class="site"></footer>
-<script src="assets/js/core.js?v=202610042131"></script>
+<script src="assets/js/core.js?v=202610111800"></script>
 </body>
 </html>

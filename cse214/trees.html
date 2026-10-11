@@ -3,31 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trees — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
+<title>Trees · CSE 214</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202610111800">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>">
 </head>
 <body>
 
-<div class="topbar">
+<header class="topbar">
   <div class="wrap topbar-in">
-    <a class="brand" href="../index.html"><span class="logo">D</span> DSA Visualizer</a>
-    <div class="crumbs"><a href="../index.html">Home</a> / <a href="index.html">CSE 214</a> / <span>Trees</span></div>
+    <a class="back" href="index.html" title="Back to CSE 214" aria-label="Back to CSE 214">&lsaquo;</a>
+    <h1 class="title">Trees</h1>
     <div class="spacer"></div>
-    <span class="pill">5 tree types</span>
   </div>
-</div>
+</header>
 
 <div class="wrap">
-  <div class="page-head">
-    <h1>Trees</h1>
-    <p>From plain traversals to self-balancing multiway trees. Recursive operations show their call stack next to the
-       tree, and every rotation, split, transfer and fusion is a separate frame you can step through.</p>
-  </div>
-
   <div id="tabs" class="tabs"></div>
 
-  <div class="panel">
+  <div class="panel main">
     <div class="toolbar">
       <div class="field"><label for="val">key</label><input type="number" step="any" id="val" placeholder="random"></div>
       <div class="field" id="del-with-wrap" style="display:none">
@@ -107,9 +100,15 @@
     <div id="player"></div>
 
     <div id="legend"></div>
-    <p class="blurb" id="blurb"></p>
   </div>
 
+
+  <details class="about" id="about">
+    <summary>About this topic</summary>
+    <div class="about-body">
+    <p class="intro">From plain traversals to self-balancing multiway trees. Recursive operations show their call stack next to the
+       tree, and every rotation, split, transfer and fusion is a separate frame you can step through.</p>
+    <p class="blurb" id="blurb"></p>
   <div class="row" style="margin-bottom:1.1rem">
     <div class="col">
       <div class="panel" style="height:100%">
@@ -125,7 +124,7 @@
             <tr><td>Right-Left</td><td>−2</td><td>&gt; 0</td><td>right on child, then left</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.6rem 0 0">A rotation is a local pointer swap — O(1) time and space — and it never changes
+        <p class="small muted" style="margin:.6rem 0 0">A rotation is a local pointer swap, O(1) time and space, and it never changes
            the in-order sequence, which is why the BST property survives. Insert needs at most one (double counts as
            one); delete may need one at every level.</p>
       </div>
@@ -139,11 +138,11 @@
           <dt>overflow</dt><dd>too many keys after an insert → <b>split</b>, middle key goes up</dd>
           <dt>underflow</dt><dd>too few keys after a delete → <b>transfer</b> from a sibling that has spare keys</dd>
           <dt>no spare keys</dt><dd>→ <b>fusion</b>: merge two siblings plus the separator into one node</dd>
-          <dt>grows taller</dt><dd>only when the <em>root</em> splits — so all leaves rise together</dd>
+          <dt>grows taller</dt><dd>only when the <em>root</em> splits, so all leaves rise together</dd>
           <dt>grows shorter</dt><dd>only when the root is emptied by a fusion</dd>
         </dl>
         <p class="small muted" style="margin:.6rem 0 0">In a (2,4)-tree, height is between log₄n and log₂n. A B-tree of
-           order m has height ≤ log<sub>⌈m/2⌉</sub>n — with m = 100, a million keys fit in 3 levels.</p>
+           order m has height ≤ log<sub>⌈m/2⌉</sub>n: with m = 100, a million keys fit in 3 levels.</p>
       </div>
     </div>
   </div>
@@ -167,10 +166,13 @@
        different clothes: colour a 3-node's extra key red and you get one from the other. AVL trees are more rigidly
        balanced (faster lookups), red-black/(2,4) trees do less work per update (faster writes).</p>
   </div>
+    </div>
+  </details>
+
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=202610042131"></script>
-<script src="../assets/js/trees.js?v=202610042131"></script>
+<script src="../assets/js/core.js?v=202610111800"></script>
+<script src="../assets/js/trees.js?v=202610111800"></script>
 </body>
 </html>

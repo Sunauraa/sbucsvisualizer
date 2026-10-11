@@ -1,6 +1,6 @@
-# DSA Visualizer — CSE 214 / CSE 373
+# DSA Visualizer: CSE 214 / CSE 373
 
-Interactive data structure and algorithm visualizers. Pure static HTML/CSS/JS — no build step, no
+Interactive data structure and algorithm visualizers. Pure static HTML/CSS/JS: no build step, no
 dependencies, no framework. Drop it on GitHub Pages and it works.
 
 **Live pages:** `index.html` → course picker → CSE 214 → eight modules.
@@ -15,7 +15,7 @@ dependencies, no framework. Drop it on GitHub Pages and it works.
 | Trees | `cse214/trees.html` | four traversals and recursive height / size with a live call stack; BST insert/search/delete as loops or as recursion, predecessor / successor, two-child delete by successor or predecessor; AVL with all four rotation cases; (2,4)-trees; B-trees of order 3–7 |
 | Priority Queues | `cse214/priority-queues.html` | unsorted list, sorted list, array-based heap, linked tree-based heap; bottom-up heapify vs build-by-insertion; PQ-sort as selection / insertion / heap sort |
 | Hash Tables | `cse214/hashtables.html` | separate chaining, linear probing, quadratic probing; load factor, tombstones, rehashing; integer and string keys |
-| Graphs | `cse214/graphs.html` | click-to-build graph editor (add/delete, drag vertices in any mode — even mid-traversal, directed toggle, 7 presets); BFS with live queue; DFS with live stack and discovery/finish times; DFS forest; synchronised adjacency matrix and list |
+| Graphs | `cse214/graphs.html` | click-to-build graph editor (add/delete, drag vertices in any mode, even mid-traversal, directed toggle, 7 presets); BFS with live queue; DFS with live stack and discovery/finish times; DFS forest; synchronised adjacency matrix and list |
 | Sorting | `cse214/sorting.html` | bubble, selection, insertion, heap, merge, quick, two-third and counting sort; negative and decimal values (bars grow down from a zero line) |
 
 Every module shares the same layout: tabs → toolbar → **code dock** (worst-case time/space badge, spec, the class
@@ -38,7 +38,7 @@ Every visualizer uses the same pattern, which lives in `assets/js/core.js`:
 
 1. The algorithm runs **to completion** and records a *frame* at each interesting step
    (`DSA.Recorder`). A frame is a plain object: a snapshot of the data plus a caption.
-2. A `DSA.Player` scrubs that frame list — play/pause, step forward *and back*, speed 0.35×–4×,
+2. A `DSA.Player` scrubs that frame list, play/pause, step forward *and back*, speed 0.35×–4×,
    drag the timeline anywhere. The step controls stay **hidden until the reader runs something** (an operation
    button, a function or algorithm tab, or an edited input); loading a single still frame (page load, tab switch,
    clear) hides them again, and the keyboard shortcuts only work while they are shown.
@@ -68,7 +68,7 @@ anchor in whichever language is showing, so the languages never need index maps.
 
 - **Spec box.** Every listing carries a `spec` (`does`, `params`, `returns`, `errors`, `time`, `space`), attached
   with `D.specs(CODE, {...})` and shown above the code. `time` and `space` are **worst-case** bounds written with
-  O (no Θ/Ω, no amortized bounds); text after " — " is the explanation, and the part before it is shown as a badge
+  O (no Θ/Ω, no amortized bounds); text after ": " is the explanation, and the part before it is shown as a badge
   in the dock header so it stays visible when the code is hidden.
 - **Classes.** `D.classes(CODE, [{ name, pseudo, java, note, keys }])` attaches the class a method belongs to
   (fields, constructor, and a full `Node` class for linked structures). The dock shows it above the method with a
@@ -77,7 +77,7 @@ anchor in whichever language is showing, so the languages never need index maps.
 - **Call line.** The dock writes the call in the selected language from each listing's first line (its signature),
   e.g. `double x = arr.remove(2);` / `x ← remove(2)`. A Java method without `static` is called on the receiver
   (`stack.push(5)`); a `static` one is called bare. Values come from the operation's opening caption
-  (`<b>remove(2)</b> — …`), from the page's `args` hook (Recursion reads its input boxes), or from `callVals` defaults;
+  (`<b>remove(2)</b>: …`), from the page's `args` hook (Recursion reads its input boxes), or from `callVals` defaults;
   otherwise the parameter names are shown. Pass `recv` to `CodeDock` to name the object (`arr`, `list`, `stack`, …).
 - **Call stacks.** `D.callStack(frames, opts)` draws one card per stack frame (label, variables, what it is
   waiting on, the value it returns). Recursion and the recursive tree operations use it.
@@ -164,8 +164,8 @@ DSA.FEEDBACK_PAGE_FIELD = "";   // optional, see below
 
 Until the link is set, the button tells readers the form isn't connected yet.
 
-Optional: to have the form pre-filled with where the reader was (e.g. `Trees — CSE 214 · tab: AVL (balanced) ·
-running: insert(k) — AVL`), add a short-answer question such as "Where were you?", then in the form editor use
+Optional: to have the form pre-filled with where the reader was (e.g. `Trees · CSE 214 · tab: AVL (balanced) ·
+running: insert(k) · AVL`), add a short-answer question such as "Where were you?", then in the form editor use
 **⋮ → Get pre-filled link**, type anything into that question, click **Get link**, and copy the
 `entry.123456789` part of the copied link into `FEEDBACK_PAGE_FIELD`.
 
@@ -195,15 +195,15 @@ Reuse the shared state classes so colours mean the same thing everywhere: `activ
 
 Two headless-Chrome scripts drive real clicks on every page:
 
-- **Fuzzer** — every tab, every toolbar button, every select and mode switch, with empty, negative, decimal, zero,
+- **Fuzzer**: every tab, every toolbar button, every select and mode switch, with empty, negative, decimal, zero,
   out-of-range and non-numeric input. It walks every frame and flags: uncaught errors and console errors; a frame
   whose highlighted anchor is missing from its listing in either language; `undefined` / `NaN` / `[object …]`
   reaching the stage or captions; horizontal overflow at a 390 px phone width.
-- **Static checks** — every listing has the same anchor set in pseudocode and Java, no other languages, and a spec
+- **Static checks**: every listing has the same anchor set in pseudocode and Java, no other languages, and a spec
   with both `time` and `space`.
-- **Scenarios** — scripted sequences (fill a dynamic array until it grows, AVL deletes for each rotation case, hash
+- **Scenarios**: scripted sequences (fill a dynamic array until it grows, AVL deletes for each rotation case, hash
   tables filled until probing fails, every recursion function with negative input, counting sort with a decimal …)
-  so that, together with the fuzzer, **every anchor of every listing is reached** — error branches included.
+  so that, together with the fuzzer, **every anchor of every listing is reached**, error branches included.
 
 Earlier model checks still apply: BST / AVL / (2,4) / B-tree invariants after random operations, all sorts verified
 sorted on many input shapes, priority queues and lists against reference models, BFS distances and DFS

@@ -1,5 +1,5 @@
 /* ============================================================
-   stacks.js — array stack, plain array queue, circular queue,
+   stacks.js: array stack, plain array queue, circular queue,
    circular deque, a side-by-side "why circular?" comparison,
    and two stack applications (brackets, postfix).
    ============================================================ */
@@ -14,7 +14,7 @@
      ============================================================ */
   const CODE = {
     st_push: {
-      title: "push(x) — ArrayStack",
+      title: "push(x) · ArrayStack",
       pseudo: [
         "push(x):                      // t = index of the top, -1 when empty",
         "  if t == capacity - 1: error \"stack is full\" @@full",
@@ -30,7 +30,7 @@
       ],
     },
     st_pop: {
-      title: "pop() — ArrayStack",
+      title: "pop() · ArrayStack",
       pseudo: [
         "pop():",
         "  if t == -1: error \"stack is empty\" @@empty",
@@ -50,18 +50,18 @@
       ],
     },
     st_top: {
-      title: "top() — ArrayStack",
+      title: "top() · ArrayStack",
       pseudo: ["top():", "  if t == -1: error \"stack is empty\" @@empty", "  return S[t]            // look, don't remove @@ret"],
       java: ["double top() {", "  if (t == -1) throw new EmptyStackException(); @@empty", "  return data[t]; @@ret", "}"],
     },
 
     aq_enqueue: {
-      title: "enqueue(x) — plain array, front pinned at 0",
+      title: "enqueue(x) · plain array, front pinned at 0",
       pseudo: ["enqueue(x):", "  if n == capacity: error \"queue is full\" @@full", "  Q[n] ← x @@write", "  n ← n + 1 @@size"],
       java: ["void enqueue(double x) {", "  if (n == data.length) throw new IllegalStateException(\"full\"); @@full", "  data[n] = x; @@write", "  n++; @@size", "}"],
     },
     aq_dequeue: {
-      title: "dequeue() — plain array, front pinned at 0",
+      title: "dequeue() · plain array, front pinned at 0",
       pseudo: [
         "dequeue():",
         "  if n == 0: error \"queue is empty\" @@empty",
@@ -83,12 +83,12 @@
       ],
     },
     dr_enqueue: {
-      title: "enqueue(x) — plain array, no wrap-around",
+      title: "enqueue(x) · plain array, no wrap-around",
       pseudo: ["enqueue(x):", "  if rear == capacity: error \"full\"     // even if front > 0! @@full", "  Q[rear] ← x @@write", "  rear ← rear + 1 @@size"],
       java: ["void enqueue(double x) {", "  if (rear == data.length) throw new IllegalStateException(\"full\"); @@full", "  data[rear] = x; @@write", "  rear++; @@size", "}"],
     },
     dr_dequeue: {
-      title: "dequeue() — plain array, no wrap-around",
+      title: "dequeue() · plain array, no wrap-around",
       pseudo: [
         "dequeue():",
         "  if front == rear: error \"queue is empty\" @@empty",
@@ -100,7 +100,7 @@
     },
 
     cq_enqueue: {
-      title: "enqueue(x) — circular array",
+      title: "enqueue(x) · circular array",
       pseudo: [
         "enqueue(x):",
         "  if size == capacity: error \"queue is full\" @@full",
@@ -118,7 +118,7 @@
       ],
     },
     cq_dequeue: {
-      title: "dequeue() — circular array",
+      title: "dequeue() · circular array",
       pseudo: [
         "dequeue():",
         "  if size == 0: error \"queue is empty\" @@empty",
@@ -138,13 +138,13 @@
       ],
     },
     cq_first: {
-      title: "first() — circular array",
+      title: "first() · circular array",
       pseudo: ["first():", "  if size == 0: return null @@empty", "  return Q[front] @@ret"],
       java: ["Double first() {", "  if (size == 0) return null; @@empty", "  return data[front]; @@ret", "}"],
     },
 
     dq_addFirst: {
-      title: "addFirst(x) — circular deque",
+      title: "addFirst(x) · circular deque",
       pseudo: [
         "addFirst(x):",
         "  if size == capacity: error \"full\" @@full",
@@ -162,7 +162,7 @@
       ],
     },
     dq_addLast: {
-      title: "addLast(x) — circular deque",
+      title: "addLast(x) · circular deque",
       pseudo: ["addLast(x):", "  if size == capacity: error \"full\" @@full", "  avail ← (front + size) mod capacity @@idx", "  D[avail] ← x @@write", "  size ← size + 1 @@size"],
       java: [
         "void addLast(double x) {",
@@ -174,7 +174,7 @@
       ],
     },
     dq_removeFirst: {
-      title: "removeFirst() — circular deque",
+      title: "removeFirst() · circular deque",
       pseudo: [
         "removeFirst():",
         "  if size == 0: error \"empty\" @@empty",
@@ -194,7 +194,7 @@
       ],
     },
     dq_removeLast: {
-      title: "removeLast() — circular deque",
+      title: "removeLast() · circular deque",
       pseudo: [
         "removeLast():",
         "  if size == 0: error \"empty\" @@empty",
@@ -274,26 +274,26 @@
   const M = (t) => "<span class='mono'>" + t + "</span>";
   const O1 = { time: "O(1)", space: "O(1)" };
   D.specs(CODE, {
-    st_push: Object.assign({ does: "Pushes " + M("x") + " onto the top of an array-backed stack.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "stack overflow when the array is full (t == capacity − 1)" }, O1),
-    st_pop: Object.assign({ does: "Removes and returns the top element — the one pushed most recently (LIFO).", params: "none", returns: "the former top", errors: "stack underflow when empty (t == −1)" }, O1),
+    st_push: Object.assign({ does: "Pushes " + M("x") + " onto the top of an array-backed stack.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "stack overflow when the array is full (t == capacity − 1)" }, O1),
+    st_pop: Object.assign({ does: "Removes and returns the top element, the one pushed most recently (LIFO).", params: "none", returns: "the former top", errors: "stack underflow when empty (t == −1)" }, O1),
     st_top: Object.assign({ does: "Returns the top element without removing it (also called peek).", params: "none", returns: "the top element", errors: "empty-stack error when t == −1" }, O1),
-    aq_enqueue: Object.assign({ does: "Adds " + M("x") + " at the rear of a queue whose front is pinned at index 0.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "queue is full when n == capacity" }, O1),
-    aq_dequeue: { does: "Removes and returns the front, then shifts every other element one slot forward so the front stays at 0.", params: "none", returns: "the former front (FIFO)", errors: "queue is empty when n == 0", time: "O(n) — the n − 1 elements behind the front all shift; this is the problem a circular array solves", space: "O(1)" },
-    dr_enqueue: Object.assign({ does: "Adds " + M("x") + " at the rear; front and rear only ever move right.", params: M("x") + " — the value (any number)", returns: "nothing", errors: "reports full once rear reaches the end, even if the front has freed slots" }, O1),
-    dr_dequeue: { does: "Removes and returns the front by moving the front index right — no shifting.", params: "none", returns: "the former front", errors: "queue is empty when front == rear", time: "O(1) — but the freed slot is never reused", space: "O(1)" },
-    cq_enqueue: Object.assign({ does: "Adds " + M("x") + " at the rear of a circular array, at " + M("(front + size) mod capacity") + ".", params: M("x") + " — the value (any number)", returns: "nothing", errors: "queue is full when size == capacity" }, O1),
-    cq_dequeue: { does: "Removes and returns the front, then advances front with wrap-around.", params: "none", returns: "the former front (FIFO)", errors: "queue is empty when size == 0", time: "O(1) — and every slot gets reused", space: "O(1)" },
+    aq_enqueue: Object.assign({ does: "Adds " + M("x") + " at the rear of a queue whose front is pinned at index 0.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "queue is full when n == capacity" }, O1),
+    aq_dequeue: { does: "Removes and returns the front, then shifts every other element one slot forward so the front stays at 0.", params: "none", returns: "the former front (FIFO)", errors: "queue is empty when n == 0", time: "O(n): the n − 1 elements behind the front all shift; this is the problem a circular array solves", space: "O(1)" },
+    dr_enqueue: Object.assign({ does: "Adds " + M("x") + " at the rear; front and rear only ever move right.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "reports full once rear reaches the end, even if the front has freed slots" }, O1),
+    dr_dequeue: { does: "Removes and returns the front by moving the front index right, no shifting.", params: "none", returns: "the former front", errors: "queue is empty when front == rear", time: "O(1): but the freed slot is never reused", space: "O(1)" },
+    cq_enqueue: Object.assign({ does: "Adds " + M("x") + " at the rear of a circular array, at " + M("(front + size) mod capacity") + ".", params: M("x") + ": the value (any number)", returns: "nothing", errors: "queue is full when size == capacity" }, O1),
+    cq_dequeue: { does: "Removes and returns the front, then advances front with wrap-around.", params: "none", returns: "the former front (FIFO)", errors: "queue is empty when size == 0", time: "O(1): every slot gets reused", space: "O(1)" },
     cq_first: Object.assign({ does: "Returns the front element without removing it.", params: "none", returns: "the front, or null if the queue is empty", errors: "none (null when empty)" }, O1),
-    dq_addFirst: Object.assign({ does: "Adds " + M("x") + " at the front of a circular deque by stepping front back one slot (mod capacity).", params: M("x") + " — the value (any number)", returns: "nothing", errors: "deque is full when size == capacity" }, O1),
-    dq_addLast: Object.assign({ does: "Adds " + M("x") + " at the back, at " + M("(front + size) mod capacity") + ".", params: M("x") + " — the value (any number)", returns: "nothing", errors: "deque is full when size == capacity" }, O1),
+    dq_addFirst: Object.assign({ does: "Adds " + M("x") + " at the front of a circular deque by stepping front back one slot (mod capacity).", params: M("x") + ": the value (any number)", returns: "nothing", errors: "deque is full when size == capacity" }, O1),
+    dq_addLast: Object.assign({ does: "Adds " + M("x") + " at the back, at " + M("(front + size) mod capacity") + ".", params: M("x") + ": the value (any number)", returns: "nothing", errors: "deque is full when size == capacity" }, O1),
     dq_removeFirst: Object.assign({ does: "Removes and returns the front element and advances front.", params: "none", returns: "the former front", errors: "deque is empty when size == 0" }, O1),
     dq_removeLast: Object.assign({ does: "Removes and returns the back element; front does not move.", params: "none", returns: "the former back", errors: "deque is empty when size == 0" }, O1),
-    brackets: { does: "Checks that every (, [ and { is closed by the matching bracket in the right order, using a stack of open brackets.", params: M("s") + " — any string; other characters are ignored", returns: "true if balanced, false otherwise", errors: "none — mismatches return false", time: "O(n) — one pass over the n characters", space: "O(n) — the stack can end up holding every character", callVals: { s: '"{[()()]}"' } },
-    postfix: { does: "Evaluates a postfix (reverse Polish) expression with a stack of operands.", params: M("tokens") + " — numbers (negative and decimal allowed) and operators + − × ÷ % ^", returns: "the value of the expression", errors: "malformed if an operator finds fewer than 2 operands, or more than one value is left; division by zero", time: "O(n) — one pass over the n tokens", space: "O(n) — the operand stack", callVals: { tokens: { pseudo: "[5, 1, 2, +, 4, *, +, 3, −]", java: 'new String[]{"5", "1", "2", "+"}' } } },
+    brackets: { does: "Checks that every (, [ and { is closed by the matching bracket in the right order, using a stack of open brackets.", params: M("s") + ": any string; other characters are ignored", returns: "true if balanced, false otherwise", errors: "none: mismatches return false", time: "O(n): one pass over the n characters", space: "O(n): the stack can end up holding every character", callVals: { s: '"{[()()]}"' } },
+    postfix: { does: "Evaluates a postfix (reverse Polish) expression with a stack of operands.", params: M("tokens") + ": numbers (negative and decimal allowed) and operators + − × ÷ % ^", returns: "the value of the expression", errors: "malformed if an operator finds fewer than 2 operands, or more than one value is left; division by zero", time: "O(n): one pass over the n tokens", space: "O(n): the operand stack", callVals: { tokens: { pseudo: "[5, 1, 2, +, 4, *, +, 3, −]", java: 'new String[]{"5", "1", "2", "+"}' } } },
   });
 
   /* ============================================================
-     CLASSES — the fields each method above reads and writes
+     CLASSES: the fields each method above reads and writes
      ============================================================ */
   D.classes(CODE, [
     { name: "ArrayStack", keys: /^st_/,
@@ -447,7 +447,7 @@
       const r = stRec().code("st_push");
       r.snap({ note: "<b>push(" + v + ")</b>. t = " + S.t + "." });
       if (S.t === CAP - 1) { r.at("full").snap({ marks: range(0, S.t, "swap"), note: "<b>Stack overflow</b>: t = " + S.t + " = capacity − 1. A growable stack would double the array here." }); return r; }
-      r.at("full^").snap({ note: "t = " + S.t + " &lt; " + (CAP - 1) + " — there is room." });
+      r.at("full^").snap({ note: "t = " + S.t + " &lt; " + (CAP - 1) + ": there is room." });
       S.t++;
       r.at("inc").snap({ marks: { [S.t]: "cmp" }, note: "t ← " + S.t + ". The top of the stack is simply the highest used index." });
       S.a[S.t] = v;
@@ -458,7 +458,7 @@
       const r = stRec().code("st_pop");
       r.snap({ note: "<b>pop()</b>." });
       if (S.t < 0) { r.at("empty").snap({ note: "<b>Stack underflow</b>: t = −1, nothing to pop." }); return r; }
-      r.at("empty^").snap({ note: "t = " + S.t + " ≥ 0 — not empty." });
+      r.at("empty^").snap({ note: "t = " + S.t + " ≥ 0: not empty." });
       const v = S.a[S.t];
       r.at("save").snap({ marks: { [S.t]: "target" }, note: "x = data[" + S.t + "] = " + v + "." });
       S.a[S.t] = null;
@@ -471,7 +471,7 @@
     top() {
       const r = stRec().code("st_top");
       r.snap({ note: "<b>top()</b>." });
-      if (S.t < 0) { r.at("empty").snap({ note: "Empty stack — error." }); return r; }
+      if (S.t < 0) { r.at("empty").snap({ note: "Empty stack: error." }); return r; }
       r.at("empty^").snap({ note: "Not empty." });
       r.at("ret").snap({ marks: { [S.t]: "target" }, note: "Return data[t] = " + S.a[S.t] + " and leave t alone. The stack is unchanged." });
       return r;
@@ -494,7 +494,7 @@
   function aqDequeue(Q, r) {
     r.code("aq_dequeue");
     if (!Q.n) { r.at("empty").snap({ note: "The queue is empty." }); return; }
-    r.at("empty^").snap({ note: "n = " + Q.n + " — not empty." });
+    r.at("empty^").snap({ note: "n = " + Q.n + ": not empty." });
     const v = Q.a[0];
     r.at("save").snap({ marks: { 0: "target" }, note: "x = Q[0] = " + v + ". The front is always index 0 in this design." });
     for (let k = 1; k < Q.n; k++) {
@@ -505,13 +505,13 @@
     Q.n--;
     Q.a[Q.n] = null;
     r.at("size").snap({ note: "n = " + Q.n + "." });
-    r.at("ret").snap({ note: "Return " + v + ". That dequeue cost " + Q.n + " shift(s) — one for every element left behind. With n elements that is n − 1 shifts, so dequeue is <b>O(n)</b>." });
+    r.at("ret").snap({ note: "Return " + v + ". That dequeue cost " + Q.n + " shift(s): one for every element left behind. With n elements that is n − 1 shifts, so dequeue is <b>O(n)</b>." });
   }
   /* ---- plain array, front moves, no wrap ---- */
   function drEnqueue(Q, r, v) {
     r.code("dr_enqueue");
     if (Q.rear === CAP) {
-      r.at("full").snap({ marks: range(0, Q.front - 1, "swap"), note: "<b>“Full”</b> — rear has hit the end of the array, although " + Q.front + " slot(s) at the front are empty. They can never be reused." });
+      r.at("full").snap({ marks: range(0, Q.front - 1, "swap"), note: "<b>“Full”</b>: rear has hit the end of the array, although " + Q.front + " slot(s) at the front are empty. They can never be reused." });
       return;
     }
     r.at("full^").snap({ note: "rear = " + Q.rear + " &lt; " + CAP + "." });
@@ -524,7 +524,7 @@
   function drDequeue(Q, r) {
     r.code("dr_dequeue");
     if (Q.front === Q.rear) { r.at("empty").snap({ note: "Empty." }); return; }
-    r.at("empty^").snap({ note: "front ≠ rear — not empty." });
+    r.at("empty^").snap({ note: "front ≠ rear: not empty." });
     const v = Q.a[Q.front];
     Q.a[Q.front] = null;
     r.at("save").snap({ marks: { [Q.front]: "target" }, note: "x = Q[" + Q.front + "] = " + v + "." });
@@ -539,7 +539,7 @@
     if (Q.size === CAP) { r.at("full").snap({ marks: range(0, CAP - 1, "swap"), note: "<b>Full</b>: size = capacity = " + CAP + ". Every slot really is in use." }); return; }
     r.at("full^").snap({ note: "size = " + Q.size + " &lt; " + CAP + "." });
     const at = (Q.front + Q.size) % CAP;
-    r.at("avail").snap({ marks: { [at]: "cmp" }, note: "avail = (front + size) mod " + CAP + " = (" + Q.front + " + " + Q.size + ") mod " + CAP + " = <b>" + at + "</b>" + (Q.front + Q.size >= CAP ? " — <b>wrapped</b> round to the start." : ".") });
+    r.at("avail").snap({ marks: { [at]: "cmp" }, note: "avail = (front + size) mod " + CAP + " = (" + Q.front + " + " + Q.size + ") mod " + CAP + " = <b>" + at + "</b>" + (Q.front + Q.size >= CAP ? ": <b>wrapped</b> round to the start." : ".") });
     Q.a[at] = v;
     r.at("write").snap({ marks: { [at]: "done" }, note: "Q[" + at + "] ← " + v + "." });
     Q.size++;
@@ -548,12 +548,12 @@
   function cqDequeue(Q, r) {
     r.code("cq_dequeue");
     if (!Q.size) { r.at("empty").snap({ note: "Empty." }); return; }
-    r.at("empty^").snap({ note: "size = " + Q.size + " — not empty." });
+    r.at("empty^").snap({ note: "size = " + Q.size + ": not empty." });
     const at = Q.front, v = Q.a[at];
     Q.a[at] = null;
     r.at("save").snap({ marks: { [at]: "target" }, note: "x = Q[" + at + "] = " + v + "." });
     Q.front = (Q.front + 1) % CAP;
-    r.at("adv").snap({ marks: { [Q.front]: "cmp" }, note: "front ← (" + at + " + 1) mod " + CAP + " = " + Q.front + (at === CAP - 1 ? " — <b>wrapped</b>." : ".") + " Slot " + at + " is free again and will be reused." });
+    r.at("adv").snap({ marks: { [Q.front]: "cmp" }, note: "front ← (" + at + " + 1) mod " + CAP + " = " + Q.front + (at === CAP - 1 ? ": <b>wrapped</b>." : ".") + " Slot " + at + " is free again and will be reused." });
     Q.size--;
     r.at("size").snap({ note: "size = " + Q.size + "." });
     r.at("ret").snap({ note: "Return " + v + ". <b>O(1)</b>, with no shifting and no wasted slots." });
@@ -563,12 +563,12 @@
   const cqRec = (kind, Q) => D.Rec(() => ({ kind: kind, a: Q.a.slice(), front: Q.front, size: Q.size, marks: {} }));
 
   const queue = {
-    enqueue(v) { const r = cqRec("cq", CQ); r.code("cq_enqueue").snap({ note: "<b>enqueue(" + v + ")</b> — new elements join at the rear." }); cqEnqueue(CQ, r, v); return r; },
-    dequeue() { const r = cqRec("cq", CQ); r.code("cq_dequeue").snap({ note: "<b>dequeue()</b> — the element at the front leaves." }); cqDequeue(CQ, r); return r; },
+    enqueue(v) { const r = cqRec("cq", CQ); r.code("cq_enqueue").snap({ note: "<b>enqueue(" + v + ")</b>: new elements join at the rear." }); cqEnqueue(CQ, r, v); return r; },
+    dequeue() { const r = cqRec("cq", CQ); r.code("cq_dequeue").snap({ note: "<b>dequeue()</b>: the element at the front leaves." }); cqDequeue(CQ, r); return r; },
     first() {
       const r = cqRec("cq", CQ).code("cq_first");
       r.snap({ note: "<b>first()</b>." });
-      if (!CQ.size) { r.at("empty").snap({ note: "Empty — return null." }); return r; }
+      if (!CQ.size) { r.at("empty").snap({ note: "Empty: return null." }); return r; }
       r.at("empty^").snap({ note: "Not empty." });
       r.at("ret").snap({ marks: { [CQ.front]: "target" }, note: "Return Q[front] = Q[" + CQ.front + "] = " + CQ.a[CQ.front] + ". Unchanged." });
       return r;
@@ -582,12 +582,12 @@
   const deque = {
     addFirst(v) {
       const r = dqRec().code("dq_addFirst");
-      r.snap({ note: "<b>addFirst(" + v + ")</b> — grow leftwards from the front." });
+      r.snap({ note: "<b>addFirst(" + v + ")</b>: grow leftwards from the front." });
       if (DQ.size === CAP) { r.at("full").snap({ note: "<b>Full.</b>" }); return r; }
       r.at("full^").snap({ note: "size = " + DQ.size + " &lt; " + CAP + "." });
       const old = DQ.front;
       DQ.front = (DQ.front - 1 + CAP) % CAP;
-      r.at("idx").snap({ marks: { [DQ.front]: "cmp" }, pending: true, note: "front ← (" + old + " − 1 + " + CAP + ") mod " + CAP + " = " + DQ.front + (old === 0 ? " — from 0 it wraps to the <b>last</b> slot." : ".") });
+      r.at("idx").snap({ marks: { [DQ.front]: "cmp" }, pending: true, note: "front ← (" + old + " − 1 + " + CAP + ") mod " + CAP + " = " + DQ.front + (old === 0 ? ": from 0 it wraps to the <b>last</b> slot." : ".") });
       DQ.a[DQ.front] = v;
       r.at("write").snap({ marks: { [DQ.front]: "done" }, note: "D[" + DQ.front + "] ← " + v + "." });
       DQ.size++;
@@ -651,7 +651,7 @@
     L.snap({ note: title }); R.snap({ note: title });
     if (kind === "enq") { CL.mode === "shift" ? aqEnqueue(CL, L, v) : drEnqueue(CL, L, v); cqEnqueue(CR, R, v); }
     else { CL.mode === "shift" ? aqDequeue(CL, L) : drDequeue(CL, L); cqDequeue(CR, R); }
-    /* the first frames carry no listing yet — give them the op's listing */
+    /* the first frames carry no listing yet; give them the op's listing */
     [L, R].forEach((r) => { const k = r.frames.find((f) => f.code); r.frames.forEach((f) => { if (!f.code && k) f.code = k.code; }); });
     return D.zip(L.frames, R.frames, "<b>" + title + "</b> on both queues. Each side runs its own code at its own pace; a side that finishes early waits with a ✓.");
   }
@@ -685,7 +685,7 @@
         st.push(c);
         r.at("push").snap({ i: i, marks: { [st.length - 1]: "done" }, note: "<b>" + c + "</b> is an opener: push it. The stack holds what is still open, innermost on top." });
       } else if (PAIRS[c]) {
-        r.at(["push^", "closer"]).snap({ i: i, note: "<b>" + c + "</b> is not an opener — it is a closer." });
+        r.at(["push^", "closer"]).snap({ i: i, note: "<b>" + c + "</b> is not an opener; it is a closer." });
         if (!st.length) { r.at("emptyfail").snap({ i: i, ok: false, note: "The stack is <b>empty</b>: there is nothing open for " + c + " to close. <b>Not balanced.</b>" }); return r; }
         const top = st[st.length - 1];
         r.at(["emptyfail^", "match"]).snap({ i: i, marks: { [st.length - 1]: "cmp" }, note: "The stack is not empty. Pop the top, <b>" + top + "</b>: it must be <b>" + PAIRS[c] + "</b> to match." });
@@ -729,10 +729,10 @@
         v = Math.round(v * 1000) / 1000;
         st.push(v);
         r.at("apply").snap({ i: i, marks: { [st.length - 1]: "swap" }, note: "Push " + a + " " + t + " " + b + " = <b>" + v + "</b>." });
-      } else { r.at(["push^", "op"]).snap({ i: i, bad: true, note: "'" + t + "' is not a number, so the code treats it as an operator — but it is not one of + − × ÷ % ^. <b>Malformed expression.</b>" }); return r; }
+      } else { r.at(["push^", "op"]).snap({ i: i, bad: true, note: "'" + t + "' is not a number, so the code treats it as an operator, but it is not one of + − × ÷ % ^. <b>Malformed expression.</b>" }); return r; }
     }
     if (st.length === 1) r.at("end").snap({ i: toks.length, marks: { 0: "done" }, note: "Input used up and exactly one value remains: <b>" + st[0] + "</b>. ✓" });
-    else r.at("end").snap({ i: toks.length, bad: true, note: "Input used up but " + st.length + " values remain — <b>malformed expression</b>." });
+    else r.at("end").snap({ i: toks.length, bad: true, note: "Input used up but " + st.length + " values remain: <b>malformed expression</b>." });
     return r;
   }
 
@@ -752,16 +752,16 @@
     const box = D.el("div");
     if (f.kind === "stack") {
       const row = D.el("div", { style: "display:flex;gap:2rem;flex-wrap:wrap;align-items:flex-end" });
-      row.appendChild(D.cells(f.a, { marks: f.marks, live: (v, i) => i <= f.t && v != null, ptrs: f.t >= 0 ? { [f.t]: "t (top)" } : {}, roomBelow: true, label: "data[] — the array implementation (capacity " + CAP + ")" }));
+      row.appendChild(D.cells(f.a, { marks: f.marks, live: (v, i) => i <= f.t && v != null, ptrs: f.t >= 0 ? { [f.t]: "t (top)" } : {}, roomBelow: true, label: "data[]: the array implementation (capacity " + CAP + ")" }));
       row.appendChild(vertical(f.a.slice(0, f.t + 1), f.marks, "the same stack, drawn upright"));
       box.appendChild(row);
     } else if (f.kind === "aq") {
-      box.appendChild(D.cells(f.a, { marks: f.marks, live: (v) => v != null, ptrs: Object.assign({ 0: "front" }, f.n < CAP ? { [f.n]: "n" } : {}), roomBelow: true, label: "data[] — the front is always index 0" }));
+      box.appendChild(D.cells(f.a, { marks: f.marks, live: (v) => v != null, ptrs: Object.assign({ 0: "front" }, f.n < CAP ? { [f.n]: "n" } : {}), roomBelow: true, label: "data[]: the front is always index 0" }));
     } else if (f.kind === "dr") {
       const p = {};
       if (f.front < CAP) p[f.front] = "front";
       if (f.rear < CAP) p[f.rear] = (p[f.rear] ? p[f.rear] + "/" : "") + "rear";
-      box.appendChild(D.cells(f.a, { marks: f.marks, live: (v, i) => i >= f.front && v != null, ghost: (i) => i < f.front, ptrs: p, roomBelow: true, label: "data[] — slots left of front are dead" }));
+      box.appendChild(D.cells(f.a, { marks: f.marks, live: (v, i) => i >= f.front && v != null, ghost: (i) => i < f.front, ptrs: p, roomBelow: true, label: "data[]: slots left of front are dead" }));
     } else if (f.kind === "cq" || f.kind === "dq") {
       const live = liveSet(f);
       const p = {};
@@ -769,7 +769,7 @@
       if (f.size) { const rear = rearOf(f); p[rear] = (p[rear] ? p[rear] + "/" : "") + "rear"; }
       const row = D.el("div", { style: "display:flex;gap:1.6rem;flex-wrap:wrap;align-items:center" });
       const left = D.el("div");
-      left.appendChild(D.cells(f.a, { marks: f.marks, live: (v, i) => live.has(i), ptrs: p, roomBelow: true, label: "data[] — capacity " + CAP + ", indices wrap with mod " + CAP }));
+      left.appendChild(D.cells(f.a, { marks: f.marks, live: (v, i) => live.has(i), ptrs: p, roomBelow: true, label: "data[]: capacity " + CAP + ", indices wrap with mod " + CAP }));
       const order = logicalOrder(f);
       left.appendChild(D.cells(order, { index: false, w: 40, h: 32, label: "logical order, front first", marks: order.length ? { 0: "target" } : {} }));
       row.appendChild(left);
@@ -789,7 +789,7 @@
      about to be written, so for one frame the data still begins one slot later. */
   const dataFront = (f) => (f.pending ? (f.front + 1) % CAP : f.front);
   const rearOf = (f) => (f.size ? (dataFront(f) + f.size - 1) % CAP : null);
-  /* every removal clears its slot, so a slot is live exactly when it holds a value — this stays
+  /* every removal clears its slot, so a slot is live exactly when it holds a value, this stays
      true mid-operation (a value written before size++ shows up, a slot cleared before front moves does not) */
   function liveSet(f) {
     const s = new Set();
@@ -821,7 +821,7 @@
   function ring(f, live) {
     const W = 230, cx = W / 2, cy = W / 2, R = 78;
     const svg = D.svg("svg", { class: "canvas", viewBox: "0 0 " + W + " " + W, width: W, height: W, style: "margin:0" });
-    svg.appendChild(D.svg("circle", { cx: cx, cy: cy, r: R, fill: "none", stroke: "#27324f", "stroke-width": 2, "stroke-dasharray": "3 5" }));
+    svg.appendChild(D.svg("circle", { cx: cx, cy: cy, r: R, fill: "none", stroke: "#bdbdbd", "stroke-width": 2, "stroke-dasharray": "3 5" }));
     const rear = rearOf(f);
     for (let i = 0; i < CAP; i++) {
       const a = -Math.PI / 2 + (i / CAP) * Math.PI * 2;
@@ -831,8 +831,8 @@
       svg.appendChild(D.sText(x, y, on ? f.a[i] : "", { "font-size": 12 }));
       const lx = cx + (R + 33) * Math.cos(a), ly = cy + (R + 33) * Math.sin(a);
       svg.appendChild(D.sText(lx, ly, i, { class: "lbl-s", "font-size": 10 }));
-      if (i === f.front) svg.appendChild(D.sText(cx + (R - 36) * Math.cos(a), cy + (R - 36) * Math.sin(a), "F", { fill: "#22d3ee", "font-size": 12 }));
-      if (i === rear) svg.appendChild(D.sText(cx + (R - 36) * Math.cos(a) + (i === f.front ? 12 : 0), cy + (R - 36) * Math.sin(a), "R", { fill: "#ffc14d", "font-size": 12 }));
+      if (i === f.front) svg.appendChild(D.sText(cx + (R - 36) * Math.cos(a), cy + (R - 36) * Math.sin(a), "F", { fill: "#0891b2", "font-size": 12 }));
+      if (i === rear) svg.appendChild(D.sText(cx + (R - 36) * Math.cos(a) + (i === f.front ? 12 : 0), cy + (R - 36) * Math.sin(a), "R", { fill: "#b45309", "font-size": 12 }));
     }
     svg.appendChild(D.sText(cx, cy - 6, "size " + f.size, { class: "lbl-s", "font-size": 11 }));
     svg.appendChild(D.sText(cx, cy + 10, "F front · R rear", { class: "lbl-s", "font-size": 9 }));
@@ -850,7 +850,7 @@
       q(side + "-note").innerHTML = fr.note || "";
       q("pane-" + side).classList.toggle("finished", !!s[3] && player.index > 0);
     });
-    q("L-title").textContent = CL.mode === "shift" ? "Plain array — front pinned at 0" : "Plain array — front moves, no wrap";
+    q("L-title").textContent = CL.mode === "shift" ? "Plain array, front pinned at 0" : "Plain array, front moves, no wrap";
     q("L-tag").textContent = CL.mode === "shift" ? "dequeue shifts everything" : "freed slots are lost";
   }
 
@@ -858,8 +858,8 @@
      TABS / INIT
      ============================================================ */
   const NOTES = {
-    stack: "A <b>stack</b> is <b>LIFO — Last In, First Out</b>: the element pushed most recently is the first one popped, like a pile of plates where you only touch the top plate. The array implementation keeps one index, <span class='mono'>t</span>, pointing at the top element (−1 when empty). push, pop and top all touch only <span class='mono'>data[t]</span>, so each is O(1) time and O(1) space. Nothing ever shifts, because the bottom of the stack never moves.",
-    aqueue: "A <b>queue</b> is <b>FIFO — First In, First Out</b>: elements leave in the order they arrived, like a line at a checkout. Elements join at the <b>rear</b> (enqueue) and leave from the <b>front</b> (dequeue). The obvious array queue keeps the front at index 0. Enqueue writes at the end in O(1), but <b>every dequeue has to slide the remaining n − 1 elements forward</b>, which makes dequeue O(n) time. The captions count the shifts.",
+    stack: "A <b>stack</b> is <b>LIFO (Last In, First Out)</b>: the element pushed most recently is the first one popped, like a pile of plates where you only touch the top plate. The array implementation keeps one index, <span class='mono'>t</span>, pointing at the top element (−1 when empty). push, pop and top all touch only <span class='mono'>data[t]</span>, so each is O(1) time and O(1) space. Nothing ever shifts, because the bottom of the stack never moves.",
+    aqueue: "A <b>queue</b> is <b>FIFO (First In, First Out)</b>: elements leave in the order they arrived, like a line at a checkout. Elements join at the <b>rear</b> (enqueue) and leave from the <b>front</b> (dequeue). The obvious array queue keeps the front at index 0. Enqueue writes at the end in O(1), but <b>every dequeue has to slide the remaining n − 1 elements forward</b>, which makes dequeue O(n) time. The captions count the shifts.",
     cqueue: "Still a <b>FIFO</b> queue (First In, First Out), but stored in a <b>circular array</b> that never shifts. It keeps <span class='mono'>front</span> and <span class='mono'>size</span>, and computes the rear as <span class='mono'>(front + size) mod N</span>. When an index runs off the end it wraps to 0, so the array behaves like the ring on the right. Enqueue and dequeue are both O(1) time and O(1) space.",
     deque: "A <b>deque</b> (double-ended queue, said “deck”) lets you add and remove at <em>both</em> ends, so it can act as a stack (LIFO) or a queue (FIFO). It is the same circular array, used at both ends. addFirst steps front <em>backwards</em> with <span class='mono'>(front − 1 + N) mod N</span>. Adding N keeps the result non-negative, since in Java −1 % N is −1. This is how Java's <span class='mono'>ArrayDeque</span> works.",
     compare: "This tab is about <b>queues</b> only (stacks never need it, because a stack's bottom never moves). Both queues get exactly the same operations. The left one is a plain array: either every dequeue shifts, or the front drifts right and the freed slots are wasted. The right one is circular. Enqueue a few values, then alternate dequeue and enqueue: the left side's captions count the shifts. Then switch the left queue to “front moves, no wrap” and see it report full while it still has empty slots.",
@@ -1065,8 +1065,8 @@
   document.addEventListener("DOMContentLoaded", function () {
     D.Practice(PRACTICE);
     dock = D.CodeDock("#code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue") });
-    dockL = D.CodeDock("#L-code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "aq_dequeue", collapsible: false });
-    dockR = D.CodeDock("#R-code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "cq_dequeue", collapsible: false });
+    dockL = D.CodeDock("#L-code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "aq_dequeue" });
+    dockR = D.CodeDock("#R-code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "cq_dequeue" });
     player = new D.Player({ mount: "#player", render: render, code: dock });
     /* any number, negative or decimal; empty means a random one */
     const val = () => { const t = q("val").value.trim(), v = Number(t); return t === "" || isNaN(v) ? D.randInt(10, 99) : v; };

@@ -1,5 +1,5 @@
 /* ============================================================
-   core.js — shared helpers + the frame-based animation player
+   core.js: shared helpers + the frame-based animation player
    Every visualizer works the same way:
      1. an algorithm runs to completion and records "frames"
      2. the Player scrubs through those frames
@@ -14,7 +14,7 @@
   const DSA = (window.DSA = {});
 
   /* ---------------- feedback ----------------
-     Every page gets a "Send feedback" button (top bar and footer) that opens this link in a new tab.
+     Every page gets a "Send feedback" button in the top bar that opens this link in a new tab.
      Paste your Google Form link between the quotes. While it is empty the button says the form is not
      connected yet.
      Optional: to pre-fill one short-answer question with the page, tab and operation the reader was on,
@@ -76,7 +76,7 @@
       .filter((t) => t.length && NUM_RE.test(t))
       .map(Number);
   };
-  /** The number typed in an input — negative and decimal values included — or fallback() when it is empty
+  /** The number typed in an input, negative and decimal values included, or fallback() when it is empty
       or not a number. Values are kept to 2 decimal places so they fit in a cell. */
   DSA.readNum = function (sel, fallback) {
     const el = typeof sel === "string" ? DSA.$(sel) : sel;
@@ -139,7 +139,7 @@
     const kw = KW_RE[lang];
     let out = "", rest = line;
 
-    /* trailing comment first — everything after it is literal */
+    /* trailing comment first: everything after it is literal */
     const ci = rest.indexOf(cmt);
     let tail = "";
     if (ci >= 0) { tail = '<span class="cm">' + esc(rest.slice(ci)) + "</span>"; rest = rest.slice(0, ci); }
@@ -174,7 +174,7 @@
     if (id === curLang) return;
     curLang = id;
     try { localStorage.setItem(LS_KEY, id); } catch (e) {}
-    /* panels are rebuilt whenever you pick a new algorithm — drop the detached ones */
+    /* panels are rebuilt whenever you pick a new algorithm; drop the detached ones */
     blocks = blocks.filter((b) => b.node.isConnected);
     blocks.forEach((b) => b.refresh());
     langListeners.forEach((fn) => { try { fn(id); } catch (e) { console.error(e); } });
@@ -359,7 +359,7 @@
     if (lang === "java") return (hasRet ? ret + " " + nm + " = " : "") + target + ";";
     return (hasRet ? nm + " ← " : "") + target;
   };
-  /* values of a call written in a caption: "<b>insert(2, 99)</b> — …" → {i: 2, x: 99} (pseudocode parameter names) */
+  /* values of a call written in a caption: "<b>insert(2, 99)</b>: …" → {i: 2, x: 99} (pseudocode parameter names) */
   function argsFromNote(L, note) {
     const sig = sigOf(L, "pseudo");
     if (!sig || !note) return null;
@@ -413,7 +413,7 @@
     paintCall();
     return { node: box, setArgs(a) { if (a !== vals || argsHook) { vals = a || null; paintCall(); } }, repaint: paintCall };
   }
-  /** specs(listings, { key: { does, params, returns, errors, time, space, callVals? } }) — attach specs to listings.
+  /** specs(listings, { key: { does, params, returns, errors, time, space, callVals? } }): attach specs to listings.
       time / space are WORST-CASE bounds written with O; space is the extra memory the call uses. */
   DSA.specs = function (listings, map) {
     Object.keys(map).forEach((k) => {
@@ -426,12 +426,11 @@
   };
   function variantsHave(L, lang) { return Array.isArray(L[lang]) && L[lang].length > 0; }
 
-  /* The code starts HIDDEN so a newcomer first sees only the picture and the caption; "show code" opens it,
-     and that choice is remembered from page to page. (.v3: a new key, so a preference saved under the
-     earlier default does not carry over.) */
-  const LS_HIDE = "dsa.codeHidden.v3", LS_CLS = "dsa.classHidden.v2";
+  /* The code is HIDDEN on every page load so a newcomer first sees only the picture and the caption.
+     "show code" opens every dock on the page, but it is not remembered: the next load starts hidden again. */
+  const LS_CLS = "dsa.classHidden.v2";
   let codeHidden = true, classHidden = false;
-  try { codeHidden = localStorage.getItem(LS_HIDE) !== "0"; classHidden = localStorage.getItem(LS_CLS) === "1"; } catch (e) {}
+  try { localStorage.removeItem("dsa.codeHidden.v3"); classHidden = localStorage.getItem(LS_CLS) === "1"; } catch (e) {}
 
   /* ------------------------------------------------------------
      Classes. A method listing such as push(x) uses fields (data, t)
@@ -452,7 +451,7 @@
   /* "O(1) time · O(1) space" for the dock header, from a listing's spec */
   function costBadge(L) {
     const sp = (L && L.spec) || {};
-    const strip = (h) => String(h || "").replace(/<[^>]*>/g, "").split(/ — |; /)[0].trim();   /* "O(n) — why" → "O(n)" */
+    const strip = (h) => String(h || "").replace(/<[^>]*>/g, "").split(/: |; /)[0].trim();   /* "O(n): why" → "O(n)" */
     const t = strip(sp.time), sMem = strip(sp.space);
     if (!t && !sMem) return "";
     return '<span class="cost-badge" title="worst case">' + (t ? "<b>" + t + "</b> time" : "") + (t && sMem ? " · " : "") + (sMem ? "<b>" + sMem + "</b> space" : "") + "</span>";
@@ -474,7 +473,7 @@
     m.appendChild(head);
     m.appendChild(body);
 
-    /* a dock without the toggle (the side-by-side panes) always shows its code */
+    /* a dock made with collapsible: false has no toggle and always shows its code */
     const paintHidden = () => {
       const hidden = codeHidden && o.collapsible !== false;
       m.classList.toggle("collapsed", hidden);
@@ -483,7 +482,6 @@
     };
     hide.addEventListener("click", () => {
       codeHidden = !codeHidden;
-      try { localStorage.setItem(LS_HIDE, codeHidden ? "1" : "0"); } catch (e) {}
       docks.forEach((d) => d.paintHidden());
     });
 
@@ -585,15 +583,17 @@
   /* ---------------- LeetCode practice ----------------
      Practice({ key: { label, note?, items: [[number, "Title", "slug", "Easy|Medium|Hard", "why"], ...] } })
      registers a page's lists; practiceShow(key) shows the list for the part the reader is on.
-     The panel is created right below the visualizer panel. */
+     The panel goes at the end of the page's About section (or right below the visualizer panel). */
   let pData = null, pKey = null;
   function practiceMount() {
     let m = DSA.$("#practice");
     if (!m) {
+      const about = DSA.$("#about .about-body");
       const host = DSA.$("#player") && DSA.$("#player").closest(".panel");
-      if (!host) return null;
+      if (!about && !host) return null;
       m = DSA.el("section", { class: "panel", id: "practice" });
-      host.parentNode.insertBefore(m, host.nextSibling);
+      if (about) about.appendChild(m);
+      else host.parentNode.insertBefore(m, host.nextSibling);
     }
     return m;
   }
@@ -606,7 +606,7 @@
     m.style.display = d ? "" : "none";
     if (!d) return;
     m.appendChild(DSA.el("div", { class: "panel-title" }, [
-      DSA.el("h2", { html: "Practice on LeetCode <span class='muted' style='font-weight:400'>— " + d.label + "</span>" }),
+      DSA.el("h2", { html: "Practice on LeetCode <span class='muted' style='font-weight:400'>· " + d.label + "</span>" }),
       DSA.el("span", { class: "hint", text: "opens in a new tab" }),
     ]));
     if (d.note) m.appendChild(DSA.el("p", { class: "small muted", style: "margin:-.3rem 0 .7rem", html: d.note }));
@@ -623,7 +623,7 @@
   DSA.practiceShow = function (key) { pKey = key; practiceRender(); };
 
   /* ---------------- segmented toggle ---------------- */
-  /** Segmented(mount, [{id,label}], onChange, initialId) — a small pill switch (mode pickers). */
+  /** Segmented(mount, [{id,label}], onChange, initialId): a small pill switch (mode pickers). */
   DSA.Segmented = function (mount, items, onChange, initial) {
     const m = typeof mount === "string" ? DSA.$(mount) : mount;
     m.className = "seg";
@@ -647,12 +647,12 @@
    * cells(values, opts) → element. The one array picture every module uses.
    *   marks   { index: stateClass }
    *   ptrs    { index: "label under the cell" }
-   *   live    (v, i) => bool — false draws an empty dashed slot (default: v != null)
+   *   live    (v, i) => bool: false draws an empty dashed slot (default: v != null)
    *   show    (v, i) => text (default: the value, or "·" when not live)
    *   label   caption above the row
    *   index   false to hide the index labels
    *   start   first index label (default 0)
-   *   ghost   (i) => bool — dim this cell
+   *   ghost   (i) => bool: dim this cell
    *   w, h    cell size in px
    */
   DSA.cells = function (values, opts) {
@@ -789,7 +789,7 @@
   };
 
   /* ============================================================
-     Player — scrubs a recorded frame list
+     Player: scrubs a recorded frame list
      opts: { mount, render(frame, index, frames), delay, onIdle }
        onIdle() runs when Play is pressed while nothing is loaded yet:
        a page either loads something to play or explains what to press.
@@ -799,7 +799,7 @@
   DSA._players = players;   /* exposed for the headless test harness */
 
   /* ------------------------------------------------------------
-     "Which operation is this?" — the toolbar button whose click produced
+     "Which operation is this?": the toolbar button whose click produced
      the animation on screen gets .current. A click that loads nothing
      (clear, random, a tab switch) or an example clears it again.
      ------------------------------------------------------------ */
@@ -942,7 +942,7 @@
       }, Math.max(24, this.baseDelay / this.speed));
     };
     this.isVisible = function () { return !!mount.offsetParent; };
-    /* the panel this player belongs to — clicking anywhere in it claims the keyboard */
+    /* the panel this player belongs to: clicking anywhere in it claims the keyboard */
     this.scope = mount.closest(".panel") || mount;
 
     players.push(this);
@@ -1003,7 +1003,7 @@
   });
 
   /* ============================================================
-     Recorder — the thing algorithms talk to
+     Recorder: the thing algorithms talk to
      ============================================================ */
   DSA.Recorder = function Recorder(limit) {
     this.frames = [];
@@ -1017,7 +1017,7 @@
   };
 
   /* ------------------------------------------------------------
-     Rec(snapshot, limit) — a Recorder that also remembers which
+     Rec(snapshot, limit): a Recorder that also remembers which
      code listing and line the algorithm is on.
        r.code("listing")          switch listing (clears the line)
        r.at("anchor").snap({...}) push snapshot() + extras, tagged
@@ -1083,7 +1083,7 @@
     a.addEventListener("focus", refresh);
     a.addEventListener("click", (e) => {
       const h = feedbackHref();
-      if (!h) { e.preventDefault(); DSA.toast("The feedback form isn't connected yet — please check back soon."); return; }
+      if (!h) { e.preventDefault(); DSA.toast("The feedback form isn't connected yet. Please check back soon."); return; }
       a.href = h;
     });
     return a;
@@ -1092,12 +1092,10 @@
   /* footer, injected so every page shares one */
   DSA.footer = function () {
     const f = DSA.$("footer.site");
-    if (f && !f.innerHTML.trim()) {
+    // only pages with a player get a footer: the keyboard shortcuts
+    if (f && !f.innerHTML.trim() && DSA.$("#player")) {
       f.innerHTML =
-        '<div class="wrap">Data Structure &amp; Algorithm Visualizer &middot; built for CSE 214 / CSE 373 &middot; ' +
-        "keyboard: <span class=\"mono\">space</span> play/pause, <span class=\"mono\">&larr; &rarr;</span> step" +
-        '<span class="fb-foot"> &middot; Found a bug? </span></div>';
-      DSA.$(".fb-foot", f).appendChild(feedbackLink("", "Send feedback"));
+        '<div class="wrap">keyboard: <span class="mono">space</span> play/pause, <span class="mono">&larr; &rarr;</span> step</div>';
     }
     const bar = DSA.$(".topbar-in");
     if (bar && !DSA.$(".fb-btn", bar)) {

@@ -1,5 +1,5 @@
 /* ============================================================
-   sorting.js — eight sorting algorithms, frame by frame
+   sorting.js: eight sorting algorithms, frame by frame
    Each algorithm gets (a, R, done, api) and records frames:
      { arr, marks, line, note, cmp, mov, rows? }
    ============================================================ */
@@ -261,7 +261,7 @@
     blurb:
       "Repeatedly walk the array swapping out-of-order neighbours. After pass <em>i</em> the largest <em>i</em> " +
       "values have bubbled to the back, so the pass gets shorter each time. If a whole pass makes no swap the array " +
-      "is already sorted and we stop early — that is the best case, O(n) time.",
+      "is already sorted and we stop early. That is the best case, O(n) time.",
     run(a, s) {
       const n = a.length;
       for (let i = n - 1; i >= 1; i--) {
@@ -298,7 +298,7 @@
     big: ["O(n²) time (worst)", "O(1) space", "every case O(n²)", "not stable"],
     blurb:
       "Scan the unsorted tail for its minimum, then swap that minimum into the front of the tail. " +
-      "It always does exactly n(n-1)/2 comparisons, but at most n-1 swaps — the fewest of any of the quadratic " +
+      "It always does exactly n(n-1)/2 comparisons, but at most n-1 swaps, the fewest of any of the quadratic " +
       "sorts, which is why it is a decent choice when moving records is expensive.",
     run(a, s) {
       const n = a.length;
@@ -376,7 +376,7 @@
     blurb:
       "Two phases. First turn the whole array into a max-heap from the bottom up in O(n). Then repeatedly swap the " +
       "root (the maximum) with the last heap slot, shrink the heap by one, and sift the new root down. The array " +
-      "splits into a heap at the front and a growing sorted suffix at the back — no extra memory at all.",
+      "splits into a heap at the front and a growing sorted suffix at the back, no extra memory at all.",
     run(a, s) {
       const n = a.length;
       const down = (i, size) => {
@@ -428,7 +428,7 @@
     blurb:
       "Split in half, sort each half recursively, then merge the two sorted halves by repeatedly taking the smaller " +
       "front element. The merge needs a scratch buffer, which is the O(n) extra space. Because ties take from the " +
-      "left buffer first, merge sort is stable — and its O(n log n) bound holds on every input.",
+      "left buffer first, merge sort is stable, and its O(n log n) bound holds on every input.",
     run(a, s) {
       const rangeMarks = (lo, hi, cls) => { const m = {}; for (let t = lo; t <= hi; t++) m[t] = cls || "range"; return m; };
       const merge = (lo, mid, hi) => {
@@ -484,7 +484,7 @@
       "Pick a pivot, partition the range so everything smaller sits left of it and everything larger sits right, " +
       "then recurse on the two sides. This version uses Lomuto partitioning with the last element as pivot: " +
       "<span class='mono'>i</span> marks the boundary of the &lt;-pivot region and <span class='mono'>j</span> " +
-      "scans. Already-sorted input makes every partition maximally lopsided — that is the O(n²) worst case.",
+      "scans. Already-sorted input makes every partition maximally lopsided; that is the O(n²) worst case.",
     run(a, s) {
       const rangeMarks = (lo, hi) => { const m = {}; for (let t = lo; t <= hi; t++) m[t] = "range"; return m; };
       const part = (lo, hi) => {
@@ -580,7 +580,7 @@
     blurb:
       "No comparisons at all. Count how many times each key 0..k occurs, turn those counts into running totals " +
       "(so C[v] is where the block of v's ends), then walk the input from the right placing each element at " +
-      "C[key]-1. Linear in n + k — brilliant for small key ranges, useless when k is huge. Walking right-to-left " +
+      "C[key]-1. Linear in n + k, brilliant for small key ranges, useless when k is huge. Walking right-to-left " +
       "is what makes it stable.",
     kRange: true,
     run(a, s) {
@@ -657,16 +657,16 @@
   Object.keys(ALGO).forEach((id) => (LISTINGS[id] = Object.assign({ title: ALGO[id].label }, ALGO[id].code)));
   const M = (t) => "<span class='mono'>" + t + "</span>";
   const HI = { pseudo: "n − 1", java: "a.length - 1" };
-  const sortSpec = (does, time, space, extra) => Object.assign({ does: does, params: M("A") + " — the array to sort (changed in place; negatives and decimals are fine)", returns: "nothing — A ends up in ascending order", errors: "none", time: time, space: space }, extra || {});
+  const sortSpec = (does, time, space, extra) => Object.assign({ does: does, params: M("A") + ": the array to sort (changed in place; negatives and decimals are fine)", returns: "nothing: A ends up in ascending order", errors: "none", time: time, space: space }, extra || {});
   D.specs(LISTINGS, {
-    bubble: sortSpec("Repeatedly swaps neighbours that are out of order; stops early after a pass with no swaps. Stable.", "O(n²) — reversed input; O(n) when already sorted", "O(1)"),
-    selection: sortSpec("Repeatedly selects the minimum of the unsorted part and swaps it into place. Not stable.", "O(n²) — on every input, though at most n − 1 swaps", "O(1)"),
-    insertion: sortSpec("Grows a sorted prefix, shifting larger values right to drop each new key into place. Stable.", "O(n²) — reversed input; O(n) when nearly sorted", "O(1)"),
-    heap: sortSpec("Builds a max-heap in the array, then repeatedly swaps the maximum to the end and repairs the heap. Not stable.", "O(n log n)", "O(1) — the heap lives inside A"),
-    merge: sortSpec("Splits the range in half, sorts each half recursively, then merges the two sorted halves. Stable.", "O(n log n)", "O(n) — the copies L and R, plus O(log n) stack", { params: M("A") + " — the array · " + M("lo") + ", " + M("hi") + " — the range to sort (call with 0 and n − 1)", callVals: { lo: "0", hi: HI } }),
-    quick: sortSpec("Partitions around a pivot (Lomuto: the last element), then sorts both sides recursively. Not stable.", "O(n²) — sorted input with this pivot; O(n log n) on average", "O(n) — stack depth on sorted input; O(log n) on average", { params: M("A") + " — the array · " + M("lo") + ", " + M("hi") + " — the range to sort (call with 0 and n − 1)", callVals: { lo: "0", hi: HI } }),
-    twothird: sortSpec("Sorts the first two-thirds, the last two-thirds, then the first two-thirds again — correct, but famously slow.", "O(n^2.71) — T(n) = 3T(2n/3) + O(1)", "O(log n) — the recursion depth", { params: M("A") + " — the array · " + M("i") + ", " + M("j") + " — the range (call with 0 and n − 1)", callVals: { i: "0", j: HI } }),
-    counting: sortSpec("Counts how many times each key occurs, turns the counts into positions, then places every key directly — no comparisons. Stable.", "O(n + k) — k = max − min", "O(n + k) — C and B", { params: M("A") + " — integer keys (negative is fine; a decimal makes it throw)", errors: "IllegalArgumentException if a key is not an integer" }),
+    bubble: sortSpec("Repeatedly swaps neighbours that are out of order; stops early after a pass with no swaps. Stable.", "O(n²): reversed input; O(n) when already sorted", "O(1)"),
+    selection: sortSpec("Repeatedly selects the minimum of the unsorted part and swaps it into place. Not stable.", "O(n²): on every input, though at most n − 1 swaps", "O(1)"),
+    insertion: sortSpec("Grows a sorted prefix, shifting larger values right to drop each new key into place. Stable.", "O(n²): reversed input; O(n) when nearly sorted", "O(1)"),
+    heap: sortSpec("Builds a max-heap in the array, then repeatedly swaps the maximum to the end and repairs the heap. Not stable.", "O(n log n)", "O(1): the heap lives inside A"),
+    merge: sortSpec("Splits the range in half, sorts each half recursively, then merges the two sorted halves. Stable.", "O(n log n)", "O(n): the copies L and R, plus O(log n) stack", { params: M("A") + ": the array · " + M("lo") + ", " + M("hi") + ": the range to sort (call with 0 and n − 1)", callVals: { lo: "0", hi: HI } }),
+    quick: sortSpec("Partitions around a pivot (Lomuto: the last element), then sorts both sides recursively. Not stable.", "O(n²): sorted input with this pivot; O(n log n) on average", "O(n): stack depth on sorted input; O(log n) on average", { params: M("A") + ": the array · " + M("lo") + ", " + M("hi") + ": the range to sort (call with 0 and n − 1)", callVals: { lo: "0", hi: HI } }),
+    twothird: sortSpec("Sorts the first two-thirds, the last two-thirds, then the first two-thirds again, correct, but famously slow.", "O(n^2.71): T(n) = 3T(2n/3) + O(1)", "O(log n): the recursion depth", { params: M("A") + ": the array · " + M("i") + ", " + M("j") + ": the range (call with 0 and n − 1)", callVals: { i: "0", j: HI } }),
+    counting: sortSpec("Counts how many times each key occurs, turns the counts into positions, then places every key directly, no comparisons. Stable.", "O(n + k): k = max − min", "O(n + k): C and B", { params: M("A") + ": integer keys (negative is fine; a decimal makes it throw)", errors: "IllegalArgumentException if a key is not an integer" }),
   });
   const dock = D.CodeDock("#code", LISTINGS);
   const player = new D.Player({
@@ -720,7 +720,7 @@
     D.$$("#algo-tabs button").forEach((b) => b.classList.toggle("active", b.dataset.id === id));
     if (A.maxN && arr.length > A.maxN) {
       newArray(A.maxN, "random");
-      D.toast(A.label + " explodes combinatorially — trimmed to " + A.maxN + " elements.");
+      D.toast(A.label + " explodes combinatorially: trimmed to " + A.maxN + " elements.");
       return;
     }
     if (A.kRange) { regenForCounting(); return; }
@@ -734,7 +734,7 @@
     if (kOf(arr) > MAX_K) {
       arr = arr.map(() => D.randInt(0, 9));
       q("custom").value = arr.join(", ");
-      D.toast("Counting sort draws one counter per key between min and max — regenerated with keys 0–9.");
+      D.toast("Counting sort draws one counter per key between min and max, regenerated with keys 0–9.");
     }
     drawStatic();
   }
@@ -784,7 +784,7 @@
     };
     s.snap({}, null, "Start <b>" + A.label + "</b> on " + a.length + " elements.");
     A.run(a, s);
-    if (R.overflow) D.toast("Step limit reached — try a smaller array.", true);
+    if (R.overflow) D.toast("Step limit reached: try a smaller array.", true);
     const last = R.frames[R.frames.length - 1];
     if (last && last.line == null) last.note += " Total: <b>" + s.cmp + "</b> comparison(s) and <b>" + s.mov + "</b> write(s).";
     return R.frames;
@@ -805,7 +805,7 @@
       "Sort an Array",
       "sort-an-array",
       "Medium",
-      "Try bubble sort — it times out, which is the lesson."
+      "Try bubble sort: it times out, which is the lesson."
      ],
      [
       283,
@@ -941,7 +941,7 @@
       "Sort an Array",
       "sort-an-array",
       "Medium",
-      "Watch it time out — O(n^2.71) is slower than bubble sort."
+      "Watch it time out: O(n^2.71) is slower than bubble sort."
      ],
      [
       509,
@@ -995,7 +995,7 @@
     q("btn-load").addEventListener("click", () => {
       const v = D.parseNums(q("custom").value).slice(0, 60);
       if (v.length < 2) { D.toast("Enter at least two numbers (negative and decimal values are fine).", true); return; }
-      if (ALGO[cur].kRange && kOf(v) > MAX_K) { D.toast("Counting sort would need " + (kOf(v) + 1) + " counters (one per key from min to max) — too many to draw. Keep max − min ≤ " + MAX_K + ".", true); return; }
+      if (ALGO[cur].kRange && kOf(v) > MAX_K) { D.toast("Counting sort would need " + (kOf(v) + 1) + " counters (one per key from min to max), too many to draw. Keep max − min ≤ " + MAX_K + ".", true); return; }
       arr = v;
       q("size").value = Math.min(60, v.length);
       q("size-out").textContent = v.length;
@@ -1004,7 +1004,7 @@
     });
     D.legend("#legend", [
       { color: "var(--c-idle)", label: "unsorted" },
-      { color: "#5d6ea3", label: "active subarray" },
+      { color: "#bfdbfe", label: "active subarray" },
       { color: "var(--c-cmp)", label: "comparing" },
       { color: "var(--c-swap)", label: "moving / writing" },
       { color: "var(--c-active)", label: "cursor" },

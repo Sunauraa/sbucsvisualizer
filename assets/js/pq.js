@@ -1,5 +1,5 @@
 /* ============================================================
-   pq.js — the Priority Queue ADT, four ways:
+   pq.js: the Priority Queue ADT, four ways:
      unsorted list · sorted list · array-based heap · tree-based heap
    plus PQ-sort in its three classic forms:
      selection sort (unsorted list) · insertion sort (sorted list) · heap sort (heap)
@@ -89,17 +89,17 @@
   const CODE = {
     /* ---------- unsorted list ---------- */
     u_insert: {
-      title: "insert(k) — unsorted list",
+      title: "insert(k) · unsorted list",
       pseudo: ["insert(k):", "  L.addLast(k)                 // no order to maintain: O(1) @@add"],
       java: ["void insert(double k) {", "  list.add(k);                 // O(1) @@add", "}"],
     },
     u_min: {
-      title: "min() — unsorted list",
+      title: "min() · unsorted list",
       pseudo: ["min():", "  if L is empty: return null @@empty", "  best ← L[0] @@init", "  for each key k in L: @@loop", "    if k < best: best ← k @@cmp", "  return best                  // a full scan: O(n) @@ret"],
       java: ["double min() {", "  if (list.isEmpty()) throw new NoSuchElementException(); @@empty", "  double best = list.get(0); @@init", "  for (double k : list) @@loop", "    if (k < best) best = k; @@cmp", "  return best; @@ret", "}"],
     },
     u_removeMin: {
-      title: "removeMin() — unsorted list",
+      title: "removeMin() · unsorted list",
       pseudo: [
         "removeMin():",
         "  if L is empty: return null @@empty",
@@ -121,7 +121,7 @@
 
     /* ---------- sorted list ---------- */
     s_insert: {
-      title: "insert(k) — sorted list",
+      title: "insert(k) · sorted list",
       pseudo: [
         "insert(k):",
         "  i ← size                     // start at the back @@init",
@@ -132,24 +132,24 @@
       java: ["void insert(double k) {", "  int i = list.size(); @@init", "  while (i > 0 && list.get(i - 1) > k) @@cmp", "    i--; @@walk", "  list.add(i, k); @@add", "}"],
     },
     s_min: {
-      title: "min() — sorted list",
+      title: "min() · sorted list",
       pseudo: ["min():", "  if L is empty: return null @@empty", "  return L[0]                  // always at the front: O(1) @@ret"],
       java: ["double min() {", "  if (list.isEmpty()) throw new NoSuchElementException(); @@empty", "  return list.get(0); @@ret", "}"],
     },
     s_removeMin: {
-      title: "removeMin() — sorted list",
+      title: "removeMin() · sorted list",
       pseudo: ["removeMin():", "  if L is empty: return null @@empty", "  return L.removeFirst()       // the min is at the front: O(1) @@remove"],
       java: ["double removeMin() {", "  if (list.isEmpty()) throw new NoSuchElementException(); @@empty", "  return list.removeFirst();   // LinkedList: O(1) @@remove", "}"],
     },
 
     /* ---------- array heap ---------- */
     a_insert: withTail({
-      title: "insert(k) — array heap",
+      title: "insert(k) · array heap",
       pseudo: ["insert(k):", "  H[n] ← k;  n ← n + 1         // next free slot keeps the tree complete @@append", "  upHeap(n - 1) @@call"],
       java: ["void insert(double k) {", "  heap.add(k);                  // next free slot @@append", "  upHeap(heap.size() - 1); @@call", "}"],
     }, UP_HEAP),
     a_removeMin: withTail({
-      title: "removeMin() — array heap",
+      title: "removeMin() · array heap",
       pseudo: [
         "removeMin():",
         "  if n == 0: return null @@empty",
@@ -169,12 +169,12 @@
       ],
     }, DOWN_HEAP),
     a_min: {
-      title: "min() — array heap",
+      title: "min() · array heap",
       pseudo: ["min():", "  if n == 0: return null @@empty", "  return H[0]                  // the root: O(1) @@ret"],
       java: ["double min() {", "  if (heap.isEmpty()) throw new NoSuchElementException(); @@empty", "  return heap.get(0); @@ret", "}"],
     },
     a_heapify: withTail({
-      title: "heapify(A) — bottom-up construction",
+      title: "heapify(A) · bottom-up construction",
       pseudo: ["heapify(A):", "  H ← A;  n ← length(A) @@init", "  for j ← ⌊n/2⌋ - 1 down to 0:   // the leaves are heaps already @@loop", "    downHeap(j) @@call"],
       java: ["void heapify(double[] a) {", "  heap.clear();  for (double x : a) heap.add(x); @@init", "  for (int j = heap.size() / 2 - 1; j >= 0; j--) @@loop", "    downHeap(j); @@call", "}"],
     }, DOWN_HEAP),
@@ -186,7 +186,7 @@
 
     /* ---------- tree heap (linked nodes) ---------- */
     t_insert: withTail({
-      title: "insert(k) — linked tree heap",
+      title: "insert(k) · linked tree heap",
       pseudo: [
         "insert(k):",
         "  node ← new Node(k);  n ← n + 1 @@alloc",
@@ -211,7 +211,7 @@
       ],
     }, NODE_AT),
     t_removeMin: withTail({
-      title: "removeMin() — linked tree heap",
+      title: "removeMin() · linked tree heap",
       pseudo: [
         "removeMin():",
         "  if n == 0: return null @@empty",
@@ -247,7 +247,7 @@
       ],
     }, NODE_AT),
     t_min: {
-      title: "min() — linked tree heap",
+      title: "min() · linked tree heap",
       pseudo: ["min():", "  if root == null: return null @@empty", "  return root.key @@ret"],
       java: ["double min() {", "  if (root == null) throw new NoSuchElementException(); @@empty", "  return root.key; @@ret", "}"],
     },
@@ -282,21 +282,21 @@
      SPECS
      ============================================================ */
   const M = (t) => "<span class='mono'>" + t + "</span>";
-  const pqSortSpec = (how, p1, p2, cls, total) => ({ does: "Sorts S by inserting every key into a priority queue P, then removing the minimum n times. With " + how + ".", params: M("S") + " — the sequence to sort · " + M("P") + " — an empty priority queue", returns: "nothing — S ends up in ascending order", errors: "none", time: total + " — phase 1 " + p1 + ", phase 2 " + p2, space: "O(n) — P holds all n keys between the phases", callVals: { s: "s", p: { java: "new " + cls + "()" } } });
+  const pqSortSpec = (how, p1, p2, cls, total) => ({ does: "Sorts S by inserting every key into a priority queue P, then removing the minimum n times. With " + how + ".", params: M("S") + ": the sequence to sort · " + M("P") + ": an empty priority queue", returns: "nothing: S ends up in ascending order", errors: "none", time: total + ": phase 1 " + p1 + ", phase 2 " + p2, space: "O(n): P holds all n keys between the phases", callVals: { s: "s", p: { java: "new " + cls + "()" } } });
   const O1 = { time: "O(1)", space: "O(1)" };
   D.specs(CODE, {
-    u_insert: Object.assign({ does: "Adds key " + M("k") + " anywhere — an unsorted list just appends.", params: M("k") + " — the key (negative and decimal keys are fine)", returns: "nothing", errors: "none" }, O1),
-    u_min: { does: "Finds the smallest key by scanning the whole list.", params: "none", returns: "the minimum key", errors: "empty priority queue", time: "O(n) — every key is looked at", space: "O(1)" },
-    u_removeMin: { does: "Scans for the smallest key, removes it and returns it.", params: "none", returns: "the minimum key", errors: "empty priority queue", time: "O(n) — the scan, then the removal shifts", space: "O(1)" },
-    s_insert: { does: "Walks the sorted list to " + M("k") + "'s place and inserts it there, keeping the list sorted.", params: M("k") + " — the key (negative and decimal keys are fine)", returns: "nothing", errors: "none", time: "O(n) — a key smaller than everything walks the whole list", space: "O(1)" },
-    s_min: Object.assign({ does: "Returns the first element — the list is kept sorted, so it is the minimum.", params: "none", returns: "the minimum key", errors: "empty priority queue" }, O1),
+    u_insert: Object.assign({ does: "Adds key " + M("k") + " anywhere: an unsorted list just appends.", params: M("k") + ": the key (negative and decimal keys are fine)", returns: "nothing", errors: "none" }, O1),
+    u_min: { does: "Finds the smallest key by scanning the whole list.", params: "none", returns: "the minimum key", errors: "empty priority queue", time: "O(n): every key is looked at", space: "O(1)" },
+    u_removeMin: { does: "Scans for the smallest key, removes it and returns it.", params: "none", returns: "the minimum key", errors: "empty priority queue", time: "O(n): the scan, then the removal shifts", space: "O(1)" },
+    s_insert: { does: "Walks the sorted list to " + M("k") + "'s place and inserts it there, keeping the list sorted.", params: M("k") + ": the key (negative and decimal keys are fine)", returns: "nothing", errors: "none", time: "O(n): a key smaller than everything walks the whole list", space: "O(1)" },
+    s_min: Object.assign({ does: "Returns the first element. The list is kept sorted, so it is the minimum.", params: "none", returns: "the minimum key", errors: "empty priority queue" }, O1),
     s_removeMin: Object.assign({ does: "Removes and returns the first element.", params: "none", returns: "the minimum key", errors: "empty priority queue" }, O1),
-    a_insert: { does: "Appends " + M("k") + " at the end of the heap array, then up-heaps it past larger parents.", params: M("k") + " — the key (negative and decimal keys are fine)", returns: "nothing", errors: "none", time: "O(log n) — at most one swap per level", space: "O(1)" },
-    a_removeMin: { does: "Returns the root, moves the last element to the root, then down-heaps it past smaller children.", params: "none", returns: "the minimum key", errors: "empty priority queue", time: "O(log n) — at most one swap per level", space: "O(1)" },
-    a_min: Object.assign({ does: "Returns the root of the heap — always the minimum.", params: "none", returns: "the minimum key", errors: "empty priority queue" }, O1),
-    a_heapify: { does: "Turns an arbitrary array into a heap bottom-up: down-heap every internal node from the last one back to the root.", params: M("A") + " — the keys", returns: "nothing — the heap now holds A", errors: "none", time: "O(n) — most nodes are near the bottom and barely move", space: "O(1) beyond the heap itself", callVals: { A: "A", a: "a" } },
-    a_build: { does: "Builds a heap by inserting the keys one at a time.", params: M("A") + " — the keys", returns: "nothing", errors: "none", time: "O(n log n) — compare with bottom-up heapify", space: "O(1) beyond the heap itself" },
-    t_insert: { does: "Hangs a new node at the next free position (found by reading n in binary), then up-heaps it.", params: M("k") + " — the key", returns: "nothing", errors: "none", time: "O(log n) — the walk down plus the up-heap", space: "O(1) — one new node" },
+    a_insert: { does: "Appends " + M("k") + " at the end of the heap array, then up-heaps it past larger parents.", params: M("k") + ": the key (negative and decimal keys are fine)", returns: "nothing", errors: "none", time: "O(log n): at most one swap per level", space: "O(1)" },
+    a_removeMin: { does: "Returns the root, moves the last element to the root, then down-heaps it past smaller children.", params: "none", returns: "the minimum key", errors: "empty priority queue", time: "O(log n): at most one swap per level", space: "O(1)" },
+    a_min: Object.assign({ does: "Returns the root of the heap, always the minimum.", params: "none", returns: "the minimum key", errors: "empty priority queue" }, O1),
+    a_heapify: { does: "Turns an arbitrary array into a heap bottom-up: down-heap every internal node from the last one back to the root.", params: M("A") + ": the keys", returns: "nothing: the heap now holds A", errors: "none", time: "O(n): most nodes are near the bottom and barely move", space: "O(1): beyond the heap itself", callVals: { A: "A", a: "a" } },
+    a_build: { does: "Builds a heap by inserting the keys one at a time.", params: M("A") + ": the keys", returns: "nothing", errors: "none", time: "O(n log n): compare with bottom-up heapify", space: "O(1): beyond the heap itself" },
+    t_insert: { does: "Hangs a new node at the next free position (found by reading n in binary), then up-heaps it.", params: M("k") + ": the key", returns: "nothing", errors: "none", time: "O(log n): the walk down plus the up-heap", space: "O(1): one new node" },
     t_removeMin: { does: "Returns the root's key, moves the last node's key to the root, unlinks the last node, then down-heaps.", params: "none", returns: "the minimum key", errors: "empty priority queue", time: "O(log n)", space: "O(1)" },
     t_min: Object.assign({ does: "Returns the root's key.", params: "none", returns: "the minimum key", errors: "empty priority queue" }, O1),
     sort_selection: pqSortSpec("an <b>unsorted list</b> as P this is selection sort", "O(n)", "O(n²)", "UnsortedListPQ", "O(n²)"),
@@ -305,7 +305,7 @@
   });
 
   /* ============================================================
-     CLASSES — the fields each method reads and writes
+     CLASSES: the fields each method reads and writes
      ============================================================ */
   const listClass = (name, type, sortedNote) => ({
     name: name,
@@ -387,7 +387,7 @@
   const U = { a: [] };      /* unsorted list */
   const S = { a: [] };      /* sorted list */
   const H = { a: [] };      /* array heap */
-  const T = { a: [] };      /* tree heap — keys kept in level order; the tree is linked */
+  const T = { a: [] };      /* tree heap: keys kept in level order; the tree is linked */
   let tab = "unsorted", player, dock;
   let cmp = 0, swaps = 0;
 
@@ -401,15 +401,15 @@
   const unsorted = {
     insert(k) {
       const r = listRec(U, false).code("u_insert");
-      r.snap({ note: "<b>insert(" + k + ")</b> — an unsorted list doesn't care where keys go." });
+      r.snap({ note: "<b>insert(" + k + ")</b>: an unsorted list doesn't care where keys go." });
       U.a.push(k);
       r.at("add").snap({ marks: { [U.a.length - 1]: "done" }, note: "Append " + k + " at the end. <b>O(1)</b>. All the work is postponed until someone asks for the minimum." });
       return r;
     },
     scan(r, remove) {
       r.code(remove ? "u_removeMin" : "u_min");
-      r.snap({ note: "<b>" + (remove ? "removeMin()" : "min()") + "</b> — nothing is ordered, so every key must be checked." });
-      if (!U.a.length) { r.at("empty").snap({ note: "Empty — return null." }); return; }
+      r.snap({ note: "<b>" + (remove ? "removeMin()" : "min()") + "</b>: nothing is ordered, so every key must be checked." });
+      if (!U.a.length) { r.at("empty").snap({ note: "Empty: return null." }); return; }
       r.at("empty^").snap({ note: "Not empty." });
       let b = 0;
       r.at("init").snap({ marks: { 0: "target" }, ptrs: { 0: "best" }, note: "Assume L[0] = " + U.a[0] + " is the smallest." });
@@ -434,7 +434,7 @@
   const sorted = {
     insert(k) {
       const r = listRec(S, true).code("s_insert");
-      r.snap({ note: "<b>insert(" + k + ")</b> — keep the list sorted, so find " + k + "'s place." });
+      r.snap({ note: "<b>insert(" + k + ")</b>: keep the list sorted, so find " + k + "'s place." });
       let i = S.a.length;
       r.at("init").snap({ ptrs: { [i]: "i" }, gap: i, note: "Start at the back: i = " + i + "." });
       while (i > 0) {
@@ -442,7 +442,7 @@
         r.at("cmp").snap({ marks: { [i - 1]: "cmp" }, ptrs: { [i]: "i" }, gap: i, note: "Is L[" + (i - 1) + "] = " + S.a[i - 1] + " &gt; " + k + "?" });
         if (!(S.a[i - 1] > k)) break;
         i--;
-        r.at("walk").snap({ marks: { [i]: "visit" }, ptrs: { [i]: "i" }, gap: i, note: "Yes — step left. i = " + i + "." });
+        r.at("walk").snap({ marks: { [i]: "visit" }, ptrs: { [i]: "i" }, gap: i, note: "Yes: step left. i = " + i + "." });
       }
       S.a.splice(i, 0, k);
       r.at("add").snap({ marks: { [i]: "done" }, note: "Insert " + k + " at index " + i + ". The walk makes insert <b>O(n)</b> in the worst case." });
@@ -546,7 +546,7 @@
       }
       cmp++;
       if (Hs.a[c] >= Hs.a[j]) { r.at(L.cmp).snap({ marks: { [j]: "done", [c]: "visit" }, note: Hs.a[c] + " ≥ " + Hs.a[j] + ": order restored, <b>stop</b>." }); return; }
-      r.at(L.cmp).snap({ marks: { [j]: "active", [c]: "cmp" }, note: Hs.a[c] + " &lt; " + Hs.a[j] + " — the child should be on top." });
+      r.at(L.cmp).snap({ marks: { [j]: "active", [c]: "cmp" }, note: Hs.a[c] + " &lt; " + Hs.a[j] + ": the child should be on top." });
       [Hs.a[j], Hs.a[c]] = [Hs.a[c], Hs.a[j]];
       swaps++;
       r.at(L.swap).snap({ marks: { [j]: "swap", [c]: "swap" }, note: "Swap with the <b>smaller</b> child. If we swapped with the larger one, it would end up above a smaller key." });
@@ -572,7 +572,7 @@
       if (!H.a.length) { r.at("empty").snap({ note: "Empty." }); return r; }
       r.at("empty^").snap({ note: "n = " + H.a.length + "." });
       const v = H.a[0];
-      r.at("save").snap({ marks: { 0: "target" }, note: "min = H[0] = <b>" + v + "</b> — the root." });
+      r.at("save").snap({ marks: { 0: "target" }, note: "min = H[0] = <b>" + v + "</b>: the root." });
       const last = H.a.length - 1;
       r.at("last").snap({ marks: { 0: "swap", [last]: "swap" }, note: "Move the last leaf (H[" + last + "] = " + H.a[last] + ") to the root. Removing the last slot is the only removal that keeps the tree complete." });
       H.a[0] = H.a[last];
@@ -732,7 +732,7 @@
         for (let i = 1; i < pq.length; i++) {
           tick();
           if (pq[i] < pq[b]) b = i;
-          r.at("remove").snap({ pmarks: { [b]: "target", [i]: "cmp" }, note: "Compare P[" + i + "] = " + pq[i] + " — smallest so far is " + pq[b] + "." });
+          r.at("remove").snap({ pmarks: { [b]: "target", [i]: "cmp" }, note: "Compare P[" + i + "] = " + pq[i] + ": smallest so far is " + pq[b] + "." });
         }
         v = pq.splice(b, 1)[0];
       } else if (algo === "insertion") {
@@ -775,23 +775,23 @@
     const st = q("stage");
     st.innerHTML = "";
     if (f.kind === "list") {
-      st.appendChild(D.cells(f.a, { marks: f.marks, ptrs: f.ptrs, roomBelow: true, label: f.sorted ? "sorted list — smallest first" : "unsorted list — keys in arrival order" }));
+      st.appendChild(D.cells(f.a, { marks: f.marks, ptrs: f.ptrs, roomBelow: true, label: f.sorted ? "sorted list, smallest first" : "unsorted list, keys in arrival order" }));
     } else if (f.kind === "aheap") {
-      st.appendChild(D.cells(f.a, { marks: f.marks, ptrs: f.a.length ? { 0: "root" } : {}, roomBelow: true, w: 42, h: 38, label: "array H[] — the actual storage" }));
+      st.appendChild(D.cells(f.a, { marks: f.marks, ptrs: f.a.length ? { 0: "root" } : {}, roomBelow: true, w: 42, h: 38, label: "array H[]: the actual storage" }));
       st.appendChild(D.el("div", { class: "cells-cap", text: "the same array read as a complete binary tree (children of i at 2i+1, 2i+2)", style: "margin-top:.4rem" }));
       st.appendChild(D.heapTree(f.a.length, { label: (i) => f.a[i], marks: f.marks }));
     } else if (f.kind === "theap") {
       const onPath = new Set(f.path || []);
-      st.appendChild(D.el("div", { class: "cells-cap", html: "linked nodes — each has <span class='mono'>key, left, right, parent</span>. Labels show each node's level-order position in binary." + (f.bits ? "   <b style='color:var(--c-cmp)'>walking to " + f.bits.pos + " = " + f.bits.pos.toString(2) + "₂</b>" : "") }));
+      st.appendChild(D.el("div", { class: "cells-cap", html: "linked nodes: each has <span class='mono'>key, left, right, parent</span>. Labels show each node's level-order position in binary." + (f.bits ? "   <b style='color:var(--c-cmp)'>walking to " + f.bits.pos + " = " + f.bits.pos.toString(2) + "₂</b>" : "") }));
       st.appendChild(D.heapTree(f.a.length, {
         label: (i) => f.a[i], marks: f.marks,
         sub: (i) => (i + 1).toString(2),
         edge: (i) => (onPath.has(i) && onPath.has(P(i)) ? "on" : ""),
       }));
     } else if (f.kind === "sort") {
-      st.appendChild(D.cells(f.seq, { marks: f.marks, label: "S — the sequence" + (f.phase === 1 ? " (being emptied into P)" : " (filling up, in order)"), w: 40, h: 36 }));
-      st.appendChild(D.cells(f.hand == null ? [null] : [f.hand], { index: false, marks: f.hand == null ? {} : { 0: "active" }, label: f.hand == null ? "in transit: —" : "in transit: " + (f.phase === 1 ? "S → P" : "P → S"), w: 40, h: 36 }));
-      const lab = "P — " + { selection: "unsorted list", insertion: "sorted list", heap: "heap (array + tree)" }[f.algo];
+      st.appendChild(D.cells(f.seq, { marks: f.marks, label: "S: the sequence" + (f.phase === 1 ? " (being emptied into P)" : " (filling up, in order)"), w: 40, h: 36 }));
+      st.appendChild(D.cells(f.hand == null ? [null] : [f.hand], { index: false, marks: f.hand == null ? {} : { 0: "active" }, label: f.hand == null ? "in transit: nothing" : "in transit: " + (f.phase === 1 ? "S → P" : "P → S"), w: 40, h: 36 }));
+      const lab = "P: " + { selection: "unsorted list", insertion: "sorted list", heap: "heap (array + tree)" }[f.algo];
       st.appendChild(D.cells(f.pq, { marks: f.pmarks, label: lab, w: 40, h: 36 }));
       if (f.algo === "heap" && f.pq.length) st.appendChild(D.heapTree(f.pq.length, { label: (i) => f.pq[i], marks: f.pmarks }));
     }
@@ -861,7 +861,7 @@
       "Last Stone Weight",
       "last-stone-weight",
       "Easy",
-      "Repeatedly remove the largest two — try it with a scan first, then a heap."
+      "Repeatedly remove the largest two. Try it with a scan first, then a heap."
      ],
      [
       215,
@@ -953,7 +953,7 @@
       "Last Stone Weight",
       "last-stone-weight",
       "Easy",
-      "Same ADT — try it with your own linked heap."
+      "Same ADT: try it with your own linked heap."
      ]
     ]
    },
@@ -965,7 +965,7 @@
       "Sort an Array",
       "sort-an-array",
       "Medium",
-      "Submit heap sort — then selection and insertion sort, and watch them time out."
+      "Submit heap sort, then selection and insertion sort, and watch them time out."
      ],
      [
       215,

@@ -3,29 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Graphs — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
+<title>Graphs · CSE 214</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202610111800">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕸️</text></svg>">
 </head>
 <body>
 
-<div class="topbar">
+<header class="topbar">
   <div class="wrap topbar-in">
-    <a class="brand" href="../index.html"><span class="logo">D</span> DSA Visualizer</a>
-    <div class="crumbs"><a href="../index.html">Home</a> / <a href="index.html">CSE 214</a> / <span>Graphs</span></div>
+    <a class="back" href="index.html" title="Back to CSE 214" aria-label="Back to CSE 214">&lsaquo;</a>
+    <h1 class="title">Graphs</h1>
     <div class="spacer"></div>
-    <span class="pill">BFS &amp; DFS</span>
   </div>
-</div>
+</header>
 
 <div class="wrap">
-  <div class="page-head">
-    <h1>Graphs</h1>
-    <p>Build a graph by clicking and drag vertices wherever you like, even mid-traversal. The adjacency matrix and
-       adjacency list are the same graph in two representations, and they highlight in step with the search.</p>
-  </div>
-
-  <div class="panel">
+  <div class="panel main">
     <div class="toolbar">
       <button data-tool="add" class="active">✚ add / connect</button>
       <button data-tool="del">✕ delete</button>
@@ -70,9 +63,15 @@
     <div id="player"></div>
 
     <div id="legend"></div>
-    <p class="blurb" id="algo-explain"></p>
   </div>
 
+
+  <details class="about" id="about">
+    <summary>About this topic</summary>
+    <div class="about-body">
+    <p class="intro">Build a graph by clicking and drag vertices wherever you like, even mid-traversal. The adjacency matrix and
+       adjacency list are the same graph in two representations, and they highlight in step with the search.</p>
+    <p class="blurb" id="algo-explain"></p>
   <div class="row" style="margin-bottom:2rem">
     <div class="col">
       <div class="panel" style="height:100%">
@@ -83,7 +82,7 @@
             <tr><td>frontier</td><td>queue (FIFO)</td><td>stack (LIFO / recursion)</td></tr>
             <tr><td>order</td><td>by distance from source</td><td>deepest-first, backtracking</td></tr>
             <tr><td>time (worst case)</td><td class="one">O(V + E)</td><td class="one">O(V + E)</td></tr>
-            <tr><td>extra space (worst case)</td><td>O(V) — a whole level in the queue</td><td>O(V) — the deepest path on the stack</td></tr>
+            <tr><td>extra space (worst case)</td><td>O(V), a whole level in the queue</td><td>O(V), the deepest path on the stack</td></tr>
             <tr><td>gives you</td><td>shortest paths (unweighted)</td><td>cycles, components, topo order</td></tr>
             <tr><td>tree edges</td><td>shortest-path tree</td><td>DFS tree / forest</td></tr>
           </table>
@@ -103,7 +102,7 @@
             <tr><td>BFS / DFS overall</td><td>O(V²) / O(V)</td><td class="one">O(V + E) / O(V)</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.7rem 0">Real graphs are <b>sparse</b> — E is closer to V than to V², so
+        <p class="small muted" style="margin:.7rem 0">Real graphs are <b>sparse</b>: E is closer to V than to V², so
            adjacency lists win almost always. Load the <em>complete K₆</em> preset: every pair of vertices is joined, and
            that dense regime is the only one where the matrix is competitive.</p>
         <h3 style="font-size:.95rem;margin:.9rem 0 .3rem">Vocabulary the visualizer uses</h3>
@@ -111,17 +110,20 @@
           <dt>degree</dt><dd>edges touching a vertex (in + out if directed)</dd>
           <dt>path / cycle</dt><dd>walk with no repeated vertex / one that returns to its start</dd>
           <dt>connected</dt><dd>every vertex reachable from every other</dd>
-          <dt>component</dt><dd>a maximal connected piece — one DFS tree each</dd>
+          <dt>component</dt><dd>a maximal connected piece (one DFS tree each)</dd>
           <dt>tree edge</dt><dd>the edge that first discovered a vertex</dd>
           <dt>back edge</dt><dd>points to a vertex still on the stack ⇒ a cycle</dd>
         </dl>
       </div>
     </div>
   </div>
+    </div>
+  </details>
+
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=202610042131"></script>
-<script src="../assets/js/graphs.js?v=202610042131"></script>
+<script src="../assets/js/core.js?v=202610111800"></script>
+<script src="../assets/js/graphs.js?v=202610111800"></script>
 </body>
 </html>

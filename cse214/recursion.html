@@ -3,32 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Recursion — CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=202610042131">
+<title>Recursion · CSE 214</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202610111800">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔁</text></svg>">
 </head>
 <body>
 
-<div class="topbar">
+<header class="topbar">
   <div class="wrap topbar-in">
-    <a class="brand" href="../index.html"><span class="logo">D</span> DSA Visualizer</a>
-    <div class="crumbs"><a href="../index.html">Home</a> / <a href="index.html">CSE 214</a> / <span>Recursion</span></div>
+    <a class="back" href="index.html" title="Back to CSE 214" aria-label="Back to CSE 214">&lsaquo;</a>
+    <h1 class="title">Recursion</h1>
     <div class="spacer"></div>
-    <span class="pill">8 functions</span>
   </div>
-</div>
+</header>
 
 <div class="wrap">
-  <div class="page-head">
-    <h1>Recursion</h1>
-    <p>Watch the call stack grow and unwind next to a live recursion tree. Every frame on the stack keeps its own copy
-       of the variables and waits for the call above it to return. Then switch to <b>Iterative</b>, or run both
-       <b>side by side</b>, to see the same answer computed with a loop and what that saves.</p>
-  </div>
-
   <div id="fn-tabs" class="tabs"></div>
 
-  <div class="panel">
+  <div class="panel main">
     <div class="toolbar">
       <div class="toolbar" id="inputs" style="margin:0"></div>
       <div class="sep"></div>
@@ -59,14 +51,20 @@
 
     <div id="player"></div>
     <div id="legend"></div>
+  </div>
 
+
+  <details class="about" id="about">
+    <summary>About this topic</summary>
+    <div class="about-body">
+    <p class="intro">Watch the call stack grow and unwind next to a live recursion tree. Every frame on the stack keeps its own copy
+       of the variables and waits for the call above it to return. Then switch to <b>Iterative</b>, or run both
+       <b>side by side</b>, to see the same answer computed with a loop and what that saves.</p>
     <div style="margin-top:1rem">
       <div class="panel-title" style="margin-bottom:.4rem"><h2 id="fn-name">factorial(n)</h2></div>
       <div class="complexity" id="fn-big" style="margin-bottom:.5rem"></div>
       <p class="blurb" id="fn-blurb" style="margin:0"></p>
     </div>
-  </div>
-
   <div class="panel">
     <h2>Recursion vs iteration</h2>
     <div style="overflow-x:auto">
@@ -100,7 +98,7 @@
       </div>
       <div>
         <h3 style="font-size:.95rem;margin:.2rem 0 .3rem">2 &middot; Progress toward it</h3>
-        <p class="small muted">Every recursive call must be on a strictly <em>smaller</em> input — n−1, n/2, one
+        <p class="small muted">Every recursive call must be on a strictly <em>smaller</em> input: n−1, n/2, one
            character shorter. Otherwise the base case is never reached.</p>
       </div>
       <div>
@@ -123,10 +121,13 @@
       </table>
     </div>
   </div>
+    </div>
+  </details>
+
 </div>
 
 <footer class="site"></footer>
-<script src="../assets/js/core.js?v=202610042131"></script>
-<script src="../assets/js/recursion.js?v=202610042131"></script>
+<script src="../assets/js/core.js?v=202610111800"></script>
+<script src="../assets/js/recursion.js?v=202610111800"></script>
 </body>
 </html>
