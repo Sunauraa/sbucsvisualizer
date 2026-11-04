@@ -37,7 +37,7 @@ Inputs take negative and decimal numbers. Java listings use `double` for stored 
 the Java parameter is an `int` (recursion's n, hash-table keys, counting sort keys) a decimal is rejected with a
 message saying why, and counting sort runs its own "not an integer" error branch.
 
-CSE 373 (`cse373/index.html`) is a placeholder listing the planned modules.
+CSE 373 is not built yet: the home page shows it as an "Under construction" box that does not link anywhere.
 
 ## Learning tools
 
@@ -163,7 +163,6 @@ r.code("push").at("inc").snap({ note: "t ← t + 1" });
 ```
 index.html              course picker
 cse214/*.html           the eight modules
-cse373/index.html       planned
 api/tutor.js            optional Vercel Function behind Ask AI
 assets/css/style.css    one stylesheet for everything
 assets/js/core.js       player, recorder, code dock (spec, class, call line), call-stack cards, cells/heap-tree drawing, tabs, compare helper
@@ -198,7 +197,7 @@ GitHub Pages lets browsers cache files for about 10 minutes, and a new page runn
 `core.js` breaks. Changing the number makes every browser fetch the matching files:
 
 ```sh
-NEW=$(date +%Y%m%d%H%M); sed -i '' -E "s/\?v=[0-9]+/?v=$NEW/g" index.html cse214/*.html cse373/index.html
+NEW=$(date +%Y%m%d%H%M); sed -i '' -E "s/\?v=[0-9]+/?v=$NEW/g" index.html cse214/*.html
 ```
 
 ## Feedback button

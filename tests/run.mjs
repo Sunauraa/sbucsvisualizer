@@ -952,7 +952,7 @@ if (want("a11y")) {
   const bare = await startServer(0, { headers: false });
   const b = "http://127.0.0.1:" + bare.address().port;
   const open = async (p) => { const c = await browser.newContext({ viewport: { width: 1280, height: 900 } }); const g = await c.newPage(); await g.goto(b + p); await g.waitForLoadState("load"); return { g, c }; };
-  for (const p of ["/index.html", "/cse214/index.html", "/cse373/index.html", "/404.html"]) {
+  for (const p of ["/index.html", "/cse214/index.html", "/404.html"]) {
     if (!fs.existsSync(path.join(ROOT, p))) continue;
     const { g, c } = await open(p);
     await scan(g, p);
@@ -1021,7 +1021,7 @@ if (want("a11y")) {
 /* ---------- production details ---------- */
 if (want("prod")) {
   console.log("production");
-  const files = fs.readdirSync(path.join(ROOT, "cse214")).map((f) => "/cse214/" + f).concat(["/index.html", "/cse373/index.html"]);
+  const files = fs.readdirSync(path.join(ROOT, "cse214")).map((f) => "/cse214/" + f).concat(["/index.html"]);
   /* every internal link and asset exists; every page has the basics */
   for (const f of files) {
     const res = await fetch(BASE + f);
@@ -1038,6 +1038,15 @@ if (want("prod")) {
       const a = await fetch(u);
       ok(a.status === 200, f + " links to something real: " + r, a.status);
     }
+  }
+  /* CSE 373 is a notice on the home page, not somewhere to go */
+  {
+    const { page: home, ctx: homeCtx } = await (async () => { const c = await browser.newContext(); const g = await c.newPage(); await g.goto(BASE + "/index.html"); return { page: g, ctx: c }; })();
+    const box = home.locator(".tile.soon");
+    ok(/Under construction/i.test(await box.textContent()) && /CSE 373/.test(await box.textContent()), "the home page says CSE 373 is under construction");
+    ok((await home.locator('a[href*="cse373"]').count()) === 0 && (await box.locator("xpath=ancestor-or-self::a").count()) === 0, "the CSE 373 box can't be clicked into");
+    await homeCtx.close();
+    ok((await fetch(BASE + "/cse373/index.html")).status === 404, "there is no CSE 373 page to reach by address");
   }
   /* headers */
   const h = await fetch(BASE + "/cse214/sorting.html");
