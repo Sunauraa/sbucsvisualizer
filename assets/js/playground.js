@@ -65,8 +65,11 @@
   const valText = (f, v) => (isRef(v) ? refText(f, v.ref) : String(v));
 
   /* linked structures: objects whose reference fields point at their own class */
+  /* a link back up (parent, prev) isn't drawn: the forward links already show the shape */
+  const BACK = /^(parent|prev|previous)$/i;
   function selfLinks(f, h) {
     return Object.keys(h.fields).filter((k) => {
+      if (BACK.test(k)) return false;
       const v = h.fields[k];
       if (isRef(v)) { const t = f.heap[v.ref]; return t && t.cls === h.cls; }
       return false;
@@ -83,7 +86,7 @@
     return byCls;
   }
   function nodeLabel(f, h, links) {
-    const parts = Object.keys(h.fields).filter((k) => !links.has(k)).map((k) => valText(f, h.fields[k]));
+    const parts = Object.keys(h.fields).filter((k) => !links.has(k) && !BACK.test(k)).map((k) => valText(f, h.fields[k]));
     return parts.join(", ") || h.cls;
   }
 
@@ -378,7 +381,7 @@
   function showIntro(text) {
     output = "";
     setError("");
-    player.load([{ note: text || "Press <b>Run code</b> to watch this program step by step. Ctrl or Cmd + Enter works too." }], false);
+    player.load([{ note: text || "Press <b>Run code</b> to watch this program step by step. Each line in <span class='mono'>main</span> calls one function: delete a line to skip it, or change its values." }], false);
   }
   function fillSelect(current) {
     const select = q("pg-example");

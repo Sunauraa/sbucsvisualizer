@@ -26,6 +26,24 @@ const marks = StateField.define({
   provide: (f) => EditorView.decorations.from(f),
 });
 
+/* Keep a line in sight by scrolling the editor's own box. EditorView.scrollIntoView won't do:
+   it also scrolls the page to reach the line, which moved the reader's screen on every step. */
+const FOLLOW_MARGIN = 24;
+const followKey = {};
+function follow(view, pos) {
+  view.requestMeasure({
+    key: followKey,
+    read(v) {
+      const block = v.lineBlockAt(pos), box = v.scrollDOM, pad = v.documentPadding.top;
+      return { top: block.top + pad, bottom: block.bottom + pad, scroll: box.scrollTop, height: box.clientHeight };
+    },
+    write(m, v) {
+      if (m.top - FOLLOW_MARGIN < m.scroll) v.scrollDOM.scrollTop = Math.max(0, m.top - FOLLOW_MARGIN);
+      else if (m.bottom + FOLLOW_MARGIN > m.scroll + m.height) v.scrollDOM.scrollTop = m.bottom + FOLLOW_MARGIN - m.height;
+    },
+  });
+}
+
 window.DSAEditor = {
   create(parent, doc, onChange, onRun) {
     const view = new EditorView({
@@ -48,13 +66,11 @@ window.DSAEditor = {
       /** Highlight one line (1-based), or none. kind: "run" or "err". */
       mark(line, kind) {
         const doc = view.state.doc;
-        let deco = Decoration.none, effects = [];
-        if (line >= 1 && line <= doc.lines) {
-          const l = doc.line(line);
-          deco = Decoration.set([Decoration.line({ class: "cm-" + (kind || "run") + "-line" }).range(l.from)]);
-          effects.push(EditorView.scrollIntoView(l.from, { y: "nearest" }));
-        }
-        view.dispatch({ effects: [setMark.of(deco), ...effects] });
+        const valid = line >= 1 && line <= doc.lines;
+        let deco = Decoration.none;
+        if (valid) deco = Decoration.set([Decoration.line({ class: "cm-" + (kind || "run") + "-line" }).range(doc.line(line).from)]);
+        view.dispatch({ effects: setMark.of(deco) });
+        if (valid) follow(view, doc.line(line).from);
       },
     };
   },

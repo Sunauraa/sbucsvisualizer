@@ -701,6 +701,47 @@ if (want("scroll")) {
     ok((await yNow(page)) === y1, mod + ": a quiz question does not move the page", { y1, y: await yNow(page) });
     await page.close();
   }
+
+  /* the playground: a run may scroll once, as it starts; the steps after it only move the editor's own box */
+  for (const viewport of [{ width: 1280, height: 720 }, { width: 390, height: 800 }]) {
+    const label = "playground at " + viewport.width + " px";
+    const page = await browser.newPage({ viewport });
+    await page.goto(BASE + "/cse214/trees.html", { waitUntil: "load" });
+    await page.waitForFunction(() => document.documentElement.classList.contains("ready"));
+    await page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; });
+    await page.click("#pg-open");
+    await page.waitForSelector("#pg-run");
+    await page.locator("#pg-example").selectOption({ label: "AVL tree" });
+    /* the stage starts out of sight, so the run has a reason to scroll */
+    await page.evaluate(() => { const s = document.querySelector(".pg-stage"); scrollTo(0, Math.max(0, s.getBoundingClientRect().top + scrollY - innerHeight - 200)); });
+    const before = await yNow(page);
+    await page.evaluate(() => document.querySelector("#pg-run").click());
+    await page.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 1 && p.frames[0].stack && !document.querySelector("#pg-run").disabled; }, null, { timeout: 8000 });
+    await page.evaluate(() => new Promise((r) => setTimeout(r, 150)));
+    const started = await yNow(page);
+    const inSight = await page.evaluate(() => { const r = document.querySelector(".pg-stage").getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; });
+    ok(started !== before && inSight, label + ": starting a run scrolls to it once", { before, started, inSight });
+    const r = await page.evaluate(async () => {
+      const p = DSA._players[DSA._players.length - 1];
+      p.pause();
+      p.noMotion = true;
+      window.scrollBy(0, 300);          /* the reader moves away, past the top of the editor */
+      await new Promise((res) => setTimeout(res, 60));
+      const y = scrollY, box = document.querySelector(".cm-scroller");
+      let moved = 0, outside = 0;
+      for (let i = 0; i < 150; i++) {
+        p.step(1);
+        await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+        if (Math.abs(scrollY - y) > 0.5) moved++;
+        const line = document.querySelector(".cm-run-line"), b = box.getBoundingClientRect();
+        if (line) { const q = line.getBoundingClientRect(); if (q.top < b.top - 1 || q.bottom > b.bottom + 1) outside++; }
+      }
+      return { moved, outside, editorScrolled: box.scrollTop > 0 };
+    });
+    ok(r.moved === 0, label + ": stepping never moves the page", r);
+    ok(r.outside === 0 && r.editorScrolled, label + ": the running line stays in sight inside the editor", r);
+    await page.close();
+  }
 }
 
 /* ---------- all the code: every function of a module can be read, whichever one is running ---------- */
@@ -1189,8 +1230,8 @@ if (want("shots")) {
     await page.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 5 && !document.querySelector("#pg-run").disabled; });
     await page.evaluate((back) => { const p = DSA._players[DSA._players.length - 1]; p.pause(); p.noMotion = true; p.goto(Math.max(0, p.frames.length - back)); document.querySelector("#playground").scrollIntoView(); }, back);
   };
-  await shot("trees", async (page) => { await inPanel("BST: insert and search", 8)(page); }, { as: "pg-trees" });
-  await shot("arrays", inPanel("singly linked list: reverse", 22), { as: "pg-phone", ctx: { viewport: { width: 390, height: 844 } }, full: true });
+  await shot("trees", async (page) => { await inPanel("BST: iterative", 8)(page); }, { as: "pg-trees" });
+  await shot("arrays", inPanel("singly linked list", 22), { as: "pg-phone", ctx: { viewport: { width: 390, height: 844 } }, full: true });
   await shot("hashtables", inPanel("separate chaining", 6), { as: "pg-hash" });
   await shot("graphs", inPanel("BFS: shortest distances", 6), { as: "pg-graph" });
   await shot("stacks-queues", inPanel("array stack", 5), { as: "pg-stack" });
