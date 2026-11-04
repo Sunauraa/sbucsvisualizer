@@ -24,7 +24,7 @@ export function startServer(port, opts) {
       return handler(req, res);
     }
     const file = path.join(ROOT, decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname));
-    const blocked = /^\/(tests|tools|Ultron|\.)/.test(url.pathname);
+    const blocked = /^\/(tests|tools|\.)/.test(url.pathname);
     if (blocked || !file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
       res.statusCode = 404;
       const page = path.join(ROOT, "404.html");

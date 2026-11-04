@@ -1070,7 +1070,7 @@ if (want("prod")) {
   const nf = await fetch(BASE + "/nope.html");
   ok(nf.status === 404 && /Page not found/i.test(await nf.text()), "a missing page gets a real 404 page");
   const ignore = fs.readFileSync(path.join(ROOT, ".vercelignore"), "utf8").split("\n");
-  ["tests", "tools", "Ultron", ".github", "README.md"].forEach((x) => ok(ignore.includes(x), x + " is not deployed"));
+  ["tests", "tools", ".github", "README.md"].forEach((x) => ok(ignore.includes(x), x + " is not deployed"));
   ok(fs.existsSync(path.join(ROOT, "assets/vendor/THIRD-PARTY-NOTICES.txt")) && /CodeMirror|Marijn/.test(fs.readFileSync(path.join(ROOT, "assets/vendor/THIRD-PARTY-NOTICES.txt"), "utf8")), "third-party licenses ship with the code");
   /* page weight: what a student downloads before they touch anything */
   const sizes = await (async () => {

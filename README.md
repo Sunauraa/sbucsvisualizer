@@ -211,7 +211,7 @@ DSA.FEEDBACK_URL = "https://docs.google.com/forms/d/e/…/viewform";
 DSA.FEEDBACK_PAGE_FIELD = "";   // optional, see below
 ```
 
-Until the link is set, the button tells readers the form isn't connected yet.
+Until the link is set, the button stays hidden, so no reader meets a dead end.
 
 Optional: to have the form pre-filled with where the reader was (e.g. `Trees · CSE 214 · tab: AVL (balanced) ·
 running: insert(k) · AVL`), add a short-answer question such as "Where were you?", then in the form editor use
@@ -245,6 +245,7 @@ Reuse the shared state classes so colours mean the same thing everywhere: `activ
 ```sh
 cd tests && npm install && npm test        # everything; takes a few minutes
 npm test -- motion quiz                    # only some suites
+npm run serve                              # the site at http://localhost:3000, as Vercel serves it
 ```
 
 `tests/run.mjs` drives the Chrome installed on your computer, against a local copy of what Vercel serves (the static
@@ -268,4 +269,17 @@ files plus the function, with a stand-in for the AI provider, so it uses no key 
   and draws cleanly, at phone width too. Also errors, a student's code surviving a reload, and links carrying code.
 - **jvm**: every starter program, plus programs aimed at Java's trickier rules, compiled with `javac` and run on a real
   JVM. The playground must print exactly the same. It is skipped if `javac` is not installed.
+- **xss**: hostile text in every input and crafted share links, with the security headers off, so the code has to be safe
+  by itself.
+- **a11y**: axe on every page in its common states, plus the keyboard paths a scanner cannot judge.
+- **prod**: every internal link, page metadata, security headers, every feature under that policy, the 404 page,
+  licenses, what loads when, and failure cases such as an editor that will not load or a program too big to record.
 - **shots**: writes screenshots to `tests/shots/`, including values caught in mid-flight, for a person to look at.
+
+GitHub Actions runs all of this on every push to `main` and every pull request (`.github/workflows/test.yml`).
+
+## Before a release
+
+1. `cd tests && npm test`.
+2. Bump the asset version (see above), or browsers may mix old and new files.
+3. Look at `tests/shots/` at phone and desktop width.
