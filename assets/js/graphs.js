@@ -26,7 +26,7 @@
     G.pos.splice(i, 1);
     G.adj.splice(i, 1);
     G.adj = G.adj.map((l) => l.filter((v) => v !== i).map((v) => (v > i ? v - 1 : v)));
-    refresh("Deleted a vertex. Note that every edge touching it had to go too.");
+    refresh("Deleted a vertex, along with every edge touching it.");
   }
   function toggleEdge(u, v) {
     if (u === v) return;
@@ -202,7 +202,7 @@
           note: "Edge " + name(u) + "→" + name(v) + ": " + name(v) + " is " +
             (!color[v] ? "<b>white</b>, so this is a <b>tree edge</b>: call DFS(" + name(v) + ") and go deeper. " + name(u) + " waits on the stack." :
               color[v] === 1 ? "<b>grey</b> (still on the stack), so this is a <b>back edge</b>: it closes a cycle." :
-                G.directed ? "<b>black</b>, so this is a <b>" + kind + " edge</b> (no new information)." : "already finished: in an undirected graph this is just the edge we came in on, seen from the other side."),
+                G.directed ? "<b>black</b>, so this is a <b>" + kind + " edge</b> (no new information)." : "already finished: in an undirected graph this is the edge we came in on, seen from the other side."),
         });
         if (!color[v]) { tre[ekey(u, v)] = "tree"; visit(v); c.snap({ line: "rec", ns: Object.assign(ns(), { [u]: "active" }), es: Object.assign({}, tre), stack: stack.slice(), tags: tags(), lhl: u, order: order.slice(), note: "Back at " + name(u) + " after finishing that subtree. Continue with its remaining neighbours." }); }
       }
@@ -364,8 +364,9 @@
       down = null;
       dragging = -1;
       try { host.releasePointerCapture(ev.pointerId); } catch (e) {}
-      if (d.moved) return;
+      if (d.moved) { if (D.share) D.share.note("graph"); return; }
       click(d.i, d.pt);
+      if (D.share) D.share.note("graph");
     };
     host.addEventListener("pointerup", up);
     host.addEventListener("pointercancel", () => { down = null; dragging = -1; });
@@ -564,6 +565,8 @@
     const dock = D.CodeDock("#code", CODE, { recv: "graph" });
     player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock });
     wireHost(q("gr-canvas"));
+    /* canvas clicks and drags are not form controls, so a shared link stores the graph itself */
+    if (D.share) D.share.state("graph", () => ({ pos: G.pos, adj: G.adj }), (v) => { G.pos = v.pos; G.adj = v.adj; refresh("The graph from the shared link."); });
 
     D.$$("[data-tool]").forEach((b) =>
       b.addEventListener("click", () => {
@@ -620,25 +623,12 @@
 
   const EXPL = {
     intro:
-      "<b>BFS</b> uses a queue and explores by distance: it finishes every vertex at distance k before touching " +
-      "distance k+1, which is why it finds shortest paths in unweighted graphs. <b>DFS</b> uses a stack (usually the " +
-      "call stack) and dives as deep as possible before backtracking, which is why it exposes cycles, components and " +
-      "topological order. Both visit every vertex and every edge exactly once: <b>O(V + E)</b> with adjacency lists.",
+      "<p><b>BFS</b> uses a queue and explores by distance. It finishes every vertex at distance k before touching distance k+1. That's why it finds shortest paths in unweighted graphs.</p><p><b>DFS</b> uses a stack (usually the call stack) and goes as deep as it can before backtracking. That's why it exposes cycles, components and topological order.</p><p>Both visit every vertex and every edge exactly once: <b>O(V + E)</b> with adjacency lists.</p>",
     bfs:
-      "<b>BFS invariant:</b> the queue always holds vertices from at most two consecutive levels. Each vertex is " +
-      "enqueued once (it is marked discovered the moment it enters, not when it leaves), and each edge is examined once " +
-      "from each endpoint, so the running time is O(V + E). The <span style='color:#16a34a'>green tree edges</span> " +
-      "form a shortest-path tree: following parents from any vertex back to the source gives a path of exactly " +
-      "<span class='mono'>dist</span> edges, and no shorter one exists.",
+      "<p><b>BFS invariant:</b> the queue always holds vertices from at most two consecutive levels.</p><p>Each vertex enters the queue once. It's marked discovered the moment it enters, not when it leaves. Each edge gets examined once from each endpoint, so the running time is O(V + E).</p><p>The <span style='color:#16a34a'>green tree edges</span> form a shortest-path tree. Follow parents from any vertex back to the source and you get a path of exactly <span class='mono'>dist</span> edges. No shorter one exists.</p>",
     dfs:
-      "<b>DFS timestamps:</b> each vertex gets a discovery and a finish time, so it owns the interval [d, f]. The " +
-      "<b>parenthesis theorem</b> says two such intervals are either nested or disjoint. A <b>back edge</b> (an edge to " +
-      "a vertex still on the stack) exists if and only if the graph has a cycle; that is the standard cycle test. " +
-      "Sorting vertices by <em>decreasing finish time</em> gives a topological order of a DAG.",
+      "<p><b>DFS timestamps:</b> each vertex gets a discovery time and a finish time, so it owns the interval [d, f]. The <b>parenthesis theorem</b> says two such intervals are either nested or disjoint.</p><p>A <b>back edge</b> (an edge to a vertex still on the stack) exists if and only if the graph has a cycle. That's the standard cycle test.</p><p>Sort the vertices by <em>decreasing finish time</em> and you get a topological order of a DAG.</p>",
     forest:
-      "<b>DFS forest:</b> restarting the search from every still-white vertex covers the whole graph, and each restart " +
-      "begins a new tree. For an undirected graph the number of trees is exactly the number of <b>connected " +
-      "components</b>: the standard linear-time way to count them. On a directed graph the same idea, run twice " +
-      "(once on the reverse graph, in decreasing finish order), gives strongly connected components: Kosaraju's algorithm.",
+      "<p><b>DFS forest:</b> restart the search from every still-white vertex and you cover the whole graph. Each restart begins a new tree.</p><p>For an undirected graph, the number of trees equals the number of <b>connected components</b>. It's the standard linear-time way to count them.</p><p>On a directed graph, run the same idea twice (once on the reverse graph, in decreasing finish order) and you get strongly connected components: Kosaraju's algorithm.</p>",
   };
 })();

@@ -1,0 +1,15 @@
+{
+  "name": "dsa-visualizer-tools",
+  "private": true,
+  "description": "Used once, to build assets/vendor/editor.js. Vercel never runs this: the built file is committed.",
+  "scripts": { "build:editor": "esbuild editor-entry.js --bundle --minify --format=iife --legal-comments=none --outfile=../assets/vendor/editor.js" },
+  "devDependencies": {
+    "@codemirror/commands": "6.8.1",
+    "@codemirror/lang-java": "6.0.2",
+    "@codemirror/language": "6.11.0",
+    "@codemirror/state": "6.5.2",
+    "@codemirror/view": "6.36.8",
+    "@lezer/highlight": "1.2.1",
+    "esbuild": "0.25.5"
+  }
+}

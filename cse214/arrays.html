@@ -3,21 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Arrays &amp; Lists · CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=202610111800">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧱</text></svg>">
+<title>Arrays &amp; Lists</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202611041200">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=202611041200">
 </head>
 <body>
 
+<a class="skip" href="#content">Skip to content</a>
 <header class="topbar">
   <div class="wrap topbar-in">
-    <a class="back" href="index.html" title="Back to CSE 214" aria-label="Back to CSE 214">&lsaquo;</a>
-    <h1 class="title">Arrays &amp; Lists</h1>
+    <a class="brand" href="../index.html"><span class="brand-mark"><svg viewBox="0 0 20 20" aria-hidden="true"><g stroke="#fff" stroke-width="1.6"><line x1="10" y1="5" x2="5" y2="14.5"/><line x1="10" y1="5" x2="15" y2="14.5"/></g><g fill="#fff"><circle cx="10" cy="5" r="2.8"/><circle cx="5" cy="14.5" r="2.8"/><circle cx="15" cy="14.5" r="2.8"/></g></svg></span><span class="brand-name">DSA Visualizer</span></a>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">CSE 214</a><span class="sl" aria-hidden="true">/</span><span class="crumb-cur" aria-current="page">Arrays &amp; Lists</span></nav>
     <div class="spacer"></div>
   </div>
 </header>
 
-<div class="wrap">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">CSE 214 &middot; Module 1</p>
+    <h1>Arrays &amp; Lists</h1>
+  </div>
+</section>
+
+<main id="content" class="wrap">
+  <h2 class="sr-only">Interactive visualizer</h2>
   <div id="tabs" class="tabs"></div>
 
   <div class="panel main">
@@ -100,14 +109,14 @@
   </div>
 
 
-  <details class="about" id="about">
-    <summary>About this topic</summary>
+  <section class="about" id="about" aria-labelledby="about-h">
+    <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">The same abstract list, built two very different ways. An array gives you O(1) random access but pays for
-       insertions by shifting. A linked list splices in O(1) but has to walk to reach anything.</p>
+    <p class="intro">Same list, two different builds.</p>
+    <p class="intro">An array reaches any element in O(1) time, but it shifts elements to make room for an insert. A linked list splices a node in at O(1), but it has to walk the list to reach anything.</p>
     <div id="notes"></div>
   <div class="panel" style="margin-bottom:2rem">
-    <h2>Arrays vs linked lists: time / space of every operation</h2>
+    <h3>Arrays vs linked lists: time / space of every operation</h3>
     <p class="small muted" style="margin-top:-.3rem">Each cell is <b>time / extra space</b>, worst case, for a list of n elements.</p>
     <div style="overflow-x:auto">
       <table class="tbl" style="min-width:820px">
@@ -124,18 +133,29 @@
         <tr><td>memory for n elements</td><td class="one">O(capacity)</td><td class="one">O(n), up to 2n slots</td><td>O(n): value + 1 pointer each</td><td>O(n): value + 2 pointers each</td><td>O(n): value + 1 pointer each</td></tr>
       </table>
     </div>
-    <p class="small muted" style="margin-bottom:0">A dynamic array's resize copies all n elements into a new array, which is
-       why its worst-case add is O(n) time and O(n) space even though most adds are O(1). Insert-at-index is O(n) for
-       <em>every</em> structure here: the array pays to shift, the list pays to walk. A linked list only wins when you
-       already hold a reference to the node, or when you work only at the ends.</p>
+    <p class="small muted" style="margin:0 0 .5rem">A resize copies all n elements into a new array. That makes a dynamic array's worst-case add O(n) time and O(n) space, even though most adds cost O(1).</p>
+    <p class="small muted" style="margin:0 0 .5rem">Insert-at-index costs O(n) for <em>every</em> structure here. The array pays to shift. The list pays to walk.</p>
+    <p class="small muted" style="margin-bottom:0">A linked list wins only when you already hold a reference to the node, or when you work at the ends.</p>
   </div>
     </div>
-  </details>
+  </section>
 
-</div>
+</main>
 
-<footer class="site"></footer>
-<script src="../assets/js/core.js?v=202610111800"></script>
-<script src="../assets/js/arrays.js?v=202610111800"></script>
+<footer class="site">
+  <div class="wrap foot-in">
+    <p><span class="foot-name">DSA Visualizer</span></p>
+    <p class="keys">Keyboard: <kbd>Space</kbd> play or pause, <kbd>&larr;</kbd> <kbd>&rarr;</kbd> step</p>
+    <p>Contact: <a href="mailto:tuanson.dao@stonybrook.edu">tuanson.dao@stonybrook.edu</a></p>
+  </div>
+</footer>
+<script src="../assets/js/core.js?v=202611041200"></script>
+<script src="../assets/vendor/lz-string.min.js?v=202611041200"></script>
+<script src="../assets/js/motion.js?v=202611041200"></script>
+<script src="../assets/js/tutor.js?v=202611041200"></script>
+<script src="../assets/js/quiz.js?v=202611041200"></script>
+<script src="../assets/js/share.js?v=202611041200"></script>
+<script src="../assets/js/playground.js?v=202611041200"></script>
+<script src="../assets/js/arrays.js?v=202611041200"></script>
 </body>
 </html>

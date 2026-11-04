@@ -3,21 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Priority Queues · CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=202610111800">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
+<title>Priority Queues</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202611041200">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=202611041200">
 </head>
 <body>
 
+<a class="skip" href="#content">Skip to content</a>
 <header class="topbar">
   <div class="wrap topbar-in">
-    <a class="back" href="index.html" title="Back to CSE 214" aria-label="Back to CSE 214">&lsaquo;</a>
-    <h1 class="title">Priority Queues</h1>
+    <a class="brand" href="../index.html"><span class="brand-mark"><svg viewBox="0 0 20 20" aria-hidden="true"><g stroke="#fff" stroke-width="1.6"><line x1="10" y1="5" x2="5" y2="14.5"/><line x1="10" y1="5" x2="15" y2="14.5"/></g><g fill="#fff"><circle cx="10" cy="5" r="2.8"/><circle cx="5" cy="14.5" r="2.8"/><circle cx="15" cy="14.5" r="2.8"/></g></svg></span><span class="brand-name">DSA Visualizer</span></a>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">CSE 214</a><span class="sl" aria-hidden="true">/</span><span class="crumb-cur" aria-current="page">Priority Queues</span></nav>
     <div class="spacer"></div>
   </div>
 </header>
 
-<div class="wrap">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">CSE 214 &middot; Module 5</p>
+    <h1>Priority Queues</h1>
+  </div>
+</section>
+
+<main id="content" class="wrap">
+  <h2 class="sr-only">Interactive visualizer</h2>
   <div id="tabs" class="tabs"></div>
 
   <div class="panel main">
@@ -58,16 +67,16 @@
   </div>
 
 
-  <details class="about" id="about">
-    <summary>About this topic</summary>
+  <section class="about" id="about" aria-labelledby="about-h">
+    <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">One ADT with three operations (insert, min, removeMin) and four ways to build it. Each implementation moves
-       the work to a different place. Then the same ADT gives you three sorting algorithms for free.</p>
+    <p class="intro">One ADT, three operations (insert, min, removeMin), four ways to build it.</p>
+    <p class="intro">Each implementation moves the work to a different place. And the same ADT hands you three sorting algorithms for free.</p>
     <div id="notes"></div>
   <div class="row" style="margin-bottom:2rem">
     <div class="col">
       <div class="panel" style="height:100%">
-        <h2>Four implementations compared</h2>
+        <h3>Four implementations compared</h3>
         <p class="small muted" style="margin-top:-.3rem">Each cell is <b>time / extra space</b>, worst case, for n keys.</p>
         <div style="overflow-x:auto">
           <table class="tbl" style="min-width:560px">
@@ -79,13 +88,12 @@
             <tr><td>memory for n keys</td><td>O(n): key + list link(s)</td><td>O(n): key + list link(s)</td><td class="one">O(n): keys only</td><td>O(n): key + 3 pointers</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.6rem 0 0">A heap never makes you pay O(n) for anything, which is why
-           it is the default choice. Java's <span class="mono">PriorityQueue</span> is an array-based binary heap.</p>
+        <p class="small muted" style="margin:.6rem 0 0">A heap never makes you pay O(n) for anything. That's why it's the default choice. Java's <span class="mono">PriorityQueue</span> is an array-based binary heap.</p>
       </div>
     </div>
     <div class="col">
       <div class="panel" style="height:100%">
-        <h2>Priority-queue sorting</h2>
+        <h3>Priority-queue sorting</h3>
         <div style="overflow-x:auto">
           <table class="tbl" style="min-width:470px">
             <tr><th>PQ used</th><th>Sort you get</th><th>Phase 1<br>(n inserts)</th><th>Phase 2<br>(n removeMins)</th><th>Total time / space</th></tr>
@@ -94,9 +102,8 @@
             <tr><td>heap</td><td>heap sort</td><td class="one">O(n log n)</td><td class="one">O(n log n)</td><td class="one">O(n log n) / O(n)</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.6rem 0 0">Insertion sort's phase 1 is only O(n) when the input is
-           already sorted, because each insert stops after one comparison. Heap sort can also run <em>in place</em>
-           by storing the heap in the first part of the input array (O(1) extra space). The Sorting module shows that version.</p>
+        <p class="small muted" style="margin:.6rem 0 .4rem">Insertion sort's phase 1 drops to O(n) only when the input is already sorted. Each insert then stops after one comparison.</p>
+        <p class="small muted" style="margin:0">Heap sort can also run <em>in place</em>. It stores the heap in the first part of the input array, using O(1) extra space. The Sorting module shows that version.</p>
         <dl class="kv" style="margin-top:.7rem">
           <dt>heap order</dt><dd>every node's key ≤ its children's keys</dd>
           <dt>complete</dt><dd>all levels full except the last, which fills left to right</dd>
@@ -106,12 +113,24 @@
     </div>
   </div>
     </div>
-  </details>
+  </section>
 
-</div>
+</main>
 
-<footer class="site"></footer>
-<script src="../assets/js/core.js?v=202610111800"></script>
-<script src="../assets/js/pq.js?v=202610111800"></script>
+<footer class="site">
+  <div class="wrap foot-in">
+    <p><span class="foot-name">DSA Visualizer</span></p>
+    <p class="keys">Keyboard: <kbd>Space</kbd> play or pause, <kbd>&larr;</kbd> <kbd>&rarr;</kbd> step</p>
+    <p>Contact: <a href="mailto:tuanson.dao@stonybrook.edu">tuanson.dao@stonybrook.edu</a></p>
+  </div>
+</footer>
+<script src="../assets/js/core.js?v=202611041200"></script>
+<script src="../assets/vendor/lz-string.min.js?v=202611041200"></script>
+<script src="../assets/js/motion.js?v=202611041200"></script>
+<script src="../assets/js/tutor.js?v=202611041200"></script>
+<script src="../assets/js/quiz.js?v=202611041200"></script>
+<script src="../assets/js/share.js?v=202611041200"></script>
+<script src="../assets/js/playground.js?v=202611041200"></script>
+<script src="../assets/js/pq.js?v=202611041200"></script>
 </body>
 </html>

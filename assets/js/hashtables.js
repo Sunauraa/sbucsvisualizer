@@ -127,6 +127,7 @@
         "      T[tomb ≥ 0 ? tomb : j] ← k;  n ← n + 1;  return @@store",
         "    if T[j] is DELETED: if tomb < 0: tomb ← j @@tomb",
         "    else if T[j] == k: return        // already present @@dup",
+        "  if tomb ≥ 0: T[tomb] ← k;  n ← n + 1;  return @@late",
         "  error \"no free slot found\" @@full",
       ],
       java: [
@@ -140,6 +141,7 @@
         "    if (table[j] == DELETED) { if (tomb < 0) tomb = j; } @@tomb",
         "    else if (table[j] == k) return; @@dup",
         "  }",
+        "  if (tomb >= 0) { table[tomb] = k;  n++;  return; } @@late",
         "  throw new IllegalStateException(\"no free slot\"); @@full",
         "}",
       ],
@@ -360,7 +362,7 @@
       h = nh;
     }
     c.at("loop").snap({}, "No characters left.", { hc: { s: k, i: k.length, h: h } });
-    c.at("ret").snap({}, "Return <b>" + h + "</b>: exactly what Java's <span class='mono'>\"" + k + "\".hashCode()</span> gives." + (h < 0 ? " It is negative, so a plain % could give a negative index; floorMod (or ((h % m) + m) % m) keeps it in [0, m)." : ""), { hc: { s: k, i: k.length, h: h, done: true } });
+    c.at("ret").snap({}, "Return <b>" + h + "</b>: the same value as Java's <span class='mono'>\"" + k + "\".hashCode()</span> gives." + (h < 0 ? " It is negative, so a plain % could give a negative index; floorMod (or ((h % m) + m) % m) keeps it in [0, m)." : ""), { hc: { s: k, i: k.length, h: h, done: true } });
     c.code(backTo);
   }
   function chainInsert(c, k) {
@@ -410,7 +412,7 @@
       if (String(chain[j]) === String(k)) {
         chain.splice(j, 1);
         T.n--;
-        c.at("found").snap({ [i]: "done" }, "Unlink it. Deleting from a chain is simple: <b>no tombstones needed</b>, because no other key's probe path runs through this node.");
+        c.at("found").snap({ [i]: "done" }, "Unlink it. A chain needs <b>no tombstones</b> on delete, because no other key's probe path runs through this node.");
         return;
       }
     }
@@ -440,14 +442,20 @@
       if (T.slots[p] === TOMB) {
         const first = firstTomb < 0;
         if (first) firstTomb = p;
-        c.at(["empty^", "tomb"]).snap({ [p]: "visit" }, "Not EMPTY but DELETED: a tombstone. " + (first ? "Remember slot " + p + " as a place we <em>could</em> use, but keep probing in case k is further along." : "An earlier tombstone (slot " + firstTomb + ") is already remembered, so just keep probing."));
+        c.at(["empty^", "tomb"]).snap({ [p]: "visit" }, "Not EMPTY but DELETED: a tombstone. " + (first ? "Remember slot " + p + " as a place we <em>could</em> use, but keep probing in case k is further along." : "An earlier tombstone (slot " + firstTomb + ") is already remembered, so keep probing."));
         continue;
       }
       if (String(T.slots[p]) === String(k)) { c.at(["empty^", "tomb^", "dup"]).snap({ [p]: "done" }, "Not EMPTY, not DELETED, and it holds " + fmtk(k) + " itself: the key is already present, so put does nothing."); return; }
       c.at(["empty^", "tomb^", "dup^"]).snap({ [p]: "cmp" }, "Not EMPTY, not DELETED, and " + fmtk(T.slots[p]) + " ≠ " + fmtk(k) + ": a <b>collision</b>. Try the next probe.");
     }
-    c.at("loop").snap({}, "i has reached m = " + T.m + ": every probe is used up.");
-    c.at("full").snap({}, "Probed all " + T.m + " slots without finding room. " + (T.mode === "quad" ? "Quadratic probing only guarantees a free slot while α &lt; 0.5 and m is prime. This is that failure." : "The table is full."));
+    c.at("loop").snap(firstTomb >= 0 ? { [firstTomb]: "visit" } : {}, "i has reached m = " + T.m + ": every probe is used up.");
+    if (firstTomb >= 0) {
+      T.slots[firstTomb] = k;
+      T.n++;
+      c.at("late").snap({ [firstTomb]: "done" }, "No probe found an EMPTY slot, but none found " + fmtk(k) + " either, so it is safe to reuse the tombstone we remembered. Store it at <b>" + firstTomb + "</b>. Probes used: " + c.probes + ".");
+      return;
+    }
+    c.at("full").snap({}, "Probed all " + T.m + " slots without finding room. " + (T.mode === "quad" ? "Quadratic probing only guarantees a free slot while α &lt; 0.5 and m is prime. This is that failure." : "Every slot holds a key, so the table is full."));
   }
   function openSearch(c, k) {
     c.code(listing("get"));
@@ -479,7 +487,7 @@
       if (T.slots[p] !== TOMB && String(T.slots[p]) === String(k)) {
         T.slots[p] = TOMB;
         T.n--;
-        c.at(["empty^", "found"]).snap({ [p]: "visit" }, "Found it. We cannot just make the slot EMPTY: that would cut the probe chain of any key that collided here and was placed further along. Instead mark it <b>DELETED</b> (☠), a tombstone. Searches pass through it, and put may reuse it.");
+        c.at(["empty^", "found"]).snap({ [p]: "visit" }, "Found it. We can't set the slot back to EMPTY: that would cut the probe chain of any key that collided here and was placed further along. Instead mark it <b>DELETED</b> (☠), a tombstone. Searches pass through it, and put may reuse it.");
         return;
       }
       c.at(["empty^", "found^"]).snap({ [p]: "cmp" }, T.slots[p] === TOMB ? "A tombstone: not EMPTY, so keep going (it cannot be " + fmtk(k) + ")." : "Not EMPTY, and " + fmtk(T.slots[p]) + " ≠ " + fmtk(k) + ": keep probing.");
@@ -569,7 +577,7 @@
         const row = D.el("div", { style: "display:flex;align-items:center;gap:6px" });
         row.appendChild(D.el("div", {
           class: "cell " + (f.marks[i] || "") + (chain.length ? " filled" : " empty"),
-          text: i, style: "min-width:34px;height:32px;font-size:.76rem",
+          text: i, style: "min-width:34px;height:32px;font-size:.76rem", "data-motion": "off",
         }));
         row.appendChild(D.el("span", { class: "muted mono", text: chain.length ? "→" : "→ ∅", style: "font-size:.8rem" }));
         chain.forEach((k, j) => {
@@ -606,23 +614,17 @@
   const MODES = {
     chain: {
       label: "Separate chaining",
-      blurb: "Each slot holds a <b>list</b> of every key that hashes there, so collisions never fight over a slot and α " +
-        "can safely exceed 1. Cost is 1 + α/2 comparisons for a successful search. The price is a pointer per node and " +
-        "worse cache behaviour than open addressing.",
+      blurb: "<p>Each slot holds a <b>list</b> of every key that hashes there. Collisions never fight over a slot, and α can safely go above 1.</p><p>A successful search costs 1 + α/2 comparisons. The price: a pointer per node, and worse cache behaviour than open addressing.</p>",
       formula: "index = h(k) mod m, then walk that bucket's list",
     },
     linear: {
       label: "Linear probing",
-      blurb: "On a collision try the very next slot, wrapping around. Cache-friendly and simple, but it suffers from " +
-        "<b>primary clustering</b>: occupied runs merge into longer runs, and once α approaches 1 the expected probe " +
-        "count explodes as ½(1 + 1/(1−α)²).",
+      blurb: "<p>On a collision, try the next slot, wrapping around. It's simple and cache-friendly.</p><p>The weakness is <b>primary clustering</b>. Occupied runs merge into longer runs, and as α approaches 1 the expected probe count explodes as ½(1 + 1/(1−α)²).</p>",
       formula: "index = (h(k) + i) mod m   for i = 0, 1, 2, …",
     },
     quad: {
       label: "Quadratic probing",
-      blurb: "Jump i² slots away instead of i, which breaks up the long runs that linear probing creates. It trades " +
-        "primary clustering for <b>secondary clustering</b> (keys with the same h(k) still follow the same path) and it " +
-        "is only guaranteed to find a free slot when m is prime and α &lt; ½.",
+      blurb: "<p>Jump i² slots away instead of i. That breaks up the long runs linear probing creates.</p><p>It trades primary clustering for <b>secondary clustering</b>: keys with the same h(k) still follow the same path. And it only guarantees a free slot when m is prime and α &lt; ½.</p>",
       formula: "index = (h(k) + i²) mod m   for i = 0, 1, 2, …",
     },
   };
@@ -764,7 +766,7 @@
       dock.show(listing("put"));
       still(t === "str"
         ? "<b>String keys.</b> A string must become a number before it can pick a slot: every operation now calls <b>hash(s)</b> first, and keys are compared with equals(). The table was cleared, because it holds one kind of key."
-        : "<b>Integer keys.</b> h(k) = k, so the slot is simply k mod m. The table was cleared.");
+        : "<b>Integer keys.</b> h(k) = k, so the slot is k mod m. The table was cleared.");
     }, "int");
     q("op-insert").addEventListener("click", () => doOp("insert", parseKey(q("key").value)));
     q("op-search").addEventListener("click", () => doOp("search", parseKey(q("key").value)));

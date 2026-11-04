@@ -285,7 +285,7 @@
   const pqSortSpec = (how, p1, p2, cls, total) => ({ does: "Sorts S by inserting every key into a priority queue P, then removing the minimum n times. With " + how + ".", params: M("S") + ": the sequence to sort · " + M("P") + ": an empty priority queue", returns: "nothing: S ends up in ascending order", errors: "none", time: total + ": phase 1 " + p1 + ", phase 2 " + p2, space: "O(n): P holds all n keys between the phases", callVals: { s: "s", p: { java: "new " + cls + "()" } } });
   const O1 = { time: "O(1)", space: "O(1)" };
   D.specs(CODE, {
-    u_insert: Object.assign({ does: "Adds key " + M("k") + " anywhere: an unsorted list just appends.", params: M("k") + ": the key (negative and decimal keys are fine)", returns: "nothing", errors: "none" }, O1),
+    u_insert: Object.assign({ does: "Adds key " + M("k") + " anywhere: an unsorted list appends it at the end.", params: M("k") + ": the key (negative and decimal keys are fine)", returns: "nothing", errors: "none" }, O1),
     u_min: { does: "Finds the smallest key by scanning the whole list.", params: "none", returns: "the minimum key", errors: "empty priority queue", time: "O(n): every key is looked at", space: "O(1)" },
     u_removeMin: { does: "Scans for the smallest key, removes it and returns it.", params: "none", returns: "the minimum key", errors: "empty priority queue", time: "O(n): the scan, then the removal shifts", space: "O(1)" },
     s_insert: { does: "Walks the sorted list to " + M("k") + "'s place and inserts it there, keeping the list sorted.", params: M("k") + ": the key (negative and decimal keys are fine)", returns: "nothing", errors: "none", time: "O(n): a key smaller than everything walks the whole list", space: "O(1)" },
@@ -636,7 +636,7 @@
     insert(k) {
       const r = heapRec(T, "theap").code("t_insert");
       if (T.a.length >= MAXN) { r.snap({ note: "Capped at " + MAXN + " keys." }); return r; }
-      r.snap({ note: "<b>insert(" + k + ")</b> into a linked heap of " + T.a.length + " nodes. There is no array, so we can't just say “slot n”: we have to <em>find</em> where the new leaf goes." });
+      r.snap({ note: "<b>insert(" + k + ")</b> into a linked heap of " + T.a.length + " nodes. There is no array, so we can't point to “slot n”: we have to <em>find</em> where the new leaf goes." });
       const n = T.a.length + 1;
       r.at("alloc").snap({ note: "Allocate a node; n becomes " + n + "." });
       if (n === 1) { T.a.push(k); r.at("empty").snap({ marks: { 0: "done" }, note: "The heap was empty: the node becomes the root." }); return r; }
@@ -696,7 +696,7 @@
       r.at("insert").snap({ note: "Take " + k + " off the front of S and insert it into P." });
       if (algo === "selection") {
         pq.push(k); hand = null;
-        r.at("insert").snap({ pmarks: { [pq.length - 1]: "done" }, note: "Unsorted list: just append. <b>No comparisons.</b>" });
+        r.at("insert").snap({ pmarks: { [pq.length - 1]: "done" }, note: "Unsorted list: append at the end. <b>No comparisons.</b>" });
       } else if (algo === "insertion") {
         let i = pq.length;
         while (i > 0) {
@@ -801,11 +801,11 @@
      TABS / INIT
      ============================================================ */
   const NOTES = {
-    unsorted: "<b>Unsorted list.</b> insert just appends, so it is O(1). The price is paid at the other end: min and removeMin must look at every key, so they are O(n). Good when you insert far more often than you remove.",
-    sorted: "<b>Sorted list.</b> insert walks to the right position, which is O(n), so the minimum is always at the front and min and removeMin are O(1). This is the mirror image of the unsorted list.",
-    aheap: "<b>Array-based heap.</b> A complete binary tree stored level by level in an array, so there are no pointers: parent(i) = ⌊(i−1)/2⌋ and children are 2i+1 and 2i+2. Every node is ≤ its children. insert and removeMin each fix one root-to-leaf path, so both are O(log n). Bottom-up heapify builds a heap from n keys in O(n).",
-    theap: "<b>Tree-based (linked) heap.</b> The same heap, built from nodes with left, right and parent pointers. Without an array there is no “slot n”. To find the last position, write n in binary, drop the leading 1, and read the remaining bits as left (0) or right (1) turns from the root. That walk is O(log n), so the bounds match the array heap, but every node carries three pointers.",
-    sort: "<b>PQ-sort</b> is one algorithm with a pluggable priority queue: insert everything, then removeMin everything. Plug in an <b>unsorted list</b> and you get <b>selection sort</b>, with all the work in phase 2. A <b>sorted list</b> gives <b>insertion sort</b>, with all the work in phase 1. A <b>heap</b> gives <b>heap sort</b>, with O(n log n) split between the phases.",
+    unsorted: "<b>Unsorted list.</b> insert appends, so it costs O(1).</p><p class='blurb'>You pay at the other end. min and removeMin have to look at every key, so they cost O(n). Pick this when you insert far more often than you remove.",
+    sorted: "<b>Sorted list.</b> insert walks to the right position, which costs O(n). In return the minimum always sits at the front, so min and removeMin cost O(1).</p><p class='blurb'>It's the mirror image of the unsorted list.",
+    aheap: "<b>Array-based heap.</b> A complete binary tree stored level by level in an array. No pointers needed: parent(i) = ⌊(i−1)/2⌋, and the children are 2i+1 and 2i+2.</p><p class='blurb'>Every node is ≤ its children. insert and removeMin each fix one root-to-leaf path, so both cost O(log n).</p><p class='blurb'>Bottom-up heapify builds a heap from n keys in O(n).",
+    theap: "<b>Tree-based (linked) heap.</b> The same heap, built from nodes with left, right and parent pointers.</p><p class='blurb'>Without an array there's no “slot n”. To find the last position, write n in binary, drop the leading 1, and read the remaining bits as left (0) or right (1) turns from the root.</p><p class='blurb'>That walk costs O(log n), so the bounds match the array heap. The difference: every node carries three pointers.",
+    sort: "<b>PQ-sort</b> is one algorithm with a pluggable priority queue. Insert everything, then removeMin everything.</p><p class='blurb'>Plug in an <b>unsorted list</b> and you get <b>selection sort</b>, with all the work in phase 2. A <b>sorted list</b> gives <b>insertion sort</b>, with all the work in phase 1.</p><p class='blurb'>A <b>heap</b> gives <b>heap sort</b>, with O(n log n) split between the two phases.",
   };
 
   function load(r) { if (r.overflow) D.toast("Step limit reached.", true); player.load(r.frames, true); }

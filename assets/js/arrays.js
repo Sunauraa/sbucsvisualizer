@@ -943,7 +943,7 @@
       const r = faRec().code("fa_add");
       r.snap({ note: "<b>add(" + v + ")</b>: append after the last element. n = " + FA.n + ", capacity = " + FA.cap + " (fixed when the array was created)." });
       if (FA.n === FA.cap) {
-        r.at("full").snap({ marks: allMarks(FA.n, "swap"), note: "<b>The array is full.</b> A fixed array can never grow: its size was decided at <span class='mono'>new double[" + FA.cap + "]</span>. The only options are to fail or copy everything into a bigger array, which is exactly what a <b>dynamic array</b> automates." });
+        r.at("full").snap({ marks: allMarks(FA.n, "swap"), note: "<b>The array is full.</b> A fixed array can never grow: its size was decided at <span class='mono'>new double[" + FA.cap + "]</span>. The only options are to fail or copy everything into a bigger array, and a <b>dynamic array</b> does that copy for you." });
         return r;
       }
       r.at("full^").snap({ note: "n = " + FA.n + " &lt; " + FA.cap + ", so there is room." });
@@ -1116,7 +1116,7 @@
       if (!g2In(r0, c0)) return fail(r, "check", g2Why(r0, c0));
       r.at("check^").snap({ marks: { ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, note: "Row " + r0 + " is in [0, " + G2.rows + ") and column " + c0 + " is in [0, " + G2.cols + ")." });
       r.at("flat").snap({ marks: { [key2(r0, c0)]: "cmp", ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, flat: { [k]: "cmp" }, note: "Find the cell. In the pseudocode the array is one row-major block, so the flat index is <span class='mono'>r · cols + c = " + r0 + " · " + G2.cols + " + " + c0 + " = " + k + "</span>. In Java, <span class='mono'>m[" + r0 + "]</span> first fetches row " + r0 + "'s own array, and <span class='mono'>[" + c0 + "]</span> then indexes into it." });
-      r.at("ret").snap({ marks: { [key2(r0, c0)]: "target" }, flat: { [k]: "target" }, note: "One read: <b>M[" + r0 + "][" + c0 + "] = " + G2.m[r0][c0] + "</b>. Still O(1). A 2-D array is just a 1-D array plus a little arithmetic." });
+      r.at("ret").snap({ marks: { [key2(r0, c0)]: "target" }, flat: { [k]: "target" }, note: "One read: <b>M[" + r0 + "][" + c0 + "] = " + G2.m[r0][c0] + "</b>. Still O(1). A 2-D array is a 1-D array plus a little arithmetic." });
       return r;
     },
     set(r0, c0, v) {
@@ -1142,7 +1142,7 @@
           const k = rr * G2.cols + cc;
           const prev = order.length ? order[order.length - 1] : null;
           order.push(k);
-          const jump = prev == null ? "" : k - prev === 1 ? ": the very next cell in memory." : ": a jump of " + (k - prev) + " cells in memory.";
+          const jump = prev == null ? "" : k - prev === 1 ? ": the next cell in memory." : ": a jump of " + (k - prev) + " cells in memory.";
           r.at(["inner", "visit"]).snap({
             marks: Object.assign(seen(order.slice(0, -1)), { [key2(rr, cc)]: "active" }),
             flat: Object.assign(seenFlat(order.slice(0, -1)), { [k]: "active" }),
@@ -1441,7 +1441,7 @@
   const cll = {
     addFirst(v, inner) {
       const L = LL.circular, r = inner || llRec("circular").code("c_addFirst");
-      if (!inner) r.snap({ note: "<b>addFirst(" + v + ")</b>: in a circular list the head is simply <span class='mono'>tail.next</span>." });
+      if (!inner) r.snap({ note: "<b>addFirst(" + v + ")</b>: in a circular list the head is <span class='mono'>tail.next</span>." });
       r.at("alloc").snap({ float: { v: v, at: L.length - 1 }, note: "Allocate a node holding " + v + "." });
       if (!L.length) {
         L.push(v);
@@ -1456,7 +1456,7 @@
     },
     addLast(v) {
       const L = LL.circular, r = llRec("circular").code("c_addLast");
-      r.snap({ note: "<b>addLast(" + v + ")</b>: a neat trick. Add at the front, then move the tail forward one step." });
+      r.snap({ note: "<b>addLast(" + v + ")</b>: add at the front, then move the tail forward one step." });
       r.at("first").snap({ note: "Call addFirst(" + v + ")." });
       r.code("c_addFirst");
       cll.addFirst(v, r);
@@ -1488,7 +1488,7 @@
     rotate() {
       const L = LL.circular, r = llRec("circular").code("c_rotate");
       r.snap({ marks: { 0: "cmp", [L.length - 1]: "active" }, note: "<b>rotate()</b>: the front element should become the back. That is what a round-robin scheduler does after each time slice." });
-      if (!L.length) { r.at("check^").snap({ note: "tail is null: an empty ring has nothing to rotate, so the body is skipped. No error: rotate() just does nothing." }); return r; }
+      if (!L.length) { r.at("check^").snap({ note: "tail is null: an empty ring has nothing to rotate, so the body is skipped. No error: rotate() does nothing." }); return r; }
       r.at("check").snap({ marks: { 0: "cmp", [L.length - 1]: "active" }, note: "tail ≠ null." });
       L.push(L.shift());
       r.at("rot").snap({ marks: { [L.length - 1]: "done", 0: "active" }, note: "tail ← tail.next. One pointer move, <b>O(1)</b>. Nothing was unlinked or allocated: " + L[L.length - 1] + " is now at the back and " + L[0] + " is the new front." });
@@ -1689,35 +1689,17 @@
      ============================================================ */
   const NOTES = {
     fixed:
-      "<p class='blurb'>A <b>fixed array</b> is one contiguous block whose capacity is decided once, at <span class='mono'>new double[8]</span>, and can " +
-      "never change. You track how many slots are in use (<span class='mono'>n</span>) yourself. Reads and writes by index are O(1). " +
-      "Inserting or removing in the middle means shifting, and when every slot is used there is simply no room left.</p>",
+      "<p class='blurb'>A <b>fixed array</b> is one contiguous block. You set its capacity once, at <span class='mono'>new double[8]</span>, and it never changes.</p><p class='blurb'>You track how many slots are in use (<span class='mono'>n</span>) yourself. Reads and writes by index cost O(1).</p><p class='blurb'>Inserting or removing in the middle means shifting. And once every slot is used, there's no room left.</p>",
     dynamic:
-      "<div class='callout' style='margin-top:.9rem'><b>Growth is a geometric progression.</b> When the array is full, a dynamic array allocates a new one of " +
-      "<b>twice</b> the capacity and copies everything across. That one add costs <b>O(n) time and O(n) space</b> (the new array), which is its worst case; " +
-      "every other add is O(1). The capacities form the geometric sequence 4, 8, 16, …, and the total copying is their sum, " +
-      "less than 2n for n adds, so resizes stay rare.<br><br>" +
-      "Compare <b>arithmetic</b> growth (+2 each time): the array fills up again after just 2 more adds, so resizes happen constantly and " +
-      "the total copying grows like n². Switch <em>growth</em> to “+2”, keep adding, and watch the capacity history under the array. " +
-      "Java's <span class='mono'>ArrayList</span> grows ×1.5; any ratio &gt; 1 keeps resizes rare.</div>",
+      "<div class='callout' style='margin-top:.9rem'><p><b>Growth is a geometric progression.</b> When the array fills up, a dynamic array allocates a new one with <b>twice</b> the capacity and copies everything across.</p><p>That one add costs <b>O(n) time and O(n) space</b> (the new array), which is its worst case. Every other add costs O(1).</p><p>The capacities form the geometric sequence 4, 8, 16, … and the total copying is their sum: less than 2n for n adds. So resizes stay rare.</p><p>Now compare <b>arithmetic</b> growth (+2 each time). The array fills up again after 2 more adds, so it resizes constantly and the total copying grows like n².</p><p>Switch <em>growth</em> to “+2”, keep adding, and watch the capacity history under the array. Java's <span class='mono'>ArrayList</span> grows ×1.5. Any ratio &gt; 1 keeps resizes rare.</p></div>",
     grid:
-      "<p class='blurb'>A <b>2-D array</b> is a grid addressed by (row, column), but memory is one-dimensional. In memory, " +
-      "a grid is laid out <b>row-major</b>: row 0, then row 1, … so M[r][c] lives at flat index r·C + c (the pseudocode works this way). In Java, " +
-      "<span class='mono'>double[][]</span> is an <em>array of references to row arrays</em>. Each row is contiguous, but rows can live apart and can even have different " +
-      "lengths (a “jagged” array). Either way the big-O is the same: O(1) access, O(R·C) to visit everything.</p>",
+      "<p class='blurb'>A <b>2-D array</b> is a grid addressed by (row, column). Memory, though, is one-dimensional.</p><p class='blurb'>So the grid gets laid out <b>row-major</b>: row 0, then row 1, and so on. M[r][c] lives at flat index r·C + c, and the pseudocode works this way.</p><p class='blurb'>Java does it differently. <span class='mono'>double[][]</span> is an <em>array of references to row arrays</em>. Each row is contiguous, but rows can live apart and can even have different lengths (a “jagged” array).</p><p class='blurb'>Either way, the big-O stays the same: O(1) access, O(R·C) to visit everything.</p>",
     single:
-      "<p class='blurb'>A <b>singly linked list</b> stores <span class='mono'>next</span> only. We keep both <span class='mono'>head</span> and " +
-      "<span class='mono'>tail</span>, so addFirst, addLast and removeFirst are O(1). Anything that needs a <em>predecessor</em> has to walk from the head, " +
-      "because you can only move forwards. That includes removeLast and remove(i), so they are O(n).</p>",
+      "<p class='blurb'>A <b>singly linked list</b> stores <span class='mono'>next</span> only. We keep both <span class='mono'>head</span> and <span class='mono'>tail</span>, so addFirst, addLast and removeFirst cost O(1).</p><p class='blurb'>You can only move forwards, though. Anything that needs a <em>predecessor</em> has to walk from the head. That includes removeLast and remove(i), so both are O(n).</p>",
     double:
-      "<p class='blurb'>A <b>doubly linked list</b> also stores <span class='mono'>prev</span>. That costs one more pointer per node, but every node can reach its " +
-      "predecessor in O(1). removeLast becomes O(1), you can traverse backwards, and removing a node you already hold never needs a walk. " +
-      "Java's <span class='mono'>LinkedList</span> is doubly linked.</p>",
+      "<p class='blurb'>A <b>doubly linked list</b> also stores <span class='mono'>prev</span>. Each node pays for one more pointer, and in return it reaches its predecessor in O(1).</p><p class='blurb'>removeLast drops to O(1). You can traverse backwards. Removing a node you already hold never needs a walk. Java's <span class='mono'>LinkedList</span> is doubly linked.</p>",
     circular:
-      "<p class='blurb'>A <b>circularly linked list</b> is a singly linked list whose last node points back to the first. You only need to store " +
-      "<span class='mono'>tail</span>, because the head is always <span class='mono'>tail.next</span>. That one pointer gives O(1) access to both ends, and " +
-      "<b>rotate()</b> (move the front to the back) is a single assignment. That makes it the natural structure for round-robin scheduling and turn-taking games. " +
-      "The catch is that there is no null to stop at, so every loop must stop after one full lap.</p>",
+      "<p class='blurb'>A <b>circularly linked list</b> is a singly linked list whose last node points back to the first. You only store <span class='mono'>tail</span>, because the head is always <span class='mono'>tail.next</span>.</p><p class='blurb'>That one pointer gives O(1) access to both ends. <b>rotate()</b> (move the front to the back) becomes a single assignment, which makes this the natural fit for round-robin scheduling and turn-taking games.</p><p class='blurb'>There's no null to stop at, so every loop must stop after one full lap.</p>",
   };
 
   function load(r) { if (r.overflow) D.toast("Step limit reached.", true); player.load(r.frames, true); }
@@ -1752,7 +1734,7 @@
     const msg = {
       fixed: "A fixed array of capacity " + FA.cap + " holding " + FA.n + " element(s).",
       dynamic: "A dynamic array: size " + DA.n + ", capacity " + DA.cap + ".",
-      grid: "A " + G2.rows + " × " + G2.cols + " array. The strip underneath is how it really sits in memory.",
+      grid: "A " + G2.rows + " × " + G2.cols + " array. The strip underneath is how it sits in memory.",
       single: "A singly linked list with " + LL.single.length + " node(s).",
       double: "A doubly linked list with " + LL.double.length + " node(s).",
       circular: "A circularly linked list with " + LL.circular.length + " node(s). There is no null at the end: the tail points back to the head.",
@@ -1773,7 +1755,7 @@
       "Duplicate Zeros",
       "duplicate-zeros",
       "Easy",
-      "Shift elements right inside a fixed-length array: exactly insert-at-index."
+      "Shift elements right inside a fixed-length array: the same as insert-at-index."
      ],
      [
       27,

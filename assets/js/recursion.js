@@ -110,9 +110,7 @@
     inputs: [{ id: "n", label: "n", value: 5, min: -99, max: 10, int: true }],
     big: ["T(n) = T(n−1) + O(1)", "O(n) time", "O(n) stack space"],
     blurb:
-      "The simplest shape of recursion: one call per level, so the tree is a straight chain and the stack grows to " +
-      "depth n. Notice that nothing is computed on the way <em>down</em>. Every frame just waits, holding its own n, and " +
-      "every multiplication happens as the frames pop back up. Try a negative n to see the error check.",
+      "<p>The simplest shape of recursion. One call per level, so the tree is a straight chain and the stack grows to depth n.</p><p>Nothing gets computed on the way <em>down</em>. Every frame waits, holding its own n, and every multiplication happens as the frames pop back up.</p><p>Try a negative n to see the error check.</p>",
     code: {
       pseudo: [
         "factorial(n): @@fn",
@@ -147,9 +145,7 @@
     inputs: [{ id: "n", label: "n", value: 5, min: -99, max: 8, int: true }],
     big: ["T(n) = T(n−1) + T(n−2) + O(1)", "O(2ⁿ) time", "O(n) stack space"],
     blurb:
-      "Two recursive calls per level make the tree branch, and the same subproblems get solved over and over. " +
-      "Count how many times <span class='mono'>fib(2)</span> appears. That duplication is what makes naive Fibonacci " +
-      "exponential (about 1.618ⁿ calls, which is O(2ⁿ)), and it is exactly what memoisation removes.",
+      "<p>Two recursive calls per level make the tree branch, and the same subproblems get solved over and over. Count how many times <span class='mono'>fib(2)</span> appears.</p><p>That duplication makes naive Fibonacci exponential (about 1.618ⁿ calls, which is O(2ⁿ)). Memoisation removes it.</p>",
     code: {
       pseudo: [
         "fib(n): @@fn",
@@ -187,9 +183,7 @@
     inputs: [{ id: "n", label: "n", value: 8, min: -99, max: 14, int: true }],
     big: ["O(n) time", "O(n) space", "top-down DP"],
     blurb:
-      "Same code, plus a table of answers already computed. Each value of n is genuinely computed once; every later " +
-      "request is a table lookup that returns without recursing. The exponential tree collapses into a path with " +
-      "stubs: n distinct subproblems, O(1) work each, so O(n).",
+      "<p>Same code, plus a table of answers already computed.</p><p>Each value of n gets computed once. Every later request is a table lookup that returns without recursing.</p><p>The exponential tree collapses into a path with stubs: n distinct subproblems, O(1) work each, so O(n).</p>",
     code: {
       pseudo: [
         "fib(n, memo): @@fn",
@@ -240,10 +234,7 @@
     ],
     big: ["O(log min(a, b)) time", "O(log min(a, b)) stack space", "tail recursive"],
     blurb:
-      "Euclid's insight: any common divisor of a and b also divides a mod b, so gcd(a, b) = gcd(b, a mod b). The " +
-      "numbers shrink fast (every two steps at least halve the smaller one), so the depth is logarithmic. It is also " +
-      "<em>tail recursive</em>: the recursive call is the whole return expression, so it turns into a loop with no " +
-      "stack growth at all. With negative inputs Java's % keeps the sign of a, so the answer can come out negative.",
+      "<p>Euclid's insight: any common divisor of a and b also divides a mod b. So gcd(a, b) = gcd(b, a mod b).</p><p>The numbers shrink fast (every two steps at least halve the smaller one), so the depth is logarithmic.</p><p>It's also <em>tail recursive</em>. The recursive call is the whole return expression, so it turns into a loop with no stack growth at all.</p><p>With negative inputs, Java's % keeps the sign of a, so the answer can come out negative.</p>",
     code: {
       pseudo: ["gcd(a, b): @@fn", "  if b == 0: return a          // base case @@base", "  return gcd(b, a mod b)       // tail call @@rec"],
       java: ["static int gcd(int a, int b) { @@fn", "  if (b == 0) return a;        // base case @@base", "  return gcd(b, a % b);        // tail call @@rec", "}"],
@@ -251,7 +242,7 @@
     run(t, args) {
       (function g(a, b) {
         const id = t.at("fn").enter("gcd(" + a + ", " + b + ")", { a: a, b: b });
-        if (b === 0) return t.at("base").exit(id, a, "b = 0: <b>base case</b>, return a = " + a + ". Every caller above just passes this value straight back up.");
+        if (b === 0) return t.at("base").exit(id, a, "b = 0: <b>base case</b>, return a = " + a + ". Every caller above passes this value straight back up.");
         t.at("base^").step("b = " + b + " ≠ 0: not the base case.");
         const r0 = a % b;
         t.wait(id, "return gcd(" + b + ", " + r0 + ")").at("rec").step("a mod b = " + a + " mod " + b + " = " + r0 + (a < 0 || b < 0 ? " (Java's % keeps the sign of a)" : "") + ", so call gcd(" + b + ", " + r0 + ").");
@@ -269,9 +260,7 @@
     ],
     big: ["T(n) = T(n/2) + O(1)", "O(log n) time", "O(log n) stack space"],
     blurb:
-      "Exponentiation by squaring. Instead of n multiplications, halve the exponent each step: x<sup>n</sup> = " +
-      "(x<sup>n/2</sup>)² for even n, and x·(x<sup>⌊n/2⌋</sup>)² for odd n. Halving gives depth log₂n, the same " +
-      "recurrence as binary search. x can be negative or a decimal; a negative n uses x<sup>−n</sup> = 1 / x<sup>n</sup>.",
+      "<p>Exponentiation by squaring. Instead of n multiplications, halve the exponent each step: x<sup>n</sup> = (x<sup>n/2</sup>)² for even n, and x·(x<sup>⌊n/2⌋</sup>)² for odd n.</p><p>Halving gives depth log₂n, the same recurrence as binary search.</p><p>x can be negative or a decimal. A negative n uses x<sup>−n</sup> = 1 / x<sup>n</sup>.</p>",
     code: {
       pseudo: [
         "power(x, n): @@fn",
@@ -320,9 +309,7 @@
     inputs: [{ id: "n", label: "disks", value: 3, min: 1, max: 5, int: true }],
     big: ["T(n) = 2T(n−1) + O(1)", "O(2ⁿ) time", "O(n) stack space"],
     blurb:
-      "The classic “trust the recursion” problem. To move n disks from A to C: move the top n−1 out of the way onto B, " +
-      "move the single biggest disk to C, then move those n−1 from B onto C. You never have to think about how the " +
-      "n−1 sub-tower gets moved: that is the recursive call's job. Two calls per level gives exactly 2ⁿ−1 moves.",
+      "<p>The classic “trust the recursion” problem. To move n disks from A to C: move the top n−1 out of the way onto B, move the biggest disk to C, then move those n−1 from B onto C.</p><p>You never have to think about how the n−1 sub-tower moves. That's the recursive call's job.</p><p>Two calls per level gives exactly 2ⁿ−1 moves.</p>",
     code: {
       pseudo: ["hanoi(n, from, to, via): @@fn", "  if n == 0: return @@base", "  hanoi(n-1, from, via, to)     // clear the way @@r1", "  move disk n: from → to @@move", "  hanoi(n-1, via, to, from)     // pile back on @@r2"],
       java: [
@@ -363,9 +350,7 @@
     inputs: [{ id: "target", label: "target", value: 47, min: -1e9, max: 1e9 }],
     big: ["T(n) = T(n/2) + O(1)", "O(log n) time", "O(log n) stack space"],
     blurb:
-      "Halving recursion on a <em>sorted</em> array (negative and decimal values are fine). Compare the target with the " +
-      "middle element: if it is smaller the answer can only be in the left half, if larger only in the right half. Each " +
-      "call throws away half of what is left, so 2<sup>k</sup> ≥ n gives at most ⌈log₂n⌉ + 1 comparisons.",
+      "<p>Halving recursion on a <em>sorted</em> array (negative and decimal values are fine).</p><p>Compare the target with the middle element. If it's smaller, the answer can only be in the left half. If it's larger, only in the right half.</p><p>Each call throws away half of what's left, so 2<sup>k</sup> ≥ n gives at most ⌈log₂n⌉ + 1 comparisons.</p>",
     code: {
       pseudo: [
         "binarySearch(A, target, lo, hi): @@fn",
@@ -420,9 +405,7 @@
     stringInput: { id: "str", label: "string", value: "ABC", max: 4 },
     big: ["n! leaves", "O(n · n!) time", "O(n) stack space"],
     blurb:
-      "Backtracking: at each level choose one of the remaining characters, recurse on what is left, then undo the " +
-      "choice and try the next one. The tree has n choices at the root, n−1 below that, and so on: n! leaves, each " +
-      "one a complete permutation.",
+      "<p>Backtracking. At each level, choose one of the remaining characters, recurse on what's left, then undo the choice and try the next one.</p><p>The tree has n choices at the root, n−1 below that, and so on: n! leaves, each one a complete permutation.</p>",
     code: {
       pseudo: [
         "permute(chosen, rest): @@fn",
@@ -571,7 +554,7 @@
           it.set({ a: a, b: b }).row().at("step").step("a ← " + a + ", b ← " + b + ". The same step the recursion takes, but it <em>replaces</em> the variables instead of pushing a new frame.");
         }
         it.at("loop").step("b = 0: stop.");
-        it.at("ret").step("Return <b>" + a + "</b>. The recursive gcd is <em>tail recursive</em>: nothing is left to do after the call returns. That is exactly the kind of recursion that turns mechanically into a loop.");
+        it.at("ret").step("Return <b>" + a + "</b>. The recursive gcd is <em>tail recursive</em>: nothing is left to do after the call returns. That kind of recursion turns mechanically into a loop.");
       },
     },
     power: {
@@ -703,7 +686,7 @@
         const out = [], st = [["", x.str]];
         const lab = (t) => '("' + t[0] + '", "' + t[1] + '")';
         it.view = { type: "list", label: "permutations found", items: out, tasks: st.map(lab) };
-        it.set({ chosen: "", rest: x.str, "stack size": 1 }).at("init").step("Push the starting state. Each stack entry is exactly what one recursive call's parameters would be.");
+        it.set({ chosen: "", rest: x.str, "stack size": 1 }).at("init").step("Push the starting state. Each stack entry holds what one recursive call's parameters would be.");
         while (st.length) {
           it.at("loop").step(st.length + " state(s) waiting.");
           const t = st.pop();
@@ -1003,7 +986,10 @@
     return it;
   }
 
-  /* build the trace for the current function, inputs and mode; Play runs it */
+  /* build the trace for the current function, inputs and mode, but show only its first
+     picture: the steps load when the reader presses the Play button above the board */
+  let pending = null, pendingOver = false;
+  function setRunLabel(loaded) { q("run").innerHTML = loaded ? "&#8635; Replay" : "&#9654; Play"; }
   function rebuild(quiet) {
     const args = readArgs(quiet);
     if (!args) return;
@@ -1011,20 +997,31 @@
     if (quiet && key === built) return;
     built = key;
     let frames;
-    if (mode === "rec") { const t = traceRec(args); if (t.over) D.toast("Trace truncated: try a smaller input.", true); frames = t.frames; }
+    pendingOver = false;
+    if (mode === "rec") { const t = traceRec(args); pendingOver = t.over; frames = t.frames; }
     else if (mode === "iter") { frames = traceIter(args).frames; }
     else {
       const t = traceRec(args), it = traceIter(args);
       frames = D.zip(t.frames, it.frames, (L, R, i, a, b) =>
         "Same input, two programs, one step each per frame. Recursive: <b>" + a + "</b> steps. Iterative: <b>" + b + "</b> steps." + (i >= Math.min(a, b) - 1 ? " The shorter one has finished and waits with a ✓." : ""));
     }
-    const call = FN[cur].label.replace(/\s+·.*$/, "");
-    const first = frames[0];
-    const hint = "Ready: <b>press ▶ Play</b> (or space) to run " + call + " step by step, or drag the slider.";
-    if (first.L) first.note = hint; else first.note = hint + " " + (first.note || "");
-    player.load(frames, false);
-    /* on page load nothing was clicked yet, so the step controls stay hidden: say how to bring them up */
-    if (!player.ctlShown) { frames[0] = Object.assign({}, frames[0], { note: "Click a function above, switch the mode, or change an input to load its steps." }); player.goto(0); }
+    /* "fib(n)" → "fib(6)": put the input values into the call */
+    const call = FN[cur].label.replace(/\s+·.*$/, "").replace(/\(([^)]*)\)/, (m, ps) => "(" + ps.split(",").map((x) => {
+      const k = x.trim();
+      return k === "s" && args.str != null ? '"' + args.str + '"' : k in args && !Array.isArray(args[k]) ? fmt(args[k]) : k;
+    }).join(", ") + ")");
+    pending = frames;
+    /* one still frame: the step controls stay hidden until Play loads the whole trace */
+    player.load([Object.assign({}, frames[0], { note: "Press <b>▶ Play</b> to run " + call + " step by step." })], false);
+    setRunLabel(false);
+  }
+  /* the Play button above the board: read the inputs, load every step and start playing */
+  function run() {
+    rebuild(false);
+    if (!pending) return;
+    if (pendingOver) D.toast("Trace truncated: try a smaller input.", true);
+    player.load(pending, true);
+    setRunLabel(true);
   }
 
   /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
@@ -1134,7 +1131,7 @@
       "Pow(x, n)",
       "powx-n",
       "Medium",
-      "Exactly this algorithm: watch out for negative n."
+      "The same algorithm as this tab. Watch out for negative n."
      ],
      [
       231,
@@ -1187,7 +1184,7 @@
       "Binary Search",
       "binary-search",
       "Easy",
-      "Exactly this tab."
+      "The same as this tab."
      ],
      [
       35,
@@ -1213,7 +1210,7 @@
       "Permutations",
       "permutations",
       "Medium",
-      "Exactly this tab."
+      "The same as this tab."
      ],
      [
       47,
@@ -1281,7 +1278,8 @@
     dock = D.CodeDock("#code", listings, { args: inputArgs });
     dockL = D.CodeDock("#L-code", listings, { args: inputArgs });
     dockR = D.CodeDock("#R-code", listings, { args: inputArgs });
-    player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock, onIdle: () => rebuild(false) });
+    player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock, onIdle: run });
+    q("run").addEventListener("click", run);
     const tabs = q("fn-tabs");
     ORDER.forEach((id) => tabs.appendChild(D.el("button", { text: FN[id].label, "data-id": id, onclick: () => select(id) })));
     modeSeg = D.Segmented("#mode", [

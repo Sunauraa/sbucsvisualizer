@@ -415,7 +415,7 @@
 
   /* ---------------- specs, shown above each listing ---------------- */
   const M = (t) => "<span class='mono'>" + t + "</span>";
-  const travSpec = (when, use) => ({ does: "Visits every node of the subtree rooted at " + M("n") + ", reporting a node " + when + ". Typical use: " + use, params: M("n") + ": the subtree's root (null for an empty tree)", returns: "nothing (visits each node)", errors: "none: null simply returns", time: "O(n): every node is entered once", space: "O(h): one stack frame per level of the path being explored; O(n) for a degenerate tree", callVals: { n: "root" } });
+  const travSpec = (when, use) => ({ does: "Visits every node of the subtree rooted at " + M("n") + ", reporting a node " + when + ". Typical use: " + use, params: M("n") + ": the subtree's root (null for an empty tree)", returns: "nothing (visits each node)", errors: "none: a null node returns at once", time: "O(n): every node is entered once", space: "O(h): one stack frame per level of the path being explored; O(n) for a degenerate tree", callVals: { n: "root" } });
   const H = "h is the tree's height: about log₂n for a bushy tree, up to n − 1 for a degenerate one";
   const delSpec = (pred) => ({ does: "Removes key " + M("k") + ". A node with two children first takes the key of its in-order <b>" + (pred ? "predecessor" : "successor") + "</b> (the " + (pred ? "largest key in its left" : "smallest key in its right") + " subtree), so only a node with ≤ 1 child is ever cut out.", params: M("k") + ": the key (negative and decimal keys are fine)", returns: "nothing (a missing key is ignored)", errors: "none", time: "O(h): " + H, space: "O(1)" });
   const delRecSpec = (pred) => ({ does: "Recursive delete: each call handles one subtree and returns its new root, which the caller links back in. A two-child node takes its in-order <b>" + (pred ? "predecessor" : "successor") + "</b>'s key, then that key is deleted from the " + (pred ? "left" : "right") + " subtree.", params: M("n") + ": a subtree's root (start with root) · " + M("k") + ": the key", returns: "the subtree's root after the delete", errors: "none", time: "O(h): " + H, space: "O(h): one stack frame per level", callVals: { n: "root" } });
@@ -636,7 +636,7 @@
     const nb = delPred ? "predecessor" : "successor", down = delPred ? "right" : "left";
     if (!(n.left && n.right)) c.at("two^").bin(st, { [n.id]: "active" }, "Found " + v + ". It has " + (n.left || n.right ? "only one child" : "no children") + ", so no " + nb + " is needed.");
     if (n.left && n.right) {
-      c.at("two").bin(st, { [n.id]: "active" }, "Node " + n.v + " has <b>two children</b>, so it cannot simply be cut out. Replace its value with its <b>in-order " + nb + "</b>: the " + (delPred ? "largest key in the left" : "smallest key in the right") + " subtree.");
+      c.at("two").bin(st, { [n.id]: "active" }, "Node " + n.v + " has <b>two children</b>, so it can't be cut out directly. Replace its value with its <b>in-order " + nb + "</b>: the " + (delPred ? "largest key in the left" : "smallest key in the right") + " subtree.");
       let s = delPred ? n.left : n.right;
       while (s[down]) {
         c.at("succ").bin(st, { [n.id]: "active", [s.id]: "cmp" }, "Go " + down + " from " + s.v + " looking for the " + (delPred ? "maximum of the left" : "minimum of the right") + " subtree.");
@@ -644,7 +644,7 @@
       }
       c.at("succ").bin(st, { [n.id]: "active", [s.id]: "target" }, "<b>" + s.v + "</b> is the " + nb + ": it is the " + (delPred ? "previous" : "next") + " key in sorted order, and it has no " + down + " child by construction.");
       n.v = s.v;
-      c.at("copy").bin(st, { [n.id]: "done", [s.id]: "swap" }, "Copy " + s.v + " up into the node we are deleting. Now the duplicate down at " + s.v + " has to go, but it has at most one child, so it is an easy case.");
+      c.at("copy").bin(st, { [n.id]: "done", [s.id]: "swap" }, "Copy " + s.v + " up into the node we are deleting. Now the duplicate down at " + s.v + " has to go, but it has at most one child, so it can be spliced out directly.");
       n = s;
     }
     const child = n.left || n.right;
@@ -656,7 +656,7 @@
     if (!rebalance) for (let a = par; a; a = a.p) fixH(a);
     c.at("splice").bin(st, par ? { [par.id]: "visit" } : {}, child
       ? "Node " + n.v + " had <b>one child</b>, so promote that child into its place. The subtree stays a valid BST because all of it was already on the same side."
-      : "Node " + n.v + " was a <b>leaf</b>: just detach it.");
+      : "Node " + n.v + " was a <b>leaf</b>: detach it.");
     if (rebalance) avlRetrace(st, par, c, "delete");
   }
 
@@ -1008,7 +1008,7 @@
         }
         let sN = n[side];
         const walk = [sN.id];
-        c.at(["oneR^", "oneL^", "succ"]).bin(st, pathMarks(path, { [n.id]: "swap", [sN.id]: "cmp" }), n.v + " has two children, so it cannot simply be cut out. Find its in-order <b>" + (pred ? "predecessor" : "successor") + "</b>: the " + (pred ? "largest key in the left" : "smallest key in the right") + " subtree. Start at " + sN.v + ".");
+        c.at(["oneR^", "oneL^", "succ"]).bin(st, pathMarks(path, { [n.id]: "swap", [sN.id]: "cmp" }), n.v + " has two children, so it can't be cut out directly. Find its in-order <b>" + (pred ? "predecessor" : "successor") + "</b>: the " + (pred ? "largest key in the left" : "smallest key in the right") + " subtree. Start at " + sN.v + ".");
         while (sN[pred ? "right" : "left"]) {
           sN = sN[pred ? "right" : "left"];
           walk.push(sN.id);
@@ -1020,7 +1020,7 @@
         fr.vars.n = sN.v + " (was " + k + ")";
         c.at("copy").bin(st, pathMarks(path, { [n.id]: "done", [sN.id]: "swap" }), "Copy " + sN.v + " into this node. Now " + sN.v + " appears twice; the copy down in the " + side + " subtree must go.");
         fr.wait = "n." + side + " ← delete(" + lab(n[side]) + ", " + sN.v + ")";
-        c.at("again").bin(st, pathMarks(path, { [n.id]: "done" }), "Delete " + sN.v + " from the " + side + " subtree with another recursive call. That node has at most one child, so it is an easy case.");
+        c.at("again").bin(st, pathMarks(path, { [n.id]: "done" }), "Delete " + sN.v + " from the " + side + " subtree with another recursive call. That node has at most one child, so it can be spliced out directly.");
         const before = n[side];
         const sub = f(before, sN.v);
         n[side] = sub; if (sub) sub.p = n; fixH(n);
@@ -1338,29 +1338,15 @@
      ============================================================ */
   const BLURB = {
     trav:
-      "Trees are recursive: a tree is a node plus two smaller trees. So most tree code is recursive too, and the call stack " +
-      "on the left of the tree shows every call that is waiting. All four traversals do the same O(n) walk; they differ only in " +
-      "<em>when</em> a node is reported. Pre-order reports on the way in, in-order between the two subtrees, post-order on the " +
-      "way out, and level-order uses a queue instead of recursion. <b>height</b> and <b>size</b> are recursion that returns a value: " +
-      "each call combines its children's answers.",
+      "<p>Trees are recursive: a tree is a node plus two smaller trees. So most tree code is recursive too, and the call stack on the left of the tree shows every call that's waiting.</p><p>All four traversals do the same O(n) walk. They differ only in <em>when</em> they report a node.</p><p>Pre-order reports on the way in, in-order between the two subtrees, post-order on the way out. Level-order swaps recursion for a queue.</p><p><b>height</b> and <b>size</b> are recursion that returns a value. Each call combines its children's answers.</p>",
     bst:
-      "A binary search tree keeps every key in the left subtree smaller and every key in the right subtree larger. " +
-      "That makes search, insert and delete <b>O(h)</b> time, which is O(log n) for a bushy tree but <b>O(n)</b> for a " +
-      "degenerate one. Switch the code style to <b>recursive</b> to see each operation as calls on smaller subtrees (O(h) stack space). " +
-      "The <b>predecessor</b> of a key is the next smaller key, the <b>successor</b> the next larger one; deleting a node with two " +
-      "children copies one of them into it. Nothing in the BST rules prevents degeneracy, which is the entire motivation for AVL trees.",
+      "<p>A binary search tree keeps every key in the left subtree smaller and every key in the right subtree larger.</p><p>That makes search, insert and delete <b>O(h)</b> time. For a bushy tree, that's O(log n). For a degenerate one, it's <b>O(n)</b>.</p><p>Switch the code style to <b>recursive</b> to see each operation as calls on smaller subtrees (O(h) stack space).</p><p>The <b>predecessor</b> of a key is the next smaller key; the <b>successor</b> is the next larger one. Deleting a node with two children copies one of them into it.</p><p>Nothing in the BST rules prevents degeneracy. That gap is the whole reason AVL trees exist.</p>",
     avl:
-      "An AVL tree is a BST that additionally keeps every node's balance factor in {−1, 0, +1}. Any insert or delete " +
-      "that breaks this is repaired by one or two <b>rotations</b>, which preserve in-order sequence while reducing " +
-      "height. Height stays ≤ 1.44·log₂n, so every operation is guaranteed O(log n) time.",
+      "<p>An AVL tree is a BST that also keeps every node's balance factor in {−1, 0, +1}.</p><p>When an insert or delete breaks that rule, one or two <b>rotations</b> repair it. Rotations keep the in-order sequence and reduce height.</p><p>Height stays ≤ 1.44·log₂n, so every operation is guaranteed O(log n) time.</p>",
     t24:
-      "A (2,4)-tree stores 1–3 keys per node and keeps <b>every leaf at the same depth</b>. Overflow on insert is fixed " +
-      "by a <b>split</b> that pushes the middle key up; underflow on delete is fixed by a <b>transfer</b> from a sibling " +
-      "or a <b>fusion</b> with one. Height is between log₄n and log₂n, so operations are O(log n) with no rotations at all.",
+      "<p>A (2,4)-tree stores 1–3 keys per node and keeps <b>every leaf at the same depth</b>.</p><p>An overflow on insert gets fixed by a <b>split</b> that pushes the middle key up. An underflow on delete gets fixed by a <b>transfer</b> from a sibling or a <b>fusion</b> with one.</p><p>Height sits between log₄n and log₂n, so operations cost O(log n) with no rotations at all.</p>",
     btree:
-      "A B-tree is the same idea with a bigger fan-out, chosen so one node fills one disk block or memory page. With " +
-      "order 100 a tree of a million keys is only 3 levels deep, so a lookup costs 3 block reads. This is why every " +
-      "database index and filesystem in the world is a B-tree or B⁺-tree.",
+      "<p>A B-tree is the same idea with a bigger fan-out. The fan-out is chosen so one node fills one disk block or memory page.</p><p>With order 100, a tree of a million keys is only 3 levels deep. A lookup costs 3 block reads.</p><p>That's why every database index and filesystem in the world is a B-tree or B⁺-tree.</p>",
   };
 
   /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */

@@ -3,21 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Graphs · CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=202610111800">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕸️</text></svg>">
+<title>Graphs</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202611041200">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=202611041200">
 </head>
 <body>
 
+<a class="skip" href="#content">Skip to content</a>
 <header class="topbar">
   <div class="wrap topbar-in">
-    <a class="back" href="index.html" title="Back to CSE 214" aria-label="Back to CSE 214">&lsaquo;</a>
-    <h1 class="title">Graphs</h1>
+    <a class="brand" href="../index.html"><span class="brand-mark"><svg viewBox="0 0 20 20" aria-hidden="true"><g stroke="#fff" stroke-width="1.6"><line x1="10" y1="5" x2="5" y2="14.5"/><line x1="10" y1="5" x2="15" y2="14.5"/></g><g fill="#fff"><circle cx="10" cy="5" r="2.8"/><circle cx="5" cy="14.5" r="2.8"/><circle cx="15" cy="14.5" r="2.8"/></g></svg></span><span class="brand-name">DSA Visualizer</span></a>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">CSE 214</a><span class="sl" aria-hidden="true">/</span><span class="crumb-cur" aria-current="page">Graphs</span></nav>
     <div class="spacer"></div>
   </div>
 </header>
 
-<div class="wrap">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">CSE 214 &middot; Module 7</p>
+    <h1>Graphs</h1>
+  </div>
+</section>
+
+<main id="content" class="wrap">
+  <h2 class="sr-only">Interactive visualizer</h2>
   <div class="panel main">
     <div class="toolbar">
       <button data-tool="add" class="active">✚ add / connect</button>
@@ -66,16 +75,16 @@
   </div>
 
 
-  <details class="about" id="about">
-    <summary>About this topic</summary>
+  <section class="about" id="about" aria-labelledby="about-h">
+    <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">Build a graph by clicking and drag vertices wherever you like, even mid-traversal. The adjacency matrix and
-       adjacency list are the same graph in two representations, and they highlight in step with the search.</p>
-    <p class="blurb" id="algo-explain"></p>
+    <p class="intro">Click to build a graph. Drag vertices wherever you like, even mid-traversal.</p>
+    <p class="intro">The adjacency matrix and adjacency list show the same graph two ways, and both highlight in step with the search.</p>
+    <div class="blurb" id="algo-explain"></div>
   <div class="row" style="margin-bottom:2rem">
     <div class="col">
       <div class="panel" style="height:100%">
-        <h2>The two traversals side by side</h2>
+        <h3>The two traversals side by side</h3>
         <div style="overflow-x:auto">
           <table class="tbl" style="min-width:440px">
             <tr><th></th><th>BFS</th><th>DFS</th></tr>
@@ -91,7 +100,7 @@
     </div>
     <div class="col">
       <div class="panel" style="height:100%">
-        <h2>Matrix or list?</h2>
+        <h3>Matrix or list?</h3>
         <div style="overflow-x:auto">
           <table class="tbl" style="min-width:400px">
             <tr><th>Operation (time / extra space)</th><th>Matrix</th><th>List</th></tr>
@@ -102,10 +111,9 @@
             <tr><td>BFS / DFS overall</td><td>O(V²) / O(V)</td><td class="one">O(V + E) / O(V)</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.7rem 0">Real graphs are <b>sparse</b>: E is closer to V than to V², so
-           adjacency lists win almost always. Load the <em>complete K₆</em> preset: every pair of vertices is joined, and
-           that dense regime is the only one where the matrix is competitive.</p>
-        <h3 style="font-size:.95rem;margin:.9rem 0 .3rem">Vocabulary the visualizer uses</h3>
+        <p class="small muted" style="margin:.7rem 0 .4rem">Real graphs are <b>sparse</b>: E sits closer to V than to V². That's why adjacency lists almost always win.</p>
+        <p class="small muted" style="margin:0 0 .7rem">Load the <em>complete K₆</em> preset for the exception: every pair of vertices is joined. Dense graphs like that are the only case where the matrix keeps up.</p>
+        <h4 style="font-size:.95rem;margin:.9rem 0 .3rem">Vocabulary the visualizer uses</h4>
         <dl class="kv">
           <dt>degree</dt><dd>edges touching a vertex (in + out if directed)</dd>
           <dt>path / cycle</dt><dd>walk with no repeated vertex / one that returns to its start</dd>
@@ -118,12 +126,24 @@
     </div>
   </div>
     </div>
-  </details>
+  </section>
 
-</div>
+</main>
 
-<footer class="site"></footer>
-<script src="../assets/js/core.js?v=202610111800"></script>
-<script src="../assets/js/graphs.js?v=202610111800"></script>
+<footer class="site">
+  <div class="wrap foot-in">
+    <p><span class="foot-name">DSA Visualizer</span></p>
+    <p class="keys">Keyboard: <kbd>Space</kbd> play or pause, <kbd>&larr;</kbd> <kbd>&rarr;</kbd> step</p>
+    <p>Contact: <a href="mailto:tuanson.dao@stonybrook.edu">tuanson.dao@stonybrook.edu</a></p>
+  </div>
+</footer>
+<script src="../assets/js/core.js?v=202611041200"></script>
+<script src="../assets/vendor/lz-string.min.js?v=202611041200"></script>
+<script src="../assets/js/motion.js?v=202611041200"></script>
+<script src="../assets/js/tutor.js?v=202611041200"></script>
+<script src="../assets/js/quiz.js?v=202611041200"></script>
+<script src="../assets/js/share.js?v=202611041200"></script>
+<script src="../assets/js/playground.js?v=202611041200"></script>
+<script src="../assets/js/graphs.js?v=202611041200"></script>
 </body>
 </html>

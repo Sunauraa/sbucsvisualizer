@@ -3,21 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trees · CSE 214</title>
-<link rel="stylesheet" href="../assets/css/style.css?v=202610111800">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>">
+<title>Trees</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202611041200">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=202611041200">
 </head>
 <body>
 
+<a class="skip" href="#content">Skip to content</a>
 <header class="topbar">
   <div class="wrap topbar-in">
-    <a class="back" href="index.html" title="Back to CSE 214" aria-label="Back to CSE 214">&lsaquo;</a>
-    <h1 class="title">Trees</h1>
+    <a class="brand" href="../index.html"><span class="brand-mark"><svg viewBox="0 0 20 20" aria-hidden="true"><g stroke="#fff" stroke-width="1.6"><line x1="10" y1="5" x2="5" y2="14.5"/><line x1="10" y1="5" x2="15" y2="14.5"/></g><g fill="#fff"><circle cx="10" cy="5" r="2.8"/><circle cx="5" cy="14.5" r="2.8"/><circle cx="15" cy="14.5" r="2.8"/></g></svg></span><span class="brand-name">DSA Visualizer</span></a>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">CSE 214</a><span class="sl" aria-hidden="true">/</span><span class="crumb-cur" aria-current="page">Trees</span></nav>
     <div class="spacer"></div>
   </div>
 </header>
 
-<div class="wrap">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">CSE 214 &middot; Module 4</p>
+    <h1>Trees</h1>
+  </div>
+</section>
+
+<main id="content" class="wrap">
+  <h2 class="sr-only">Interactive visualizer</h2>
   <div id="tabs" class="tabs"></div>
 
   <div class="panel main">
@@ -103,18 +112,17 @@
   </div>
 
 
-  <details class="about" id="about">
-    <summary>About this topic</summary>
+  <section class="about" id="about" aria-labelledby="about-h">
+    <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">From plain traversals to self-balancing multiway trees. Recursive operations show their call stack next to the
-       tree, and every rotation, split, transfer and fusion is a separate frame you can step through.</p>
-    <p class="blurb" id="blurb"></p>
+    <p class="intro">This module goes from plain traversals to self-balancing multiway trees.</p>
+    <p class="intro">Recursive operations show their call stack next to the tree. Every rotation, split, transfer and fusion gets its own frame, so you can step through each one.</p>
+    <div class="blurb" id="blurb"></div>
   <div class="row" style="margin-bottom:1.1rem">
     <div class="col">
       <div class="panel" style="height:100%">
-        <h2>The four rotation cases</h2>
-        <p class="small muted">After an insert, exactly one node is the <em>lowest</em> unbalanced one. Which rotation
-           you need depends on the direction of the two steps down toward the new key:</p>
+        <h3>The four rotation cases</h3>
+        <p class="small muted">After an insert, exactly one node is the <em>lowest</em> unbalanced one. Look at the two steps down from it toward the new key. Their direction picks the rotation:</p>
         <div style="overflow-x:auto">
           <table class="tbl" style="min-width:430px">
             <tr><th>Case</th><th>bf(node)</th><th>bf(child)</th><th>Fix</th></tr>
@@ -124,33 +132,30 @@
             <tr><td>Right-Left</td><td>−2</td><td>&gt; 0</td><td>right on child, then left</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.6rem 0 0">A rotation is a local pointer swap, O(1) time and space, and it never changes
-           the in-order sequence, which is why the BST property survives. Insert needs at most one (double counts as
-           one); delete may need one at every level.</p>
+        <p class="small muted" style="margin:.6rem 0 .4rem">A rotation is a local pointer swap: O(1) time and space. It never changes the in-order sequence, so the BST property survives.</p>
+        <p class="small muted" style="margin:0">Insert needs at most one rotation (a double counts as one). Delete may need one at every level.</p>
       </div>
     </div>
     <div class="col">
       <div class="panel" style="height:100%">
-        <h2>Overflow, underflow, and why heights match</h2>
-        <p class="small muted">Multiway trees never rotate. They keep all leaves at the same depth by changing the
-           <em>number of keys</em> in a node instead of moving nodes around:</p>
+        <h3>Overflow, underflow, and why heights match</h3>
+        <p class="small muted">Multiway trees never rotate. Instead of moving nodes around, they change how many keys a node holds. That keeps every leaf at the same depth:</p>
         <dl class="kv">
           <dt>overflow</dt><dd>too many keys after an insert → <b>split</b>, middle key goes up</dd>
           <dt>underflow</dt><dd>too few keys after a delete → <b>transfer</b> from a sibling that has spare keys</dd>
           <dt>no spare keys</dt><dd>→ <b>fusion</b>: merge two siblings plus the separator into one node</dd>
           <dt>grows taller</dt><dd>only when the <em>root</em> splits, so all leaves rise together</dd>
-          <dt>grows shorter</dt><dd>only when the root is emptied by a fusion</dd>
+          <dt>grows shorter</dt><dd>only when a fusion empties the root</dd>
         </dl>
-        <p class="small muted" style="margin:.6rem 0 0">In a (2,4)-tree, height is between log₄n and log₂n. A B-tree of
-           order m has height ≤ log<sub>⌈m/2⌉</sub>n: with m = 100, a million keys fit in 3 levels.</p>
+        <p class="small muted" style="margin:.6rem 0 .4rem">A (2,4)-tree's height sits between log₄n and log₂n.</p>
+        <p class="small muted" style="margin:0">A B-tree of order m has height ≤ log<sub>⌈m/2⌉</sub>n. With m = 100, a million keys fit in 3 levels.</p>
       </div>
     </div>
   </div>
 
   <div class="panel" style="margin-bottom:2rem">
-    <h2>All five, side by side: time / space</h2>
-    <p class="small muted" style="margin-top:-.3rem">Each operation cell is <b>time / extra space</b>, worst case, for n keys
-       and height h. The recursive BST versions use O(h) space instead of O(1), for their call stack.</p>
+    <h3>All five, side by side: time / space</h3>
+    <p class="small muted" style="margin-top:-.3rem">Each operation cell is <b>time / extra space</b>, worst case, for n keys and height h. The recursive BST versions need O(h) space instead of O(1) because of their call stack.</p>
     <div style="overflow-x:auto">
       <table class="tbl" style="min-width:820px">
         <tr><th>Structure</th><th>Search</th><th>Insert</th><th>Delete</th><th>Predecessor / successor</th><th>Height</th><th>Rebalancing by</th></tr>
@@ -162,17 +167,28 @@
         <tr><td>Traversal, height, size</td><td colspan="4">O(n) / O(h) for the recursive ones (the call stack); level-order O(n) / O(n) for its queue</td><td></td><td></td></tr>
       </table>
     </div>
-    <p class="small muted" style="margin-bottom:0">A (2,4)-tree and a red-black tree are the same thing wearing
-       different clothes: colour a 3-node's extra key red and you get one from the other. AVL trees are more rigidly
-       balanced (faster lookups), red-black/(2,4) trees do less work per update (faster writes).</p>
+    <p class="small muted" style="margin:.6rem 0 .4rem">A (2,4)-tree and a red-black tree are the same structure. Colour a 3-node's extra key red and you turn one into the other.</p>
+    <p class="small muted" style="margin-bottom:0">AVL trees stay more tightly balanced, so lookups are faster. Red-black and (2,4) trees do less work per update, so writes are faster.</p>
   </div>
     </div>
-  </details>
+  </section>
 
-</div>
+</main>
 
-<footer class="site"></footer>
-<script src="../assets/js/core.js?v=202610111800"></script>
-<script src="../assets/js/trees.js?v=202610111800"></script>
+<footer class="site">
+  <div class="wrap foot-in">
+    <p><span class="foot-name">DSA Visualizer</span></p>
+    <p class="keys">Keyboard: <kbd>Space</kbd> play or pause, <kbd>&larr;</kbd> <kbd>&rarr;</kbd> step</p>
+    <p>Contact: <a href="mailto:tuanson.dao@stonybrook.edu">tuanson.dao@stonybrook.edu</a></p>
+  </div>
+</footer>
+<script src="../assets/js/core.js?v=202611041200"></script>
+<script src="../assets/vendor/lz-string.min.js?v=202611041200"></script>
+<script src="../assets/js/motion.js?v=202611041200"></script>
+<script src="../assets/js/tutor.js?v=202611041200"></script>
+<script src="../assets/js/quiz.js?v=202611041200"></script>
+<script src="../assets/js/share.js?v=202611041200"></script>
+<script src="../assets/js/playground.js?v=202611041200"></script>
+<script src="../assets/js/trees.js?v=202611041200"></script>
 </body>
 </html>

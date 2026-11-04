@@ -449,7 +449,7 @@
       if (S.t === CAP - 1) { r.at("full").snap({ marks: range(0, S.t, "swap"), note: "<b>Stack overflow</b>: t = " + S.t + " = capacity − 1. A growable stack would double the array here." }); return r; }
       r.at("full^").snap({ note: "t = " + S.t + " &lt; " + (CAP - 1) + ": there is room." });
       S.t++;
-      r.at("inc").snap({ marks: { [S.t]: "cmp" }, note: "t ← " + S.t + ". The top of the stack is simply the highest used index." });
+      r.at("inc").snap({ marks: { [S.t]: "cmp" }, note: "t ← " + S.t + ". The top of the stack is the highest used index." });
       S.a[S.t] = v;
       r.at("write").snap({ marks: { [S.t]: "done" }, note: "data[" + S.t + "] ← " + v + ". <b>O(1)</b>, and nothing else moved." });
       return r;
@@ -462,7 +462,7 @@
       const v = S.a[S.t];
       r.at("save").snap({ marks: { [S.t]: "target" }, note: "x = data[" + S.t + "] = " + v + "." });
       S.a[S.t] = null;
-      r.at("clear").snap({ marks: { [S.t]: "swap" }, note: "Null out the slot so the old element can be garbage-collected." });
+      r.at("clear").snap({ marks: { [S.t]: "swap" }, note: "Clear the slot. Only t decides what is on the stack, so this just marks the slot as unused." });
       S.t--;
       r.at("dec").snap({ note: "t ← " + S.t + "." });
       r.at("ret").snap({ note: "Return " + v + ". <b>LIFO</b>: the last element pushed is the first to leave. <b>O(1)</b>." });
@@ -536,7 +536,7 @@
   /* ---- circular ---- */
   function cqEnqueue(Q, r, v) {
     r.code("cq_enqueue");
-    if (Q.size === CAP) { r.at("full").snap({ marks: range(0, CAP - 1, "swap"), note: "<b>Full</b>: size = capacity = " + CAP + ". Every slot really is in use." }); return; }
+    if (Q.size === CAP) { r.at("full").snap({ marks: range(0, CAP - 1, "swap"), note: "<b>Full</b>: size = capacity = " + CAP + ". Every slot is in use." }); return; }
     r.at("full^").snap({ note: "size = " + Q.size + " &lt; " + CAP + "." });
     const at = (Q.front + Q.size) % CAP;
     r.at("avail").snap({ marks: { [at]: "cmp" }, note: "avail = (front + size) mod " + CAP + " = (" + Q.front + " + " + Q.size + ") mod " + CAP + " = <b>" + at + "</b>" + (Q.front + Q.size >= CAP ? ": <b>wrapped</b> round to the start." : ".") });
@@ -858,12 +858,12 @@
      TABS / INIT
      ============================================================ */
   const NOTES = {
-    stack: "A <b>stack</b> is <b>LIFO (Last In, First Out)</b>: the element pushed most recently is the first one popped, like a pile of plates where you only touch the top plate. The array implementation keeps one index, <span class='mono'>t</span>, pointing at the top element (−1 when empty). push, pop and top all touch only <span class='mono'>data[t]</span>, so each is O(1) time and O(1) space. Nothing ever shifts, because the bottom of the stack never moves.",
-    aqueue: "A <b>queue</b> is <b>FIFO (First In, First Out)</b>: elements leave in the order they arrived, like a line at a checkout. Elements join at the <b>rear</b> (enqueue) and leave from the <b>front</b> (dequeue). The obvious array queue keeps the front at index 0. Enqueue writes at the end in O(1), but <b>every dequeue has to slide the remaining n − 1 elements forward</b>, which makes dequeue O(n) time. The captions count the shifts.",
-    cqueue: "Still a <b>FIFO</b> queue (First In, First Out), but stored in a <b>circular array</b> that never shifts. It keeps <span class='mono'>front</span> and <span class='mono'>size</span>, and computes the rear as <span class='mono'>(front + size) mod N</span>. When an index runs off the end it wraps to 0, so the array behaves like the ring on the right. Enqueue and dequeue are both O(1) time and O(1) space.",
-    deque: "A <b>deque</b> (double-ended queue, said “deck”) lets you add and remove at <em>both</em> ends, so it can act as a stack (LIFO) or a queue (FIFO). It is the same circular array, used at both ends. addFirst steps front <em>backwards</em> with <span class='mono'>(front − 1 + N) mod N</span>. Adding N keeps the result non-negative, since in Java −1 % N is −1. This is how Java's <span class='mono'>ArrayDeque</span> works.",
-    compare: "This tab is about <b>queues</b> only (stacks never need it, because a stack's bottom never moves). Both queues get exactly the same operations. The left one is a plain array: either every dequeue shifts, or the front drifts right and the freed slots are wasted. The right one is circular. Enqueue a few values, then alternate dequeue and enqueue: the left side's captions count the shifts. Then switch the left queue to “front moves, no wrap” and see it report full while it still has empty slots.",
-    app: "Two classic stack applications. Both work because a stack captures <em>nesting</em>: the most recently opened thing is the first one that has to be resolved.",
+    stack: "A <b>stack</b> is <b>LIFO (Last In, First Out)</b>. The element you pushed most recently is the first one popped, like a pile of plates where you only touch the top plate.</p><p class='blurb'>The array version keeps one index, <span class='mono'>t</span>, pointing at the top element (−1 when empty). push, pop and top only touch <span class='mono'>data[t]</span>, so each costs O(1) time and O(1) space.</p><p class='blurb'>Nothing ever shifts. The bottom of the stack never moves.",
+    aqueue: "A <b>queue</b> is <b>FIFO (First In, First Out)</b>. Elements leave in the order they arrived, like a line at a checkout. They join at the <b>rear</b> (enqueue) and leave from the <b>front</b> (dequeue).</p><p class='blurb'>The most direct array queue keeps the front at index 0. Enqueue writes at the end in O(1).</p><p class='blurb'>Dequeue is the problem. <b>Every dequeue slides the remaining n − 1 elements forward</b>, so it costs O(n) time. The captions count the shifts.",
+    cqueue: "Still a <b>FIFO</b> queue (First In, First Out), but this one sits in a <b>circular array</b> that never shifts.</p><p class='blurb'>It keeps <span class='mono'>front</span> and <span class='mono'>size</span>, and computes the rear as <span class='mono'>(front + size) mod N</span>. When an index runs off the end, it wraps to 0, so the array behaves like the ring on the right.</p><p class='blurb'>Enqueue and dequeue both cost O(1) time and O(1) space.",
+    deque: "A <b>deque</b> (double-ended queue, said “deck”) lets you add and remove at <em>both</em> ends. It can act as a stack (LIFO) or a queue (FIFO).</p><p class='blurb'>It's the same circular array, used at both ends. addFirst steps front <em>backwards</em> with <span class='mono'>(front − 1 + N) mod N</span>.</p><p class='blurb'>Adding N keeps the result non-negative, since in Java −1 % N is −1. Java's <span class='mono'>ArrayDeque</span> works this way.",
+    compare: "This tab covers <b>queues</b> only. Stacks never need it, because a stack's bottom never moves.</p><p class='blurb'>Both queues get the same operations. The left one is a plain array: either every dequeue shifts, or the front drifts right and wastes the freed slots. The right one is circular.</p><p class='blurb'>Enqueue a few values, then alternate dequeue and enqueue. The left side's captions count the shifts.</p><p class='blurb'>Then switch the left queue to “front moves, no wrap”. It reports full while it still has empty slots.",
+    app: "Two classic stack applications.</p><p class='blurb'>Both work because a stack captures <em>nesting</em>: the most recently opened thing is the first one you have to resolve.",
   };
   function load(r) { player.load(r.frames, true); }
 
