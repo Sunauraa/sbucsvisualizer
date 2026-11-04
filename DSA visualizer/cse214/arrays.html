@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arrays &amp; Lists</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202610300807">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=202610300807">
+</head>
+<body>
+
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="../index.html"><span class="brand-mark"><svg viewBox="0 0 20 20" aria-hidden="true"><g stroke="#fff" stroke-width="1.6"><line x1="10" y1="5" x2="5" y2="14.5"/><line x1="10" y1="5" x2="15" y2="14.5"/></g><g fill="#fff"><circle cx="10" cy="5" r="2.8"/><circle cx="5" cy="14.5" r="2.8"/><circle cx="15" cy="14.5" r="2.8"/></g></svg></span><span class="brand-name">DSA Visualizer</span></a>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">CSE 214</a><span class="sl" aria-hidden="true">/</span><span class="crumb-cur" aria-current="page">Arrays &amp; Lists</span></nav>
+    <div class="spacer"></div>
+  </div>
+</header>
+
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">CSE 214 &middot; Module 1</p>
+    <h1>Arrays &amp; Lists</h1>
+  </div>
+</section>
+
+<main id="content" class="wrap">
+  <h2 class="sr-only">Interactive visualizer</h2>
+  <div id="tabs" class="tabs"></div>
+
+  <div class="panel main">
+    <div class="toolbar">
+      <div class="field" data-tab="fixed dynamic single double circular"><label for="val">value</label><input type="number" step="any" id="val" placeholder="random"></div>
+      <div class="field" data-tab="fixed dynamic single double"><label for="idx">index</label><input type="number" id="idx" value="2" style="width:4.5rem"></div>
+      <div class="field" data-tab="grid"><label for="g-r">row</label><input type="number" id="g-r" value="2" style="width:4rem"></div>
+      <div class="field" data-tab="grid"><label for="g-c">col</label><input type="number" id="g-c" value="3" style="width:4rem"></div>
+      <div class="field" data-tab="grid"><label for="g-v">value</label><input type="number" step="any" id="g-v" placeholder="random" style="width:5.5rem"></div>
+      <div class="field" data-tab="dynamic">
+        <label for="growth">growth</label>
+        <select id="growth">
+          <option value="geo">×2 (geometric)</option>
+          <option value="arith">+2 (arithmetic)</option>
+        </select>
+      </div>
+      <div class="sep"></div>
+
+      <div class="toolbar" data-tab="fixed" style="margin:0">
+        <button id="fa-add">add(value)</button>
+        <button id="fa-insert">insert(i, value)</button>
+        <button id="fa-remove">remove(i)</button>
+        <button id="fa-get">get(i)</button>
+        <button id="fa-set">set(i, value)</button>
+        <button id="fa-find">indexOf(value)</button>
+        <button class="danger" id="fa-clear">clear</button>
+      </div>
+
+      <div class="toolbar" data-tab="dynamic" style="margin:0">
+        <button id="da-add">add(value)</button>
+        <button id="da-insert">insert(i, value)</button>
+        <button id="da-remove">remove(i)</button>
+        <button id="da-get">get(i)</button>
+        <button id="da-find">indexOf(value)</button>
+        <button class="danger" id="da-clear">clear</button>
+      </div>
+
+      <div class="toolbar" data-tab="grid" style="margin:0">
+        <button id="g-get">get(r, c)</button>
+        <button id="g-set">set(r, c, value)</button>
+        <button id="g-rowsum">rowSum(r)</button>
+        <button id="g-find">find(value)</button>
+        <button id="g-rowmajor">row-major traversal</button>
+        <button id="g-colmajor">column-major traversal</button>
+        <div class="sep"></div>
+        <div class="field"><label for="g-rows">rows</label><input type="number" id="g-rows" value="4" min="1" max="6" style="width:3.8rem"></div>
+        <div class="field"><label for="g-cols">cols</label><input type="number" id="g-cols" value="5" min="1" max="8" style="width:3.8rem"></div>
+        <button id="g-new">↻ new grid</button>
+      </div>
+
+      <div class="toolbar" data-tab="single double" style="margin:0">
+        <button id="ll-af">addFirst</button>
+        <button id="ll-al">addLast</button>
+        <button id="ll-ins">insert(i)</button>
+        <button id="ll-rf">removeFirst</button>
+        <button id="ll-rl">removeLast</button>
+        <button id="ll-rat">remove(i)</button>
+        <button id="ll-find">indexOf</button>
+        <button id="ll-rev" data-tab="single">reverse</button>
+        <button id="ll-back" data-tab="double">walk backward</button>
+        <button id="ll-rand">↻ random</button>
+        <button class="danger" id="ll-clear">clear</button>
+      </div>
+
+      <div class="toolbar" data-tab="circular" style="margin:0">
+        <button id="cl-af">addFirst</button>
+        <button id="cl-al">addLast</button>
+        <button id="cl-rf">removeFirst</button>
+        <button id="cl-rot">rotate</button>
+        <button id="cl-find">indexOf</button>
+        <button id="cl-rand">↻ random</button>
+        <button class="danger" id="cl-clear">clear</button>
+      </div>
+    </div>
+
+    <div id="code"></div>
+    <div class="stage" id="stage"></div>
+    <div id="player"></div>
+    <div id="legend"></div>
+  </div>
+
+
+  <section class="about" id="about" aria-labelledby="about-h">
+    <h2 id="about-h">Study notes</h2>
+    <div class="about-body">
+    <p class="intro">Same list, two different builds.</p>
+    <p class="intro">An array reaches any element in O(1) time, but it shifts elements to make room for an insert. A linked list splices a node in at O(1), but it has to walk the list to reach anything.</p>
+    <div id="notes"></div>
+  <div class="panel" style="margin-bottom:2rem">
+    <h3>Arrays vs linked lists: time / space of every operation</h3>
+    <p class="small muted" style="margin-top:-.3rem">Each cell is <b>time / extra space</b>, worst case, for a list of n elements.</p>
+    <div style="overflow-x:auto">
+      <table class="tbl" style="min-width:820px">
+        <tr><th>Operation</th><th>Fixed array</th><th>Dynamic array</th><th>Singly linked<br>(head + tail)</th><th>Doubly linked</th><th>Circularly linked<br>(tail only)</th></tr>
+        <tr><td>get(i) / set(i)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td></tr>
+        <tr><td>addFirst</td><td>O(n) / O(1)</td><td>O(n) / O(n)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+        <tr><td>addLast</td><td class="one">O(1) / O(1)<br><span class="small muted">error when full</span></td><td>O(n) / O(n)<br><span class="small muted">only when it resizes</span></td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+        <tr><td>removeFirst</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+        <tr><td>removeLast</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td>O(n) / O(1)</td><td class="one">O(1) / O(1)</td><td>O(n) / O(1)</td></tr>
+        <tr><td>insert / remove at i</td><td>O(n) / O(1)</td><td>O(n) / O(n)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td></tr>
+        <tr><td>indexOf(x)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td></tr>
+        <tr><td>rotate (front → back)</td><td>O(n) / O(1)</td><td>O(n) / O(1)</td><td>O(1) / O(1)</td><td>O(1) / O(1)</td><td class="one">O(1) / O(1), one pointer</td></tr>
+        <tr><td>capacity</td><td>fixed forever</td><td>grows by doubling</td><td>unbounded</td><td>unbounded</td><td>unbounded</td></tr>
+        <tr><td>memory for n elements</td><td class="one">O(capacity)</td><td class="one">O(n), up to 2n slots</td><td>O(n): value + 1 pointer each</td><td>O(n): value + 2 pointers each</td><td>O(n): value + 1 pointer each</td></tr>
+      </table>
+    </div>
+    <p class="small muted" style="margin:0 0 .5rem">A resize copies all n elements into a new array. That makes a dynamic array's worst-case add O(n) time and O(n) space, even though most adds cost O(1).</p>
+    <p class="small muted" style="margin:0 0 .5rem">Insert-at-index costs O(n) for <em>every</em> structure here. The array pays to shift. The list pays to walk.</p>
+    <p class="small muted" style="margin-bottom:0">A linked list wins only when you already hold a reference to the node, or when you work at the ends.</p>
+  </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap foot-in">
+    <p><span class="foot-name">DSA Visualizer</span></p>
+    <p class="keys">Keyboard: <kbd>Space</kbd> play or pause, <kbd>&larr;</kbd> <kbd>&rarr;</kbd> step</p>
+    <p>Contact: <a href="mailto:tuanson.dao@stonybrook.edu">tuanson.dao@stonybrook.edu</a></p>
+  </div>
+</footer>
+<script src="../assets/js/core.js?v=202610300807"></script>
+<script src="../assets/js/arrays.js?v=202610300807"></script>
+</body>
+</html>

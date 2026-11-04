@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recursion</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202610300807">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=202610300807">
+</head>
+<body>
+
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="../index.html"><span class="brand-mark"><svg viewBox="0 0 20 20" aria-hidden="true"><g stroke="#fff" stroke-width="1.6"><line x1="10" y1="5" x2="5" y2="14.5"/><line x1="10" y1="5" x2="15" y2="14.5"/></g><g fill="#fff"><circle cx="10" cy="5" r="2.8"/><circle cx="5" cy="14.5" r="2.8"/><circle cx="15" cy="14.5" r="2.8"/></g></svg></span><span class="brand-name">DSA Visualizer</span></a>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">CSE 214</a><span class="sl" aria-hidden="true">/</span><span class="crumb-cur" aria-current="page">Recursion</span></nav>
+    <div class="spacer"></div>
+  </div>
+</header>
+
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">CSE 214 &middot; Module 2</p>
+    <h1>Recursion</h1>
+  </div>
+</section>
+
+<main id="content" class="wrap">
+  <h2 class="sr-only">Interactive visualizer</h2>
+  <div id="fn-tabs" class="tabs"></div>
+
+  <div class="panel main">
+    <div class="toolbar">
+      <div class="toolbar" id="inputs" style="margin:0"></div>
+      <div class="sep"></div>
+      <div id="mode"></div>
+      <div class="sep"></div>
+      <button class="primary" id="run" type="button" title="Load the steps and play them">&#9654; Play</button>
+    </div>
+
+    <div data-tab="rec iter">
+      <div id="code"></div>
+      <div class="stage" id="main"></div>
+    </div>
+
+    <div class="compare" data-tab="cmp">
+      <div class="pane" id="pane-L">
+        <div class="pane-head"><h3>Recursive</h3><span class="tagline">one stack frame per call</span></div>
+        <div id="L-code"></div>
+        <div class="stage" id="L-stage"></div>
+        <div class="pane-note" id="L-note"></div>
+      </div>
+      <div class="pane" id="pane-R">
+        <div class="pane-head"><h3>Iterative</h3><span class="tagline">a loop, with an explicit stack if needed</span></div>
+        <div id="R-code"></div>
+        <div class="stage" id="R-stage"></div>
+        <div class="pane-note" id="R-note"></div>
+      </div>
+    </div>
+
+    <div id="player"></div>
+    <div id="legend"></div>
+  </div>
+
+
+  <section class="about" id="about" aria-labelledby="about-h">
+    <h2 id="about-h">Study notes</h2>
+    <div class="about-body">
+    <p class="intro">Watch the call stack grow and unwind next to a live recursion tree.</p>
+    <p class="intro">Every frame on the stack keeps its own copy of the variables. It waits for the call above it to return.</p>
+    <p class="intro">Then switch to <b>Iterative</b>, or run both <b>side by side</b>. You'll see the same answer computed with a loop, and what the loop saves.</p>
+    <div style="margin-top:1rem">
+      <div class="panel-title" style="margin-bottom:.4rem"><h3 id="fn-name">factorial(n)</h3></div>
+      <div class="complexity" id="fn-big" style="margin-bottom:.5rem"></div>
+      <div class="blurb" id="fn-blurb" style="margin:0"></div>
+    </div>
+  <div class="panel">
+    <h3>Recursion vs iteration</h3>
+    <div style="overflow-x:auto">
+      <table class="tbl" style="min-width:640px">
+        <tr><th>Function</th><th>Recursive: time / stack space</th><th>Iterative: time / extra space</th><th>How the loop version works</th></tr>
+        <tr><td>factorial</td><td>O(n) / O(n)</td><td>O(n) / <span style="color:var(--c-done)">O(1)</span></td><td>accumulate the product upwards</td></tr>
+        <tr><td>fib (naive)</td><td>O(2ⁿ) / O(n)</td><td><span style="color:var(--c-done)">O(n) / O(1)</span></td><td>keep only the last two values</td></tr>
+        <tr><td>fib (memoised)</td><td>O(n) / O(n)</td><td>O(n) / O(n)</td><td>fill the same table bottom-up</td></tr>
+        <tr><td>gcd</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--c-done)">O(1)</span></td><td>tail recursion → a while loop</td></tr>
+        <tr><td>fast power</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--c-done)">O(1)</span></td><td>read the bits of n</td></tr>
+        <tr><td>binary search</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--c-done)">O(1)</span></td><td>move lo / hi instead of recursing</td></tr>
+        <tr><td>Towers of Hanoi</td><td>O(2ⁿ) / O(n)</td><td>O(2ⁿ) / O(n)</td><td>an explicit stack of tasks</td></tr>
+        <tr><td>permutations</td><td>O(n·n!) / O(n)</td><td>O(n·n!) / O(n²)</td><td>an explicit stack of states</td></tr>
+      </table>
+    </div>
+    <p class="small muted" style="margin:.6rem 0 .4rem">All bounds are worst case. A recursive call's space is its stack, since each waiting frame holds its own variables.</p>
+    <p class="small muted" style="margin:0 0 .4rem">You can rewrite any recursion as a loop plus a stack. The machine runs it that way.</p>
+    <p class="small muted" style="margin:0 0 .4rem">Sometimes the recursive call is the last thing a function does. That's <b>tail recursion</b>, as in gcd. It doesn't need the stack, so a plain loop does the job in O(1) space.</p>
+    <p class="small muted" style="margin-bottom:0">Recursion wins on clarity for branching problems like Hanoi, trees and permutations. Iteration wins on space, and it won't hit <span class="mono">StackOverflowError</span> on deep inputs.</p>
+  </div>
+
+  <div class="panel" style="margin-bottom:2rem">
+    <h3>The three things every recursive method needs</h3>
+    <div class="grid cols-3">
+      <div>
+        <h4 style="font-size:.95rem;margin:.2rem 0 .3rem">1 &middot; A base case</h4>
+        <p class="small muted">At least one input it answers without recursing. Skip it and you get infinite recursion. In Java, that means <span class="mono">StackOverflowError</span>.</p>
+      </div>
+      <div>
+        <h4 style="font-size:.95rem;margin:.2rem 0 .3rem">2 &middot; Progress toward it</h4>
+        <p class="small muted">Every recursive call needs a strictly <em>smaller</em> input: n−1, n/2, one character shorter. Otherwise you never reach the base case.</p>
+      </div>
+      <div>
+        <h4 style="font-size:.95rem;margin:.2rem 0 .3rem">3 &middot; Correct combination</h4>
+        <p class="small muted">Trust that the recursive call already works (the "recursive leap of faith"). Then combine its answer correctly. Induction proves that trust is safe.</p>
+      </div>
+    </div>
+    <hr class="hr">
+    <h4 style="font-size:1rem;margin:0 0 .5rem">Reading the shape of the tree</h4>
+    <div style="overflow-x:auto">
+      <table class="tbl" style="min-width:600px">
+        <tr><th>Recurrence</th><th>Tree shape</th><th>Total time</th><th>Example</th></tr>
+        <tr><td>T(n) = T(n−1) + O(1)</td><td>a chain of depth n</td><td>O(n)</td><td>factorial, list length</td></tr>
+        <tr><td>T(n) = T(n/2) + O(1)</td><td>a chain of depth log n</td><td>O(log n)</td><td>binary search, fast power</td></tr>
+        <tr><td>T(n) = 2T(n/2) + O(n)</td><td>log n full levels of n work</td><td>O(n log n)</td><td>merge sort</td></tr>
+        <tr><td>T(n) = 2T(n−1) + O(1)</td><td>complete binary tree of depth n</td><td>O(2ⁿ)</td><td>Hanoi, naive Fibonacci</td></tr>
+        <tr><td>T(n) = 3T(2n/3) + O(1)</td><td>branching 3, shrinking slowly</td><td>O(n<sup>2.71</sup>)</td><td>two-third sort</td></tr>
+        <tr><td>T(n) = n·T(n−1) + O(1)</td><td>n! leaves</td><td>O(n·n!)</td><td>permutations</td></tr>
+      </table>
+    </div>
+  </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap foot-in">
+    <p><span class="foot-name">DSA Visualizer</span></p>
+    <p class="keys">Keyboard: <kbd>Space</kbd> play or pause, <kbd>&larr;</kbd> <kbd>&rarr;</kbd> step</p>
+    <p>Contact: <a href="mailto:tuanson.dao@stonybrook.edu">tuanson.dao@stonybrook.edu</a></p>
+  </div>
+</footer>
+<script src="../assets/js/core.js?v=202610300807"></script>
+<script src="../assets/js/recursion.js?v=202610300807"></script>
+</body>
+</html>

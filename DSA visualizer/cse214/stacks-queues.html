@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stacks, Queues &amp; Deques</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202610300807">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=202610300807">
+</head>
+<body>
+
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="../index.html"><span class="brand-mark"><svg viewBox="0 0 20 20" aria-hidden="true"><g stroke="#fff" stroke-width="1.6"><line x1="10" y1="5" x2="5" y2="14.5"/><line x1="10" y1="5" x2="15" y2="14.5"/></g><g fill="#fff"><circle cx="10" cy="5" r="2.8"/><circle cx="5" cy="14.5" r="2.8"/><circle cx="15" cy="14.5" r="2.8"/></g></svg></span><span class="brand-name">DSA Visualizer</span></a>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">CSE 214</a><span class="sl" aria-hidden="true">/</span><span class="crumb-cur" aria-current="page">Stacks, Queues &amp; Deques</span></nav>
+    <div class="spacer"></div>
+  </div>
+</header>
+
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">CSE 214 &middot; Module 3</p>
+    <h1>Stacks, Queues &amp; Deques</h1>
+  </div>
+</section>
+
+<main id="content" class="wrap">
+  <h2 class="sr-only">Interactive visualizer</h2>
+  <div id="tabs" class="tabs"></div>
+
+  <div class="panel main">
+    <div class="toolbar">
+      <div class="field" data-tab="stack aqueue cqueue deque compare"><label for="val">value</label><input type="number" step="any" id="val" placeholder="random"></div>
+      <div class="sep" data-tab="stack aqueue cqueue deque compare"></div>
+
+      <div class="toolbar" data-tab="stack" style="margin:0">
+        <button id="s-push">push</button>
+        <button id="s-pop">pop</button>
+        <button id="s-peek">top</button>
+        <button class="danger" id="s-clear">clear</button>
+      </div>
+      <div class="toolbar" data-tab="aqueue" style="margin:0">
+        <button id="a-enq">enqueue</button>
+        <button id="a-deq">dequeue</button>
+        <button class="danger" id="a-clear">clear</button>
+      </div>
+      <div class="toolbar" data-tab="cqueue" style="margin:0">
+        <button id="q-enq">enqueue</button>
+        <button id="q-deq">dequeue</button>
+        <button id="q-peek">first</button>
+        <button class="danger" id="q-clear">clear</button>
+      </div>
+      <div class="toolbar" data-tab="deque" style="margin:0">
+        <button id="k-af">addFirst</button>
+        <button id="k-al">addLast</button>
+        <button id="k-rf">removeFirst</button>
+        <button id="k-rl">removeLast</button>
+        <button class="danger" id="k-clear">clear</button>
+      </div>
+      <div class="toolbar" data-tab="compare" style="margin:0">
+        <button id="c-enq">enqueue on both</button>
+        <button id="c-deq">dequeue on both</button>
+        <div class="field">
+          <label for="c-left">left queue</label>
+          <select id="c-left">
+            <option value="shift">front pinned at 0 (shift)</option>
+            <option value="drift">front moves, no wrap</option>
+          </select>
+        </div>
+        <button class="danger" id="c-clear">reset both</button>
+      </div>
+      <div class="toolbar" data-tab="app" style="margin:0">
+        <input type="text" id="bstr" class="wide" value="{ a[ i ] + (b * c) }" aria-label="expression">
+        <button id="ap-brackets">check brackets</button>
+        <div class="sep"></div>
+        <input type="text" id="pstr" class="wide" value="3 4 + 2 * 7 -" aria-label="postfix expression">
+        <button id="ap-postfix">evaluate postfix</button>
+      </div>
+    </div>
+
+
+    <div data-tab="stack aqueue cqueue deque app">
+      <div id="code"></div>
+      <div class="stage" id="stage"></div>
+    </div>
+
+    <div class="compare" data-tab="compare">
+      <div class="pane" id="pane-L">
+        <div class="pane-head"><h3 id="L-title">Plain array queue</h3><span class="tagline" id="L-tag"></span></div>
+        <div id="L-code"></div>
+        <div class="stage" id="L-stage"></div>
+        <div class="pane-note" id="L-note"></div>
+      </div>
+      <div class="pane" id="pane-R">
+        <div class="pane-head"><h3>Circular array queue</h3><span class="tagline">indices wrap with mod</span></div>
+        <div id="R-code"></div>
+        <div class="stage" id="R-stage"></div>
+        <div class="pane-note" id="R-note"></div>
+      </div>
+    </div>
+
+    <div id="player"></div>
+    <div id="legend"></div>
+  </div>
+
+
+  <section class="about" id="about" aria-labelledby="about-h">
+    <h2 id="about-h">Study notes</h2>
+    <div class="about-body">
+    <p class="intro">Three lists that only let you touch their ends.</p>
+    <p class="intro">A <b>stack</b> is <b>LIFO</b> (Last In, First Out). A <b>queue</b> is <b>FIFO</b> (First In, First Out). A <b>deque</b> does both.</p>
+    <p class="intro">Each one sits on a plain array here. Working only at the ends keeps every operation at O(1) time.</p>
+    <div id="notes"></div>
+  <div class="row" style="margin-bottom:2rem">
+    <div class="col">
+      <div class="panel" style="height:100%">
+        <h3>Words to know</h3>
+        <dl class="kv defs">
+          <dt>LIFO</dt><dd><b>Last In, First Out.</b> The last element you add is the first one out. Think of a pile of plates: you add to the top and take from the top. Stacks are LIFO.</dd>
+          <dt>FIFO</dt><dd><b>First In, First Out.</b> Elements leave in the order they arrived, like a checkout line where the first person in line gets served first. Queues are FIFO.</dd>
+          <dt>stack</dt><dd>a LIFO list. <span class="mono">push(x)</span> adds on top, <span class="mono">pop()</span>
+            removes the top, <span class="mono">top()</span> (or peek) looks at it without removing it.</dd>
+          <dt>queue</dt><dd>a FIFO list. <span class="mono">enqueue(x)</span> joins at the <b>rear</b>,
+            <span class="mono">dequeue()</span> leaves from the <b>front</b>, <span class="mono">first()</span> looks at the front.</dd>
+          <dt>deque</dt><dd>“double-ended queue”, said “deck”. You can add and remove at both ends, so it works as a stack or as a queue.</dd>
+          <dt>overflow</dt><dd>adding to a structure that is already full (here, all 8 array slots are in use).</dd>
+          <dt>underflow</dt><dd>removing from (or looking into) an empty structure.</dd>
+        </dl>
+        <h4 style="margin-top:1.2rem">Queues only: why a circular array?</h4>
+        <p class="small muted" style="margin-bottom:.4rem">Stacks don't need one. A stack's bottom stays at index 0 forever.</p>
+        <p class="small muted">A queue is different. It removes from the front, so the front keeps moving. You can handle that three ways:</p>
+        <div style="overflow-x:auto">
+          <table class="tbl" style="min-width:470px">
+            <tr><th>Array queue strategy</th><th>enqueue</th><th>dequeue</th><th>problem</th></tr>
+            <tr><td>front pinned at index 0</td><td class="one">O(1)</td><td>O(n)</td><td>every dequeue shifts n − 1 elements</td></tr>
+            <tr><td>front index moves, no wrap</td><td class="one">O(1)</td><td class="one">O(1)</td><td>freed slots are never reused: “full” with empty space</td></tr>
+            <tr><td>circular (front + size, mod N)</td><td class="one">O(1)</td><td class="one">O(1)</td><td>none. Every slot is reusable.</td></tr>
+          </table>
+        </div>
+        <p class="small muted" style="margin:.6rem 0 .4rem">Times are worst case, and all three use O(1) extra space.</p>
+        <p class="small muted" style="margin:0 0 .4rem">The circular array lets the front index wrap from N − 1 back to 0. Tracking <span class="mono">size</span> alongside <span class="mono">front</span> is how you tell a full queue from an empty one.</p>
+        <p class="small muted" style="margin-bottom:0">The <b>Queue: plain vs circular</b> tab runs both side by side.</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel" style="height:100%">
+        <h3>Time and space of every operation</h3>
+        <p class="small muted" style="margin-top:-.3rem">Each cell is <b>time / extra space</b>, worst case. Every array here holds exactly 8 slots, so you can hit the “full” error.</p>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <tr><th></th><th>Stack (array)</th><th>Queue (circular)</th><th>Deque (circular)</th></tr>
+            <tr><td>add at front</td><td>–</td><td>–</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>add at rear / push</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>remove front</td><td>–</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>remove rear / pop</td><td class="one">O(1) / O(1)</td><td>–</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>peek (top / first)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
+            <tr><td>whole structure</td><td>– / O(N)</td><td>– / O(N)</td><td>– / O(N)</td></tr>
+          </table>
+        </div>
+        <p class="small muted" style="margin:.5rem 0 .4rem">The last row is the structure's own memory: an array of N slots.</p>
+        <p class="small muted" style="margin:0 0 .7rem">The bracket checker and postfix evaluator each take O(n) time and O(n) space for an input of n characters or tokens.</p>
+        <dl class="kv">
+          <dt>Stack</dt><dd>call frames, undo/redo, DFS, bracket matching, postfix evaluation</dd>
+          <dt>Queue</dt><dd>BFS, print/task scheduling, buffers, level-order traversal</dd>
+          <dt>Deque</dt><dd>sliding-window maximum, work stealing, palindrome checks</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap foot-in">
+    <p><span class="foot-name">DSA Visualizer</span></p>
+    <p class="keys">Keyboard: <kbd>Space</kbd> play or pause, <kbd>&larr;</kbd> <kbd>&rarr;</kbd> step</p>
+    <p>Contact: <a href="mailto:tuanson.dao@stonybrook.edu">tuanson.dao@stonybrook.edu</a></p>
+  </div>
+</footer>
+<script src="../assets/js/core.js?v=202610300807"></script>
+<script src="../assets/js/stacks.js?v=202610300807"></script>
+</body>
+</html>

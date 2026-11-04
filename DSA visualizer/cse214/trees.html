@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trees</title>
+<link rel="stylesheet" href="../assets/css/style.css?v=202610300807">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=202610300807">
+</head>
+<body>
+
+<a class="skip" href="#content">Skip to content</a>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="../index.html"><span class="brand-mark"><svg viewBox="0 0 20 20" aria-hidden="true"><g stroke="#fff" stroke-width="1.6"><line x1="10" y1="5" x2="5" y2="14.5"/><line x1="10" y1="5" x2="15" y2="14.5"/></g><g fill="#fff"><circle cx="10" cy="5" r="2.8"/><circle cx="5" cy="14.5" r="2.8"/><circle cx="15" cy="14.5" r="2.8"/></g></svg></span><span class="brand-name">DSA Visualizer</span></a>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">CSE 214</a><span class="sl" aria-hidden="true">/</span><span class="crumb-cur" aria-current="page">Trees</span></nav>
+    <div class="spacer"></div>
+  </div>
+</header>
+
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">CSE 214 &middot; Module 4</p>
+    <h1>Trees</h1>
+  </div>
+</section>
+
+<main id="content" class="wrap">
+  <h2 class="sr-only">Interactive visualizer</h2>
+  <div id="tabs" class="tabs"></div>
+
+  <div class="panel main">
+    <div class="toolbar">
+      <div class="field"><label for="val">key</label><input type="number" step="any" id="val" placeholder="random"></div>
+      <div class="field" id="del-with-wrap" style="display:none">
+        <label for="del-with">two-child delete uses</label>
+        <select id="del-with">
+          <option value="succ">successor</option>
+          <option value="pred">predecessor</option>
+        </select>
+      </div>
+      <div class="field" id="bt-order-wrap" style="display:none">
+        <label for="bt-order">order m</label><input type="number" id="bt-order" value="5" min="3" max="7" style="width:4rem">
+      </div>
+
+      <div class="toolbar" id="tools-trav" style="margin:0">
+        <button id="tr-pre">pre-order</button>
+        <button id="tr-in">in-order</button>
+        <button id="tr-post">post-order</button>
+        <button id="tr-level">level-order</button>
+        <button id="tr-height">height(root)</button>
+        <button id="tr-size">size(root)</button>
+        <div class="sep"></div>
+        <button id="tr-perfect">perfect tree</button>
+        <button id="tr-rand">↻ random</button>
+        <input type="text" id="tr-vals" class="wide" placeholder="50, 25, 75, ...">
+        <button id="tr-load">Build</button>
+      </div>
+
+      <div class="toolbar" id="tools-bst" style="margin:0;display:none">
+        <div id="bst-style" title="Run insert, search and delete as loops or as recursive calls"></div>
+        <button id="bst-insert">insert</button>
+        <button id="bst-search">search</button>
+        <button id="bst-delete">delete</button>
+        <button id="bst-pred">predecessor</button>
+        <button id="bst-succ">successor</button>
+        <div class="sep"></div>
+        <button id="bst-rand">↻ random</button>
+        <button id="bst-degenerate">insert 10,20,…,60 sorted</button>
+        <button class="danger" id="bst-clear">clear</button>
+      </div>
+
+      <div class="toolbar" id="tools-avl" style="margin:0;display:none">
+        <button id="avl-insert">insert</button>
+        <button id="avl-search">search</button>
+        <button id="avl-delete">delete</button>
+        <button id="avl-pred">predecessor</button>
+        <button id="avl-succ">successor</button>
+        <div class="sep"></div>
+        <button id="avl-rand">↻ random</button>
+        <button id="avl-degenerate">insert 10,20,…,60 sorted</button>
+        <button class="danger" id="avl-clear">clear</button>
+      </div>
+
+      <div class="toolbar" id="tools-t24" style="margin:0;display:none">
+        <button id="t24-insert">insert</button>
+        <button id="t24-search">search</button>
+        <button id="t24-delete">delete</button>
+        <div class="sep"></div>
+        <button id="t24-rand">↻ random</button>
+        <button id="t24-seq">insert 1…12</button>
+        <button class="danger" id="t24-clear">clear</button>
+      </div>
+
+      <div class="toolbar" id="tools-btree" style="margin:0;display:none">
+        <button id="btree-insert">insert</button>
+        <button id="btree-search">search</button>
+        <button id="btree-delete">delete</button>
+        <div class="sep"></div>
+        <button id="btree-rand">↻ random</button>
+        <button id="btree-seq">insert 1…12</button>
+        <button class="danger" id="btree-clear">clear</button>
+      </div>
+    </div>
+
+    <div id="code"></div>
+    <div class="stage" id="tree-view"></div>
+    <div id="output" style="margin-top:.8rem"></div>
+    <div id="player"></div>
+
+    <div id="legend"></div>
+  </div>
+
+
+  <section class="about" id="about" aria-labelledby="about-h">
+    <h2 id="about-h">Study notes</h2>
+    <div class="about-body">
+    <p class="intro">This module goes from plain traversals to self-balancing multiway trees.</p>
+    <p class="intro">Recursive operations show their call stack next to the tree. Every rotation, split, transfer and fusion gets its own frame, so you can step through each one.</p>
+    <div class="blurb" id="blurb"></div>
+  <div class="row" style="margin-bottom:1.1rem">
+    <div class="col">
+      <div class="panel" style="height:100%">
+        <h3>The four rotation cases</h3>
+        <p class="small muted">After an insert, exactly one node is the <em>lowest</em> unbalanced one. Look at the two steps down from it toward the new key. Their direction picks the rotation:</p>
+        <div style="overflow-x:auto">
+          <table class="tbl" style="min-width:430px">
+            <tr><th>Case</th><th>bf(node)</th><th>bf(child)</th><th>Fix</th></tr>
+            <tr><td>Left-Left</td><td>+2</td><td>≥ 0</td><td>single right rotation</td></tr>
+            <tr><td>Left-Right</td><td>+2</td><td>&lt; 0</td><td>left on child, then right</td></tr>
+            <tr><td>Right-Right</td><td>−2</td><td>≤ 0</td><td>single left rotation</td></tr>
+            <tr><td>Right-Left</td><td>−2</td><td>&gt; 0</td><td>right on child, then left</td></tr>
+          </table>
+        </div>
+        <p class="small muted" style="margin:.6rem 0 .4rem">A rotation is a local pointer swap: O(1) time and space. It never changes the in-order sequence, so the BST property survives.</p>
+        <p class="small muted" style="margin:0">Insert needs at most one rotation (a double counts as one). Delete may need one at every level.</p>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel" style="height:100%">
+        <h3>Overflow, underflow, and why heights match</h3>
+        <p class="small muted">Multiway trees never rotate. Instead of moving nodes around, they change how many keys a node holds. That keeps every leaf at the same depth:</p>
+        <dl class="kv">
+          <dt>overflow</dt><dd>too many keys after an insert → <b>split</b>, middle key goes up</dd>
+          <dt>underflow</dt><dd>too few keys after a delete → <b>transfer</b> from a sibling that has spare keys</dd>
+          <dt>no spare keys</dt><dd>→ <b>fusion</b>: merge two siblings plus the separator into one node</dd>
+          <dt>grows taller</dt><dd>only when the <em>root</em> splits, so all leaves rise together</dd>
+          <dt>grows shorter</dt><dd>only when a fusion empties the root</dd>
+        </dl>
+        <p class="small muted" style="margin:.6rem 0 .4rem">A (2,4)-tree's height sits between log₄n and log₂n.</p>
+        <p class="small muted" style="margin:0">A B-tree of order m has height ≤ log<sub>⌈m/2⌉</sub>n. With m = 100, a million keys fit in 3 levels.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:2rem">
+    <h3>All five, side by side: time / space</h3>
+    <p class="small muted" style="margin-top:-.3rem">Each operation cell is <b>time / extra space</b>, worst case, for n keys and height h. The recursive BST versions need O(h) space instead of O(1) because of their call stack.</p>
+    <div style="overflow-x:auto">
+      <table class="tbl" style="min-width:820px">
+        <tr><th>Structure</th><th>Search</th><th>Insert</th><th>Delete</th><th>Predecessor / successor</th><th>Height</th><th>Rebalancing by</th></tr>
+        <tr><td>Binary tree (any shape)</td><td>O(n) / O(h)</td><td>O(1) / O(1) if position known</td><td>O(n) / O(h)</td><td>O(n) / O(h)</td><td>n−1 … ⌊log₂n⌋</td><td>nothing</td></tr>
+        <tr><td>Binary search tree</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>up to n−1</td><td>nothing</td></tr>
+        <tr><td>AVL tree</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td>≤ 1.44 log₂n</td><td>rotations</td></tr>
+        <tr><td>(2,4)-tree</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td>log₄n … log₂n</td><td>split / transfer / fusion</td></tr>
+        <tr><td>B-tree, order m</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td>≤ log<sub>⌈m/2⌉</sub>n</td><td>split / transfer / fusion</td></tr>
+        <tr><td>Traversal, height, size</td><td colspan="4">O(n) / O(h) for the recursive ones (the call stack); level-order O(n) / O(n) for its queue</td><td></td><td></td></tr>
+      </table>
+    </div>
+    <p class="small muted" style="margin:.6rem 0 .4rem">A (2,4)-tree and a red-black tree are the same structure. Colour a 3-node's extra key red and you turn one into the other.</p>
+    <p class="small muted" style="margin-bottom:0">AVL trees stay more tightly balanced, so lookups are faster. Red-black and (2,4) trees do less work per update, so writes are faster.</p>
+  </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap foot-in">
+    <p><span class="foot-name">DSA Visualizer</span></p>
+    <p class="keys">Keyboard: <kbd>Space</kbd> play or pause, <kbd>&larr;</kbd> <kbd>&rarr;</kbd> step</p>
+    <p>Contact: <a href="mailto:tuanson.dao@stonybrook.edu">tuanson.dao@stonybrook.edu</a></p>
+  </div>
+</footer>
+<script src="../assets/js/core.js?v=202610300807"></script>
+<script src="../assets/js/trees.js?v=202610300807"></script>
+</body>
+</html>
