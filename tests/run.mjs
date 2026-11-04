@@ -290,81 +290,6 @@ if (want("quiz")) {
   }
 }
 
-/* ---------- shared links ---------- */
-if (want("share")) {
-  console.log("share");
-  /* for each page: do something, copy the link, open it fresh, and expect the same picture on the same frame */
-  const fingerprint = (page) => page.evaluate(() => {
-    const p = DSA._players[0];
-    const stage = document.querySelector(".panel.main").cloneNode(true);
-    stage.querySelectorAll(".code-dock, .toolbar, .learn-panel, .player, #legend").forEach((n) => n.remove());
-    return { i: p.index, n: p.frames.length, html: stage.innerHTML.replace(/\s+/g, " "), note: p.frames[p.index] && p.frames[p.index].note, lang: DSA.lang() };
-  });
-  for (const name of PAGES) {
-    const { page, ctx, errors } = await openPage(name);
-    await page.evaluate(async () => {
-      const tabs = Array.from(document.querySelectorAll(".tabs button"));
-      if (tabs.length > 1) tabs[1].click();
-      await new Promise((r) => setTimeout(r, 20));
-      const buttons = () => Array.from(document.querySelectorAll(".panel.main .toolbar button")).filter((b) => b.offsetParent && !b.matches(".danger, [data-tool]"));
-      /* a random structure if the page has one (proves the seed works), then an operation */
-      const rnd = buttons().find((b) => /random|new array/i.test(b.textContent));
-      if (rnd) rnd.click();
-      await new Promise((r) => setTimeout(r, 20));
-      const op = buttons().find((b) => !/random|new array|clear|load/i.test(b.textContent));
-      if (op) op.click();
-      await new Promise((r) => setTimeout(r, 20));
-      const p = DSA._players[0];
-      p.pause();
-      p.noMotion = true;
-      p.goto(Math.floor(p.frames.length / 2));
-      p.noMotion = false;
-    });
-    await page.waitForTimeout(600);
-    await page.evaluate(() => DSA._players[0].pause());
-    const a = await fingerprint(page);
-    const link = await page.evaluate(() => DSA.share.link());
-    ok(link.url && link.url.length < 12000, name + " makes a link", link);
-    if (link.url) {
-      const ctx2 = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-      const page2 = await ctx2.newPage();
-      const errs2 = [];
-      page2.on("pageerror", (e) => errs2.push(e.message));
-      await page2.goto(link.url);
-      await page2.waitForLoadState("load");
-      await page2.waitForTimeout(900);
-      const b = await fingerprint(page2);
-      ok(a.i === b.i && a.n === b.n, name + " link reopens the same frame", { a: [a.i, a.n], b: [b.i, b.n] });
-      ok(a.note === b.note, name + " link reopens the same caption", { a: a.note, b: b.note });
-      ok(a.html === b.html, name + " link reopens the same picture");
-      ok(!errs2.length, name + " link has no errors", errs2);
-      await ctx2.close();
-    }
-    ok(!errors.length, name + " share has no errors", errors);
-    await ctx.close();
-  }
-  /* graphs: canvas edits are not form controls */
-  {
-    const { page, ctx } = await openPage("graphs");
-    const svg = page.locator("#gr-canvas svg");
-    const box = await svg.boundingBox();
-    await page.mouse.click(box.x + box.width * 0.93, box.y + box.height * 0.08);    /* add a vertex in an empty corner */
-    await page.waitForTimeout(30);
-    await page.click("#btn-bfs");
-    await page.waitForTimeout(30);
-    const before = await page.evaluate(() => { const p = DSA._players[0]; p.pause(); p.noMotion = true; p.goto(3); p.noMotion = false; return { n: document.querySelectorAll("#gr-canvas svg .node-c").length, note: p.frames[3].note, adjlist: document.querySelector("#adjlist").textContent, link: DSA.share.link() }; });
-    const ctx2 = await browser.newContext();
-    const page2 = await ctx2.newPage();
-    await page2.goto(before.link.url);
-    await page2.waitForLoadState("load");
-    await page2.waitForTimeout(600);
-    const after = await page2.evaluate(() => ({ n: document.querySelectorAll("#gr-canvas svg .node-c").length, note: DSA._players[0].frames[3] && DSA._players[0].frames[3].note, adjlist: document.querySelector("#adjlist").textContent }));
-    ok(after.n === before.n && after.adjlist === before.adjlist && after.note === before.note, "a hand-edited graph survives a link", { before, after });
-    await ctx2.close();
-    await ctx.close();
-  }
-}
-
 /* ---------- the Why? button: every line of every listing has something to say ---------- */
 let whyStats = null;
 if (want("why")) {
@@ -692,18 +617,7 @@ if (want("playground")) {
   ok(/for-each/.test(why[2]), "Why? recognises for-each", why[2]);
   ok(/method starts/.test(why[3]), "Why? recognises a constructor being entered", why[3]);
   ok(/finished/.test(why[4]), "Why? recognises the end of a method", why[4]);
-  /* a link carries the code, reopens the panel, and lands on the same step */
   await setCode('public class Main {\n  public static void main(String[] args) {\n    int x = 41;\n    x++;\n    System.out.println("from a link " + x);\n  }\n}\n');
-  await page.click("#pg-run");
-  await page.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 3 && !document.querySelector("#pg-run").disabled; }, null, { timeout: 8000 });
-  const link = await page.evaluate(`(() => { const p = ${pgPlayer}; p.pause(); p.goto(p.frames.length - 1); return { index: p.index, link: DSA.share.link() }; })()`);
-  const ctx2 = await browser.newContext();
-  const page2 = await ctx2.newPage();
-  await page2.goto(link.link.url);
-  await page2.waitForLoadState("load");
-  await page2.waitForFunction(() => document.querySelector("#pg-out") && /from a link 42/.test(document.querySelector("#pg-out").textContent), null, { timeout: 8000 }).catch(() => {});
-  ok(/from a link 42/.test(await page2.locator("#pg-out").textContent().catch(() => "")), "a link reopens the playground, with the code and the step");
-  await ctx2.close();
   /* the student's code is still there after a reload */
   await page.reload();
   await page.waitForLoadState("load");
@@ -737,6 +651,90 @@ if (want("playground")) {
     ok(!t.errors.length, "tombstone reuse has no errors", t.errors);
     await t.ctx.close();
   }
+}
+
+/* ---------- the page moves once, when a run starts, and never during one ---------- */
+if (want("scroll")) {
+  console.log("scrolling");
+  const OPS = { sorting: /Run sort/, trees: /pre-order/, graphs: /BFS/, "stacks-queues": /^push$/, recursion: /^▶ Play$/ };
+  const yNow = (page) => page.evaluate(() => Math.round(scrollY));
+  for (const [mod, op] of Object.entries(OPS)) {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    await page.goto(BASE + "/cse214/" + mod + ".html", { waitUntil: "load" });
+    await page.waitForFunction(() => document.documentElement.classList.contains("ready"));
+    await page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; });
+    await page.locator(".code-hide:visible").first().click();
+    /* a real click at the top of the page: the code has pushed the stage below the fold */
+    await page.evaluate(() => scrollTo(0, 0));
+    const btn = page.locator("main button:visible").filter({ hasText: op }).first();
+    const box = await btn.boundingBox();
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await page.waitForTimeout(150);
+    const seen = await page.evaluate(() => {
+      const s = [...document.querySelectorAll(".stage")].find((x) => x.offsetParent);
+      const r = s.getBoundingClientRect();
+      return r.top >= 0 && r.top < innerHeight;
+    });
+    ok(seen, mod + ": starting a run brings the picture on screen");
+    /* now the reader looks somewhere else and the run keeps playing */
+    const y0 = await page.evaluate(() => {
+      const p = DSA._players.find((x) => x.isVisible());
+      p.speed = 4;
+      p.goto(0);
+      p.play();
+      scrollTo(0, scrollY + 500);
+      return Math.round(scrollY);
+    });
+    await page.waitForTimeout(1500);
+    ok((await yNow(page)) === y0, mod + ": playing never moves the page", { y0, y: await yNow(page) });
+    /* a quiz question stops the run but leaves the page alone */
+    const y1 = await page.evaluate(() => {
+      const p = DSA._players.find((x) => x.isVisible());
+      p.pause();
+      [...p.tools.querySelectorAll("button")].find((b) => b.textContent === "Quiz me").click();
+      scrollTo(0, 0);
+      p.goto(0);
+      p.play();
+      return Math.round(scrollY);
+    });
+    await page.waitForFunction(() => { const q = document.querySelector(".learn-panel.quiz"); return q && !q.hidden; }, null, { timeout: 8000 });
+    ok((await yNow(page)) === y1, mod + ": a quiz question does not move the page", { y1, y: await yNow(page) });
+    await page.close();
+  }
+}
+
+/* ---------- all the code: every function of a module can be read, whichever one is running ---------- */
+if (want("fullcode")) {
+  console.log("all the code panel");
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  await page.goto(BASE + "/cse214/trees.html", { waitUntil: "load" });
+  await page.waitForFunction(() => document.documentElement.classList.contains("ready"));
+  const box = () => page.evaluate(() => {
+    const pre = [...document.querySelectorAll(".full-code pre")].find((p) => p.offsetParent);
+    return pre ? { text: pre.textContent, shaded: [...pre.querySelectorAll(".ln.on")].map((l) => l.textContent).join("\n") } : null;
+  });
+  ok((await box()) === null, "the box stays out of the way until the code is opened");
+  await page.locator(".code-hide:visible").first().click();
+  await page.locator('.tabs button:has-text("AVL")').click();
+  let b1 = await box();
+  ok(b1 && /rotateLeft\(x\)/.test(b1.text) && /bstDelete\(k\)/.test(b1.text) && /delete\(k\)/.test(b1.text), "the AVL tab shows every AVL function, helpers too");
+  ok(/rebalance\(n\)/.test(b1.shaded) && /bstInsert/.test(b1.shaded) && !/bstDelete\(k\):/.test(b1.shaded), "the running function is the one shaded");
+  ok(b1.text.split("rebalance(n):").length === 2, "a helper two listings share appears once");
+  ok(!/@@/.test(b1.text), "no line markers leak into the code");
+  const pick = page.locator(".cls-pick:visible").first();
+  await pick.selectOption({ label: "class BTree" });
+  ok(/fuseWithSibling\(\)/.test((await box()).text), "another structure can be picked");
+  await page.locator('.lang-switch button[data-lang="java"]:visible').first().click();
+  const b2 = await box();
+  ok(/^import java\.util\.\*;/.test(b2.text) && /public class BTree \{/.test(b2.text) && /}\s*$/.test(b2.text), "Java shows a whole class");
+  await pick.selectOption({ label: "class BinarySearchTree" });
+  const b3 = await box();
+  ok(/\/\/ delete\(k\) · BST, successor/.test(b3.text) && /\/\/ delete\(k\) · BST, predecessor/.test(b3.text), "two versions of a method are both shown, each named");
+  await page.locator(".cls-toggle:visible").first().click();
+  ok((await box()) === null, "it can be hidden");
+  await page.locator(".cls-toggle:visible").first().click();
+  ok((await box()) !== null, "and shown again");
+  await page.close();
 }
 
 /* ---------- the real JVM: the playground must print exactly what Java prints ---------- */
@@ -824,7 +822,74 @@ class MyErr extends RuntimeException { MyErr(String m) { super(m); } }`)]);
     }
     fs.rmSync(dir, { recursive: true, force: true });
     console.log("  compared " + programs.length + " programs");
+    await fullCodeSuite(execFileSync, os);
   }
+}
+/* "All the code" must be real: javac finds any function that is called but not shown, and the
+   structures whose helpers no animation runs are then exercised against java.util. */
+async function fullCodeSuite(execFileSync, os) {
+  console.log("all the code: javac and behaviour");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dsa-full-"));
+  const sigOf = (c) => {
+    const t = (c.lines.find((l) => l.includes("(")) || "").replace(/\/\/.*$/, "");
+    const m = /(\w+)\s*\(([^)]*)\)/.exec(t);
+    return m ? m[1] + "(" + m[2].split(",").map((x) => x.trim().split(/\s+/)[0]).join(",") + ")" : c.lines[0];
+  };
+  const drivers = JSON.parse(fs.readFileSync(path.join(ROOT, "tests", "full-code-drivers.json"), "utf8"));
+  let compiled = 0, ran = 0;
+  for (const mod of ["arrays", "stacks-queues", "trees", "hashtables", "priority-queues", "graphs", "sorting", "recursion"]) {
+    const page = await browser.newPage();
+    await page.goto(BASE + "/cse214/" + mod + ".html", { waitUntil: "load" });
+    await page.waitForFunction(() => window.DSA && DSA._docks && DSA._docks.length > 0);
+    const groups = await page.evaluate(() => {
+      const d = DSA._docks[0];
+      return d.groups.map((g, i) => ({ i, name: g.name, label: g.title || g.name, isClass: !!g.java, chunks: DSA.fullChunks(g, d.listings, "java") }));
+    });
+    const orphans = await page.evaluate(() => {
+      const d = DSA._docks[0];
+      const inGroup = (g, k) => { const l = g.methods || g.keys; return l instanceof RegExp ? l.test(k) : (l || []).includes(k); };
+      return Object.keys(d.listings).filter((k) => !d.groups.some((g) => inGroup(g, k)));
+    });
+    ok(orphans.length === 0, mod + ": every function is in the full code", orphans);
+    for (const g of groups) {
+      /* two versions of one method can't share a class, so compile one class per version */
+      const bySig = {};
+      g.chunks.forEach((c) => (bySig[sigOf(c)] = bySig[sigOf(c)] || []).push(c));
+      const versions = Math.max(1, ...Object.values(bySig).map((a) => a.length));
+      for (let v = 0; v < versions; v++) {
+        const keep = g.chunks.filter((c) => { const a = bySig[sigOf(c)]; return a[v % a.length] === c; });
+        const src = await page.evaluate(([i, keep]) => { const d = DSA._docks[0]; return DSA.fullSource(d.groups[i], d.listings, "java", keep); }, [g.i, keep]);
+        let text = src.map((l) => l.replace(/\s*@@[\w,-]+\s*$/, "")).join("\n").replace(/^import java\.util\.\*;\n/, "");
+        const driver = drivers[mod + "/" + g.label];
+        const main = driver ? "  public static void main(String[] args) {\n" + driver.join("\n") + "\n  }\n" : "";
+        if (g.isClass) text = text.replace(/\}\s*$/, main + "}\n");
+        else text = "public class " + g.name + " {\n" + text + "\n" + main + "}\n";
+        text = "import java.util.*;\n" + text;
+        const sub = fs.mkdtempSync(path.join(dir, "g"));
+        fs.writeFileSync(path.join(sub, g.name + ".java"), text);
+        const label = mod + " / " + g.label + (versions > 1 ? " (version " + (v + 1) + ")" : "");
+        try {
+          execFileSync("javac", ["-nowarn", "-Xlint:none", g.name + ".java"], { cwd: sub, stdio: "pipe" });
+          compiled++;
+          ok(true, label + " compiles");
+        } catch (e) {
+          ok(false, label + " compiles", String(e.stderr || e.message).split("\n").filter((l) => /error:|symbol:/.test(l)).slice(0, 8).join(" | "));
+          continue;
+        }
+        if (!driver) continue;
+        try {
+          const out = execFileSync("java", ["-ea", "-cp", ".", g.name], { cwd: sub, stdio: "pipe", timeout: 30000 }).toString();
+          ran++;
+          ok(/^ok\b/m.test(out), label + " behaves correctly", out.slice(0, 200));
+        } catch (e) {
+          ok(false, label + " behaves correctly", String(e.stderr || e.message).slice(0, 400));
+        }
+      }
+    }
+    await page.close();
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
+  console.log("  compiled " + compiled + " classes, ran " + ran);
 }
 function firstDiff(a, b) {
   const A = a.split("\n"), B = b.split("\n");
@@ -888,51 +953,6 @@ if (want("xss")) {
     await c.close();
   }
   bareX.close();
-  /* a crafted link: the page must refuse to act on anything outside its own controls */
-  const { page, ctx } = await openPage("sorting");
-  const crafted = await page.evaluate(() => {
-    const enc = (o) => location.pathname + "#s=" + LZString.compressToEncodedURIComponent(JSON.stringify(o));
-    return [
-      enc({ v: 1, seed: 1, acts: [{ t: "c", q: ".fb-btn" }], players: [0] }),
-      enc({ v: 1, seed: 1, acts: [{ t: "c", q: "a" }], players: [0] }),
-      enc({ v: 1, seed: 1, acts: [{ t: "i", q: "#custom", v: '<img src=x onerror="window.__xss=1">' }, { t: "c", q: "#btn-load" }], players: [0] }),
-      enc({ v: 1, seed: 1, acts: "nope", players: "nope", lang: '"]bad' }),
-      enc({ v: 1, seed: 1, acts: [{ t: "s", q: "__proto__", v: {} }], players: [999999, -1, "x"] }),
-      enc({ v: 1, seed: "x", acts: new Array(5000).fill({ t: "c", q: "#btn-new" }), players: [] }),
-      "not-base64-at-all",
-    ];
-  });
-  for (const c of crafted) {
-    const x = await browser.newContext();
-    const pg = await x.newPage();
-    const errs = [];
-    pg.on("pageerror", (e) => errs.push(e.message));
-    const url = c.startsWith("not-") ? BASE + "/cse214/sorting.html#s=" + c : BASE + c;
-    await pg.goto(url);
-    await pg.waitForLoadState("load");
-    await pg.waitForTimeout(350);
-    const st = await pg.evaluate(() => ({ url: location.pathname, fired: !!window.__xss, working: DSA._players[0].frames.length >= 1 }));
-    ok(st.url.endsWith("sorting.html") && !st.fired && st.working && !errs.length, "a crafted link does no harm: " + c.slice(-24), { st, errs });
-    await x.close();
-  }
-  await ctx.close();
-  /* a graph from a link is checked before it is used */
-  {
-    const { page: gp, ctx: gc } = await openPage("graphs");
-    const url = await gp.evaluate(() => location.pathname + "#s=" + LZString.compressToEncodedURIComponent(JSON.stringify({ v: 1, seed: 1, acts: [{ t: "s", q: "graph", v: { pos: [{ x: "<b>", y: null }], adj: [[99, "x"]] } }], players: [0] })));
-    const x = await browser.newContext();
-    const pg = await x.newPage();
-    const errs = [];
-    pg.on("pageerror", (e) => errs.push(e.message));
-    await pg.goto(BASE + url);
-    await pg.waitForLoadState("load");
-    await pg.waitForTimeout(350);
-    await pg.click("#btn-bfs").catch(() => {});
-    await pg.waitForTimeout(50);
-    ok(!errs.length, "a malformed graph in a link causes no errors", errs);
-    await x.close();
-    await gc.close();
-  }
 }
 
 /* ---------- accessibility: axe on every page, in the states students actually see ---------- */

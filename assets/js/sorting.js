@@ -650,7 +650,22 @@
     counting: sortSpec("Counts how many times each key occurs, turns the counts into positions, then places every key directly, no comparisons. Stable.", "O(n + k): k = max − min", "O(n + k): C and B", { params: M("A") + ": integer keys (negative is fine; a decimal makes it throw)", errors: "IllegalArgumentException if a key is not an integer" }),
   });
   D.sortAlgos = ALGO;   /* the growth-chart test checks its operation counts against these */
-  const dock = D.CodeDock("#code", LISTINGS);
+  const dock = D.CodeDock("#code", LISTINGS, { full: [{ name: "Sorts", title: "All the sorts", keys: Object.keys(LISTINGS), helpers: [{
+    pseudo: ["min(A):                       // used by counting sort", "  return the smallest value in A", "", "max(A):                       // used by counting sort", "  return the largest value in A"],
+    java: [
+      "static double min(double[] a) { // used by countingSort",
+      "  double m = a[0];",
+      "  for (double x : a) if (x < m) m = x;",
+      "  return m;",
+      "}",
+      "",
+      "static double max(double[] a) { // used by countingSort",
+      "  double m = a[0];",
+      "  for (double x : a) if (x > m) m = x;",
+      "  return m;",
+      "}",
+    ],
+  }] }] });
   const player = new D.Player({
     mount: "#player",
     code: dock,

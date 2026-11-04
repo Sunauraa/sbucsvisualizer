@@ -1,0 +1,141 @@
+{
+ "trees/BinarySearchTree": [
+  "    Random r = new Random(3); TreeSet<Double> want = new TreeSet<>(); BinarySearchTree t = new BinarySearchTree();",
+  "    for (int i = 0; i < 4000; i++) { double k = r.nextInt(200);",
+  "      if (r.nextBoolean()) { t.insert(k); want.add(k); } else { t.delete(k); want.remove(k); }",
+  "      if ((t.search(k) != null) != want.contains(k)) throw new AssertionError(\"search \" + k);",
+  "      ArrayDeque<Node> st = new ArrayDeque<>(); if (t.root != null) { st.push(t.root); if (t.root.parent != null) throw new AssertionError(\"root parent\"); }",
+  "      int count = 0; while (!st.isEmpty()) { Node n = st.pop(); count++;",
+  "        if (n.left != null) { if (n.left.parent != n) throw new AssertionError(\"left parent\"); st.push(n.left); }",
+  "        if (n.right != null) { if (n.right.parent != n) throw new AssertionError(\"right parent\"); st.push(n.right); } }",
+  "      if (count != want.size()) throw new AssertionError(\"size \" + count); }",
+  "    /* the recursive family, on its own tree */",
+  "    BinarySearchTree q = new BinarySearchTree(); TreeSet<Double> w2 = new TreeSet<>();",
+  "    for (int i = 0; i < 4000; i++) { double k = r.nextInt(200);",
+  "      if (r.nextBoolean()) { q.root = q.insert(q.root, k); w2.add(k); } else { q.root = q.delete(q.root, k); w2.remove(k); }",
+  "      if ((q.search(q.root, k) != null) != w2.contains(k)) throw new AssertionError(\"rec search \" + k); }",
+  "    System.out.println(\"ok\");"
+ ],
+ "trees/AVLTree": [
+  "    Random r = new Random(7); TreeSet<Double> want = new TreeSet<>(); AVLTree t = new AVLTree();",
+  "    for (int i = 0; i < 6000; i++) { double k = r.nextInt(400);",
+  "      if (r.nextBoolean()) { t.insert(k); want.add(k); } else { t.delete(k); want.remove(k); }",
+  "      ArrayList<Double> got = new ArrayList<>();",
+  "      ArrayDeque<Node> st = new ArrayDeque<>(); Node c = t.root;",
+  "      if (c != null && c.parent != null) throw new AssertionError(\"root parent\");",
+  "      while (c != null || !st.isEmpty()) { while (c != null) { st.push(c); c = c.left; } c = st.pop(); got.add(c.key);",
+  "        int hl = c.left == null ? 0 : c.left.height, hr = c.right == null ? 0 : c.right.height;",
+  "        if (c.height != 1 + Math.max(hl, hr)) throw new AssertionError(\"height at \" + c.key);",
+  "        if (Math.abs(hl - hr) > 1) throw new AssertionError(\"unbalanced at \" + c.key);",
+  "        if (c.left != null && c.left.parent != c) throw new AssertionError(\"left parent\");",
+  "        if (c.right != null && c.right.parent != c) throw new AssertionError(\"right parent\");",
+  "        c = c.right; }",
+  "      if (!got.equals(new ArrayList<>(want))) throw new AssertionError(\"keys differ at op \" + i); }",
+  "    System.out.println(\"ok\");"
+ ],
+ "trees/BTree": [
+  "    for (int order : new int[]{4, 5, 3, 6}) {",
+  "      Random r = new Random(order); TreeSet<Double> want = new TreeSet<>(); BTree t = new BTree(order);",
+  "      for (int i = 0; i < 6000; i++) { double k = r.nextInt(300);",
+  "        if (r.nextInt(100) < 55) { t.insert(k); want.add(k); } else { t.delete(k); want.remove(k); }",
+  "        if ((t.search(k) != null) != want.contains(k)) throw new AssertionError(\"search \" + k);",
+  "        ArrayList<Double> got = new ArrayList<>(); int[] leaf = {-1};",
+  "        if (t.root != null) { if (t.root.parent != null) throw new AssertionError(\"root parent\"); walk(t, t.root, 0, leaf, got); }",
+  "        if (!got.equals(new ArrayList<>(want))) throw new AssertionError(\"keys differ at op \" + i + \" order \" + order); } }",
+  "    System.out.println(\"ok\");",
+  "  }",
+  "  static void walk(BTree t, BTree.BNode n, int depth, int[] leaf, List<Double> out) {",
+  "    if (n != t.root && n.keys.size() < t.MIN) throw new AssertionError(\"underflow\");",
+  "    if (n.keys.size() > t.M - 1) throw new AssertionError(\"overflow\");",
+  "    if (n.isLeaf()) { if (leaf[0] < 0) leaf[0] = depth; if (leaf[0] != depth) throw new AssertionError(\"leaf depth\"); out.addAll(n.keys); return; }",
+  "    if (n.kids.size() != n.keys.size() + 1) throw new AssertionError(\"kids count\");",
+  "    for (int i = 0; i < n.kids.size(); i++) { BTree.BNode c = n.kids.get(i);",
+  "      if (c.parent != n) throw new AssertionError(\"kid parent\");",
+  "      walk(t, c, depth + 1, leaf, out);",
+  "      if (i < n.keys.size()) out.add(n.keys.get(i)); }"
+ ],
+ "hashtables/class ChainingHashTable · integer keys": [
+  "    Random r = new Random(11); HashSet<Integer> want = new HashSet<>(); ChainingHashTable t = new ChainingHashTable(11);",
+  "    for (int i = 0; i < 5000; i++) { int k = r.nextInt(600) - 300;",
+  "      if (r.nextInt(100) < 60) { if (t.n >= t.m / 2) t.rehash(); t.put(k); want.add(k); }",
+  "      else { t.remove(k); want.remove(k); }",
+  "      if (t.get(k) != want.contains(k)) throw new AssertionError(\"get \" + k + \" at \" + i);",
+  "      if (t.n != want.size()) throw new AssertionError(\"n = \" + t.n + \", want \" + want.size()); }",
+  "    for (int x : want) if (!t.get(x)) throw new AssertionError(\"lost \" + x);",
+  "    if (t.m < 11 || !isPrime(t.m)) throw new AssertionError(\"m \" + t.m);",
+  "    System.out.println(\"ok\");"
+ ],
+ "hashtables/class ChainingHashTable · String keys": [
+  "    Random r = new Random(11); HashSet<String> want = new HashSet<>(); ChainingHashTable t = new ChainingHashTable(11);",
+  "    for (int i = 0; i < 5000; i++) { String k = \"key\" + (r.nextInt(300) * 7919 - 900000);",
+  "      if (r.nextInt(100) < 60) { if (t.n >= t.m / 2) t.rehash(); t.put(k); want.add(k); }",
+  "      else { t.remove(k); want.remove(k); }",
+  "      if (t.get(k) != want.contains(k)) throw new AssertionError(\"get \" + k + \" at \" + i);",
+  "      if (t.n != want.size()) throw new AssertionError(\"n = \" + t.n + \", want \" + want.size()); }",
+  "    for (String x : want) if (!t.get(x)) throw new AssertionError(\"lost \" + x);",
+  "    if (t.m < 11 || !isPrime(t.m)) throw new AssertionError(\"m \" + t.m);",
+  "    System.out.println(\"ok\");"
+ ],
+ "hashtables/class LinearProbingTable · integer keys": [
+  "    Random r = new Random(11); HashSet<Integer> want = new HashSet<>(); LinearProbingTable t = new LinearProbingTable(11);",
+  "    for (int i = 0; i < 5000; i++) { int k = r.nextInt(600) - 300;",
+  "      if (r.nextInt(100) < 60) { if (t.n >= t.m / 2) t.rehash(); t.put(k); want.add(k); }",
+  "      else { t.remove(k); want.remove(k); }",
+  "      if (t.get(k) != want.contains(k)) throw new AssertionError(\"get \" + k + \" at \" + i);",
+  "      if (t.n != want.size()) throw new AssertionError(\"n = \" + t.n + \", want \" + want.size()); }",
+  "    for (int x : want) if (!t.get(x)) throw new AssertionError(\"lost \" + x);",
+  "    if (t.m < 11 || !isPrime(t.m)) throw new AssertionError(\"m \" + t.m);",
+  "    System.out.println(\"ok\");"
+ ],
+ "hashtables/class LinearProbingTable · String keys": [
+  "    Random r = new Random(11); HashSet<String> want = new HashSet<>(); LinearProbingTable t = new LinearProbingTable(11);",
+  "    for (int i = 0; i < 5000; i++) { String k = \"key\" + (r.nextInt(300) * 7919 - 900000);",
+  "      if (r.nextInt(100) < 60) { if (t.n >= t.m / 2) t.rehash(); t.put(k); want.add(k); }",
+  "      else { t.remove(k); want.remove(k); }",
+  "      if (t.get(k) != want.contains(k)) throw new AssertionError(\"get \" + k + \" at \" + i);",
+  "      if (t.n != want.size()) throw new AssertionError(\"n = \" + t.n + \", want \" + want.size()); }",
+  "    for (String x : want) if (!t.get(x)) throw new AssertionError(\"lost \" + x);",
+  "    if (t.m < 11 || !isPrime(t.m)) throw new AssertionError(\"m \" + t.m);",
+  "    System.out.println(\"ok\");"
+ ],
+ "hashtables/class QuadraticProbingTable · integer keys": [
+  "    Random r = new Random(11); HashSet<Integer> want = new HashSet<>(); QuadraticProbingTable t = new QuadraticProbingTable(11);",
+  "    for (int i = 0; i < 5000; i++) { int k = r.nextInt(600) - 300;",
+  "      if (r.nextInt(100) < 60) { if (t.n >= t.m / 2) t.rehash(); t.put(k); want.add(k); }",
+  "      else { t.remove(k); want.remove(k); }",
+  "      if (t.get(k) != want.contains(k)) throw new AssertionError(\"get \" + k + \" at \" + i);",
+  "      if (t.n != want.size()) throw new AssertionError(\"n = \" + t.n + \", want \" + want.size()); }",
+  "    for (int x : want) if (!t.get(x)) throw new AssertionError(\"lost \" + x);",
+  "    if (t.m < 11 || !isPrime(t.m)) throw new AssertionError(\"m \" + t.m);",
+  "    System.out.println(\"ok\");"
+ ],
+ "hashtables/class QuadraticProbingTable · String keys": [
+  "    Random r = new Random(11); HashSet<String> want = new HashSet<>(); QuadraticProbingTable t = new QuadraticProbingTable(11);",
+  "    for (int i = 0; i < 5000; i++) { String k = \"key\" + (r.nextInt(300) * 7919 - 900000);",
+  "      if (r.nextInt(100) < 60) { if (t.n >= t.m / 2) t.rehash(); t.put(k); want.add(k); }",
+  "      else { t.remove(k); want.remove(k); }",
+  "      if (t.get(k) != want.contains(k)) throw new AssertionError(\"get \" + k + \" at \" + i);",
+  "      if (t.n != want.size()) throw new AssertionError(\"n = \" + t.n + \", want \" + want.size()); }",
+  "    for (String x : want) if (!t.get(x)) throw new AssertionError(\"lost \" + x);",
+  "    if (t.m < 11 || !isPrime(t.m)) throw new AssertionError(\"m \" + t.m);",
+  "    System.out.println(\"ok\");"
+ ],
+ "stacks-queues/Applications of a stack": [
+  "    if (!isBalanced(\"{[()()]}\") || isBalanced(\"(]\") || isBalanced(\"((\")) throw new AssertionError(\"brackets\");",
+  "    if (evalPostfix(new String[]{\"5\",\"1\",\"2\",\"+\",\"4\",\"*\",\"+\",\"3\",\"-\"}) != 14) throw new AssertionError(\"postfix\");",
+  "    if (evalPostfix(new String[]{\"-3\",\"2.5\",\"*\"}) != -7.5) throw new AssertionError(\"negative and decimal\");",
+  "    if (evalPostfix(new String[]{\"2\",\"10\",\"^\",\"7\",\"%\"}) != 2) throw new AssertionError(\"^ and %\");",
+  "    try { evalPostfix(new String[]{\"1\",\"0\",\"/\"}); throw new AssertionError(\"no error\"); } catch (ArithmeticException e) { }",
+  "    System.out.println(\"ok\");"
+ ],
+ "recursion/All the functions": [
+  "    hanoiIter(3);",
+  "    System.out.println(\"ok\");"
+ ],
+ "sorting/All the sorts": [
+  "    double[] a = {3, -2, 7, 0, 7, -5};",
+  "    countingSort(a);",
+  "    if (!Arrays.equals(a, new double[]{-5, -2, 0, 3, 7, 7})) throw new AssertionError(Arrays.toString(a));",
+  "    System.out.println(\"ok\");"
+ ]
+}

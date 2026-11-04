@@ -905,13 +905,24 @@
         "}",
       ]) },
   };
+  const SHARED = ["get", "set", "remove", "indexOf"];
+  CLS.fixed.methods = SHARED.concat(["fa_add", "fa_insert"]);
+  CLS.dynamic.methods = SHARED.concat(["da_add_geo", "da_add_arith", "da_insert_geo", "da_insert_arith"]);
+  CLS.single.methods = /^(s_|l_indexOf$)/;
+  CLS.double.methods = /^(d_|l_indexOf$)/;
   D.classes(CODE, [
-    Object.assign({ keys: /^fa_/ }, CLS.fixed),
-    Object.assign({ keys: /^da_/ }, CLS.dynamic),
-    Object.assign({ keys: /^s_/ }, CLS.single),
-    Object.assign({ keys: /^d_/ }, CLS.double),
-    Object.assign({ keys: /^c_/ }, CLS.circular),
+    (CLS.fixed.keys = /^fa_/, CLS.fixed),
+    (CLS.dynamic.keys = /^da_/, CLS.dynamic),
+    (CLS.single.keys = /^s_/, CLS.single),
+    (CLS.double.keys = /^d_/, CLS.double),
+    (CLS.circular.keys = /^c_/, CLS.circular),
   ]);
+  const VISIT = {
+    pseudo: ["visit(x):                     // whatever the walk is for; here, print", "  print x"],
+    java: ["static void visit(double x) {   // whatever the walk is for; here, print", "  System.out.println(x);", "}"],
+  };
+  CLS.double.helpers = [VISIT];
+  const FULL = [CLS.fixed, CLS.dynamic, { name: "Grid", title: "2-D array", keys: /^g_/, helpers: [VISIT] }, CLS.single, CLS.double, CLS.circular];
   /* the listings two tabs share follow the tab on screen */
   function shareClass(tabId) {
     const c = CLS[tabId] || null;
@@ -1970,7 +1981,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     D.Practice(PRACTICE);
-    dock = D.CodeDock("#code", CODE, { recv: (k) => (/^(s|d|c|l)_/.test(k) ? "list" : "arr") });
+    dock = D.CodeDock("#code", CODE, { full: FULL, recv: (k) => (/^(s|d|c|l)_/.test(k) ? "list" : "arr") });
     player = new D.Player({ mount: "#player", render: render, code: dock });
 
     const num = (id) => D.readInt(q(id));

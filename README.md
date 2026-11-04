@@ -20,7 +20,7 @@ feature costs nothing to run.
 | Sorting | `cse214/sorting.html` | bubble, selection, insertion, heap, merge, quick, two-third and counting sort; negative and decimal values (bars grow down from a zero line) |
 
 Every module shares the same layout: site bar with breadcrumbs → page heading (course and module number, title) →
-tabs → toolbar → **code dock** (worst-case time/space badge, spec, the class the method belongs to, and the
+tabs → toolbar → **code dock** (worst-case time/space badge, spec, the running function, all the code of its structure, and the
 running line highlighted in pseudocode or Java) → stage → player → legend → **Study notes** (always visible: key
 terms, cost tables, LeetCode practice) → footer.
 
@@ -30,7 +30,7 @@ per page with no skipped heading levels, a "Skip to content" link, and the step 
 links with their URLs, one column wide.
 
 The code dock starts **collapsed**: a newcomer sees only the running operation's name and its time/space badge.
-"show code" opens the spec, class and listing, and that choice is remembered from page to page (`localStorage`
+"show code" opens the spec, listing and all the code, and that choice is remembered from page to page (`localStorage`
 key `dsa.codeHidden.v3`). The side-by-side comparison panes always show their code.
 
 Inputs take negative and decimal numbers. Java listings use `double` for stored values (indices stay `int`); where
@@ -48,12 +48,10 @@ These sit in the player of every module, and none of them needs changes to a mod
 | Animation | `assets/js/motion.js` | Values slide to their new place on each step, and tree edges follow their nodes. It compares the pictures before and after each repaint (FLIP), so stepping back works too. The slider jumps without animating, and `prefers-reduced-motion` fades instead of moving. Add `data-motion="off"` to anything whose text is not a value that travels, such as a counter. |
 | Why? | `assets/js/tutor.js`, `assets/js/why-data.js` | A hand-written reason for every line of every listing, loaded on first use. Add a key to `why-data.js` when you add a line: the tests fail if an entry names a line that no longer exists. |
 | Quiz me | `assets/js/quiz.js` | Stops before some steps and asks which line runs next or what happens next. Questions are built from the recorded frames, and the right answer is simply the next frame. |
-| Copy link | `assets/js/share.js` | A link that reopens this input at this step. It stores the controls used and a random seed in the URL hash, then replays them, so nothing goes to a server. State that lives outside form controls registers with `D.share.state(name, get, set)` and reports changes with `D.share.note(name)`. |
 | Growth chart | `assets/js/growth.js`, `assets/js/growth-worker.js` | On the Sorting page: runs all eight sorts up to n = 10,000 in a Web Worker and plots the operation counts. The worker has its own fast copies of the sorts, and the tests check their counts match the visualizer's. |
 | Code playground | `assets/js/playground.js`, `assets/js/playground-examples.js`, `assets/js/java-interp.js` | The button by each module's title opens a panel under the visualizer, where a student types Java and steps through it. It opens on a starter program for the current tab, and keeps the student's own code per module. `java-interp.js` is a small interpreter in a Web Worker: it never uses `eval`, and it records frames like any module, so all the tools above work there too. The panel lists what it supports. The editor and starter programs load the first time it opens. Add a starter by adding an entry to `playground-examples.js`: the tests compile it with `javac` and compare the output. |
 
-`assets/vendor/` holds two MIT-licensed files, committed so the site still has no build step: `lz-string.min.js`, and
-`editor.js` (CodeMirror 6). To rebuild the editor: `cd tools && npm install && npm run build:editor`.
+`assets/vendor/` holds `editor.js` (CodeMirror 6, MIT-licensed), committed so the site still has no build step. To rebuild the editor: `cd tools && npm install && npm run build:editor`.
 
 ## Deploying on Vercel
 
@@ -115,6 +113,11 @@ anchor in whichever language is showing, so the languages never need index maps.
   with `D.specs(CODE, {...})` and shown above the code. `time` and `space` are **worst-case** bounds written with
   O (no Θ/Ω, no amortized bounds); text after ": " is the explanation, and the part before it is shown as a badge
   in the dock header so it stays visible when the code is hidden.
+- **All the code.** `D.CodeDock(mount, CODE, { full: groups })` adds a box under the running listing with the whole source
+  of one structure: fields, constructor, every method, and helpers. A group is a class from `D.classes` or a plain
+  `{ name, title, keys }`; `methods` overrides `keys` for listings several classes share, and `helpers: [{ pseudo, java }]`
+  holds functions no animation step runs, so they carry no anchors. A new listing joins its group automatically if its key
+  matches; the `jvm` suite fails if it calls something nobody shows.
 - **Classes.** `D.classes(CODE, [{ name, pseudo, java, note, keys }])` attaches the class a method belongs to
   (fields, constructor, and a full `Node` class for linked structures). The dock shows it above the method with a
   short "how objects work" note written with the page's own names (`list.addFirst(…)`, `this.head`). A listing
@@ -257,7 +260,6 @@ files plus the function, with a stand-in for the AI provider, so it uses no key 
 - **motion**: a swap moves exactly two bars, an AVL rotation moves its nodes, everything lands clean, a jump does not
   animate, and reduced motion fades.
 - **quiz**: every module asks questions, and each answer marked correct really is the next step.
-- **share**: on every module, a link rebuilds the same frame, caption and picture in a fresh browser.
 - **why**: every anchored line has a saved explanation, and every saved explanation names a real line. This checks that
   they exist and match, not that they are true: that takes a person reading them against the code.
 - **tutor**: the function with no key, with a key, over the limit, with a provider outage, oversized and malformed
@@ -266,7 +268,11 @@ files plus the function, with a stand-in for the AI provider, so it uses no key 
   growth rates are about ×100, ×13 and ×10.
 - **playground**: on every module, the button opens the panel on the right program for the tab, and every starter runs
   and draws cleanly, at phone width too. Also errors, a student's code surviving a reload, and links carrying code.
-- **jvm**: every starter program, plus programs aimed at Java's trickier rules, compiled with `javac` and run on a real
+- **scroll**: starting a run brings the picture on screen once; playing, stepping and quiz questions never move the page.
+- **fullcode**: the "all the code" box follows the running function, shades it, and can show any other structure.
+- **jvm**: also compiles every structure's full code with `javac`, so a function that is called but not shown fails the
+  test, then runs AVL trees, B-trees, BSTs, hash tables and more against `java.util` over thousands of random operations
+  (`tests/full-code-drivers.json`). Before that: every starter program, plus programs aimed at Java's trickier rules, compiled with `javac` and run on a real
   JVM. The playground must print exactly the same. It is skipped if `javac` is not installed.
 - **xss**: hostile text in every input and crafted share links, with the security headers off, so the code has to be safe
   by itself.

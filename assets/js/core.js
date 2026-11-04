@@ -18,7 +18,7 @@
   DSA.ROOT = (function () {
     try { return new URL("../../", document.currentScript.src).href; } catch (e) { return "../"; }
   })();
-  /* Features in their own files (motion, quiz, why, share) add themselves to every Player through this list. */
+  /* Features in their own files (motion, quiz, why) add themselves to every Player through this list. */
   DSA.playerAddons = [];
 
   /* ---------------- feedback ----------------
@@ -455,6 +455,91 @@
         if (hit) listings[k].cls = d;
       });
     });
+    return defs;
+  };
+
+  /* ------------------------------------------------------------
+     Full code. The dock's lower box holds the whole source of one
+     structure: its fields and constructor, every method the module
+     uses, and the helpers those methods call.
+       D.CodeDock(mount, listings, { full: [group, ...] })
+       group = a class from D.classes, or a plain { name, keys }, plus
+         methods  listing keys, when keys alone would miss a shared one
+         helpers  [{ pseudo: [...], java: [...] }], functions no step of
+                  the animation runs, so they have no listing of their own
+
+     A listing is cut at its blank lines, so a helper two listings both
+     carry (AVL's rotations) appears once. Two versions of one method
+     (delete with a successor, delete with a predecessor) both appear,
+     each under a comment naming it.
+     ------------------------------------------------------------ */
+  const plainTitle = (t) => String(t || "").replace(/<[^>]*>/g, "");
+  function chunksOf(lines) {
+    const out = [];
+    let cur = null;
+    (lines || []).forEach((raw) => {
+      const t = splitAnchor(raw).text;
+      if (!t.trim()) { cur = null; return; }
+      if (!cur) out.push((cur = []));
+      cur.push(t);
+    });
+    return out;
+  }
+  /* the name a chunk defines: "void delete(double k) {" → delete */
+  function chunkName(lines) {
+    for (const l of lines) {
+      const t = l.replace(/\/\/.*$/, "");
+      const m = /([A-Za-z_]\w*)\s*\(/.exec(t);
+      if (m) return m[1];
+      if (t.trim()) return null;
+    }
+    return null;
+  }
+  const groupHas = (g, k) => {
+    const list = g.methods || g.keys;
+    return list instanceof RegExp ? list.test(k) : (list || []).indexOf(k) >= 0;
+  };
+  /** The functions of a group in one language: [{ lines, keys, title, name }] */
+  DSA.fullChunks = function (g, listings, lang) {
+    const out = [], seen = new Map();
+    const put = (lines, key, title) => {
+      const text = lines.join("\n");
+      const had = seen.get(text);
+      if (had) { if (key) had.keys.push(key); return; }
+      const c = { lines: lines, keys: key ? [key] : [], title: title || null, name: chunkName(lines) };
+      seen.set(text, c);
+      out.push(c);
+    };
+    Object.keys(listings).forEach((k) => {
+      if (!groupHas(g, k) || !listings[k][lang]) return;
+      chunksOf(listings[k][lang]).forEach((c, i) => put(c, k, i === 0 ? plainTitle(listings[k].title) : null));
+    });
+    (g.helpers || []).forEach((h) => chunksOf(h[lang]).forEach((c) => put(c, null, null)));
+    return out;
+  };
+  /** One group as a single listing: the class around every function, each line tagged with the listings it belongs to. */
+  DSA.fullSource = function (g, listings, lang, chunks) {
+    const list = chunks || DSA.fullChunks(g, listings, lang);
+    const count = {};
+    list.forEach((c) => { if (c.name) count[c.name] = (count[c.name] || 0) + 1; });
+    const wrap = (g[lang] || []).filter((l) => !/^\s*\/\/.*\bbelow\b/.test(l));
+    while (wrap.length && !wrap[wrap.length - 1].trim()) wrap.pop();
+    const closes = lang === "java" && wrap.length && wrap[wrap.length - 1].trim() === "}";
+    if (closes) wrap.pop();
+    while (wrap.length && !wrap[wrap.length - 1].trim()) wrap.pop();
+    const indent = wrap.length ? "  " : "";
+    const out = [];
+    wrap.forEach((l) => out.push(l));
+    list.forEach((c) => {
+      const tag = c.keys.length ? " @@" + c.keys.map((k) => "m_" + k).join(",") : "";
+      if (out.length) out.push("");
+      if (c.title && c.name && count[c.name] > 1) out.push(indent + "// " + c.title + tag);
+      c.lines.forEach((l) => out.push(indent + l + tag));
+    });
+    if (closes) out.push("}");
+    if (lang === "java" && /\b(List|ArrayList|LinkedList|Map|HashMap|Queue|Deque|ArrayDeque|Iterator|NoSuchElementException|EmptyStackException|Arrays)\b/.test(out.join("\n")))
+      out.unshift("import java.util.*;", "");
+    return out;
   };
   /* "O(1) time · O(1) space" for the dock header, from a listing's spec */
   function costBadge(L) {
@@ -487,6 +572,7 @@
       m.classList.toggle("collapsed", hidden);
       hide.textContent = hidden ? "show code" : "hide code";
       hide.classList.toggle("primary", hidden);
+      if (api.paintClass) api.paintClass();
     };
     hide.addEventListener("click", () => {
       codeHidden = !codeHidden;
@@ -498,53 +584,105 @@
     const clsMount = DSA.el("div", { class: "code-class" });
     const codeMount = DSA.el("div");
     body.appendChild(specMount);
-    body.appendChild(clsMount);
     body.appendChild(codeMount);
-    function showClass(c) {   /* rebuilt per listing: the note names the method being shown */
-      clsMount.innerHTML = "";
-      clsMount.style.display = c ? "" : "none";
-      if (!c) return;
+    body.appendChild(clsMount);
+
+    /* ---------- the full code of the structure on screen ---------- */
+    const groups = o.full || [];
+    const fullBlocks = new Map();      /* group index → its code block, built when first needed */
+    let shown = -1, followedKey = null, followed = -1, fullUi = null;
+    const groupLabel = (g) => (g.title || (g.pseudo || g.java ? "class " + g.name : g.name));
+    function groupFor(k) {
+      const c = listings[k] && listings[k].cls;
+      let i = c ? groups.findIndex((g) => g === c) : -1;
+      if (i < 0 && c) i = groups.findIndex((g) => g.name === c.name && groupHas(g, k));
+      if (i < 0) i = groups.findIndex((g) => groupHas(g, k));
+      return i;
+    }
+    function buildFullUi() {
       const tog = DSA.el("button", { class: "ghost cls-toggle", type: "button" });
-      const head = DSA.el("div", { class: "cls-head" }, [
-        DSA.el("span", { class: "lang-label", text: "inside" }),
-        DSA.el("span", { class: "mono", text: "class " + c.name }),
-        DSA.el("span", { class: "cls-sub", text: "the fields every method below uses" }),
-        tog,
-      ]);
+      const head = DSA.el("div", { class: "cls-head" }, [DSA.el("span", { class: "lang-label", text: "all the code" })]);
+      let pick = null;
+      if (groups.length > 1) {
+        pick = DSA.el("select", { class: "cls-pick", "aria-label": "Which structure's code to read" });
+        groups.forEach((g, i) => pick.appendChild(DSA.el("option", { value: String(i), text: groupLabel(g) })));
+        pick.addEventListener("change", () => showGroup(Number(pick.value)));
+        head.appendChild(pick);
+      } else if (groups.length) head.appendChild(DSA.el("span", { class: "mono", text: groupLabel(groups[0]) }));
+      head.appendChild(DSA.el("span", { class: "cls-sub", text: "every function, with the running one shaded" }));
+      head.appendChild(tog);
       const inner = DSA.el("div", { class: "cls-body" });
-      const codeEl = DSA.el("div");
+      const codeEl = DSA.el("div", { class: "full-code" });
+      const note = DSA.el("p", { class: "cls-note" });
       inner.appendChild(codeEl);
-      inner.appendChild(DSA.el("p", { class: "cls-note", html: (c.note ? c.note + "<br>" : "") + oopNote(c, key) }));
+      inner.appendChild(note);
       clsMount.appendChild(head);
       clsMount.appendChild(inner);
-      DSA.CodeBlock(codeEl, c, { switcher: false });
-      const paint = () => { inner.style.display = classHidden ? "none" : ""; tog.textContent = classHidden ? "show class" : "hide class"; };
       tog.addEventListener("click", () => {
         classHidden = !classHidden;
         try { localStorage.setItem(LS_CLS, classHidden ? "1" : "0"); } catch (e) {}
         docks.forEach((d) => d.paintClass && d.paintClass());
       });
-      api.paintClass = paint;
-      paint();
+      api.paintClass = () => {
+        inner.style.display = classHidden ? "none" : "";
+        tog.textContent = classHidden ? "show all the code" : "hide all the code";
+        if (!classHidden) showGroup(shown);
+      };
+      fullUi = { pick: pick, codeEl: codeEl, note: note, tog: tog };
+    }
+    /* Building waits until the code can be seen, so a page whose code stays hidden pays nothing. */
+    function showGroup(i) {
+      if (i < 0 || !groups[i]) return;
+      shown = i;
+      if (!fullUi) return;
+      if (fullUi.pick) fullUi.pick.value = String(i);
+      if (m.classList.contains("collapsed") || classHidden) return;
+      const g = groups[i];
+      if (!fullBlocks.has(i)) {
+        const holder = DSA.el("div");
+        fullUi.codeEl.appendChild(holder);
+        const variants = {};
+        ["pseudo", "java"].forEach((l) => { const src = DSA.fullSource(g, listings, l); if (src.length) variants[l] = src; });
+        const block = DSA.CodeBlock(holder, variants, { switcher: false });
+        block.node.tabIndex = 0;
+        block.node.setAttribute("aria-label", "All the code: " + groupLabel(g));
+        fullBlocks.set(i, { holder: holder, block: block });
+      }
+      fullBlocks.forEach((b, j) => { b.holder.hidden = j !== i; });
+      const isClass = !!(g.pseudo || g.java);
+      fullUi.note.innerHTML = (g.note ? g.note + (isClass ? "<br>" : "") : "") + (isClass ? oopNote(g, key) : "");
+      fullUi.note.hidden = !fullUi.note.innerHTML;
+      fullBlocks.get(i).block.highlight(key && groupHas(g, key) ? "m_" + key : null);
+    }
+    /* follow the running listing; a structure the reader picked stays until the listing changes */
+    function followGroup(k) {
+      if (!groups.length) return;
+      if (!fullUi) buildFullUi();
+      const want = groupFor(k);
+      if (want < 0 || (want === followed && k === followedKey)) return;
+      followed = want;
+      followedKey = k;
+      showGroup(want);
     }
     DSA.onLang(() => { if (spec && specMount.isConnected) spec.repaint(); });
     const api = {
       listings: listings,
       paintHidden: paintHidden,
+      groups: groups,
       recvOf: (k) => (typeof o.recv === "function" ? o.recv(k) : o.recv || null),
       get current() { return key; },
       /** Switch to listing `k` (no-op if already showing it). */
       show(k) {
-        if (k === key && block) return api;
+        if (k === key && block) { followGroup(k); return api; }
         const L = listings[k];
         if (!L) return api;
         key = k;
         title.innerHTML = '<span class="lang-label">running</span> <span class="mono">' + (L.title || k) + "</span>" + costBadge(L);
-        showClass(L.cls || null);
         specMount.innerHTML = "";
         spec = specBox(L, k, o.recv || null, o.args || null);
         specMount.appendChild(spec.node);
         block = DSA.CodeBlock(codeMount, L, { switcherMount: sw });
+        followGroup(k);
         return api;
       },
       highlight(line) { if (block) block.highlight(line == null ? null : line); },
@@ -560,6 +698,7 @@
     paintHidden();
     if (o.initial) api.show(o.initial);
     else { const first = Object.keys(listings)[0]; if (first) api.show(first); }
+    if (api.paintClass) api.paintClass();
     return api;
   };
   const docks = [];
@@ -933,7 +1072,10 @@
       this.index = 0;
       this.loadHooks.forEach((fn) => { try { fn(this.frames); } catch (err) { console.error(err); } });
       this._sync();
-      if (autoplay !== false) this.play();
+      if (autoplay !== false) {
+        if (this.frames.length > 1 && performance.now() - lastUser < 1500) this._reveal();
+        this.play();
+      }
       return this;
     };
     this.goto = function (i) {
@@ -960,7 +1102,12 @@
       clearTimeout(this._t);
       if (btnPlay) btnPlay.innerHTML = "&#9654; Play";
     };
-    this.toggle = function () { this.playing ? this.pause() : this.play(); };
+    this.toggle = function () {
+      if (this.playing) { this.pause(); return; }
+      /* pressing Play from the first or last frame starts the run again; resuming mid-run stays put */
+      if (this.frames.length > 1 && (this.index === 0 || this.index >= this.frames.length - 1)) this._reveal();
+      this.play();
+    };
     this._arm = function () {
       clearTimeout(this._t);
       this._t = setTimeout(() => {
@@ -969,6 +1116,15 @@
         if (this.index < this.frames.length - 1) { this.index++; this._sync(); this._arm(); }
         else this.pause();
       }, Math.max(24, this.baseDelay / this.speed));
+    };
+    /* Starting a run brings the picture on screen, once. Nothing after that moves the page. */
+    this._reveal = function () {
+      const stage = DSA.$$(".stage", this.scope).find((s) => s.offsetParent);
+      if (!stage) return;
+      const r = stage.getBoundingClientRect();
+      const bar = document.querySelector(".topbar");
+      if (r.top >= (bar ? bar.getBoundingClientRect().bottom : 0) && r.bottom <= window.innerHeight) return;
+      stage.scrollIntoView({ block: "start" });
     };
     this.isVisible = function () { return !!mount.offsetParent; };
     /* the panel this player belongs to: clicking anywhere in it claims the keyboard */

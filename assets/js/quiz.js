@@ -28,18 +28,13 @@
   const anchors = (line) => (line == null ? [] : (Array.isArray(line) ? line : [line]).filter((a) => typeof a === "string").map((a) => a.replace(/\^$/, "")));
   const lineKey = (line) => anchors(line).join("+");
   const shuffled = (a) => {
-    /* its own randomness: a shared link replays Math.random, and a quiz must not disturb that */
     a = a.slice();
     for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(rng() * (i + 1));
+      const j = Math.floor(Math.random() * (i + 1));
       [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
   };
-  const rng = (function () {
-    let s = (Date.now() ^ (performance.now() * 1000)) >>> 0;
-    return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-  })();
 
   /* The listing lines for a key, in the language on screen: [{ text, tags }] */
   function listingLines(player, key) {
@@ -205,7 +200,6 @@
       panel.appendChild(list);
       panel.appendChild(D.el("div", { class: "quiz-result", role: "status", "aria-live": "polite" }));
       open.choices = choices;
-      panel.scrollIntoView({ block: "nearest" });
       title.focus({ preventScroll: true });
     }
 

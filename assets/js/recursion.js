@@ -1275,7 +1275,10 @@
       });
       return v;
     };
-    dock = D.CodeDock("#code", listings, { args: inputArgs });
+    dock = D.CodeDock("#code", listings, { full: [{ name: "Recursion", title: "All the functions", keys: Object.keys(listings), helpers: [{
+      pseudo: ["move(from, to):               // one disk, shown as a line of output", "  print \"move from → to\""],
+      java: ["static void move(int from, int to) {   // from and to are the peg letters", "  System.out.println(\"move \" + (char) from + \" to \" + (char) to);", "}"],
+    }] }], args: inputArgs });
     dockL = D.CodeDock("#L-code", listings, { args: inputArgs });
     dockR = D.CodeDock("#R-code", listings, { args: inputArgs });
     player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock, onIdle: run });

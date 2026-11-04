@@ -364,9 +364,8 @@
       down = null;
       dragging = -1;
       try { host.releasePointerCapture(ev.pointerId); } catch (e) {}
-      if (d.moved) { if (D.share) D.share.note("graph"); return; }
+      if (d.moved) return;
       click(d.i, d.pt);
-      if (D.share) D.share.note("graph");
     };
     host.addEventListener("pointerup", up);
     host.addEventListener("pointercancel", () => { down = null; dragging = -1; });
@@ -468,7 +467,7 @@
     dfs: { does: "Depth-first search: goes as deep as possible from " + "<span class='mono'>u</span>" + " before backtracking, recording discovery and finish times.", params: "<span class='mono'>u</span>: the vertex to explore from", returns: "nothing; colours every reachable vertex and records d[] / f[]", errors: "none", time: "O(V + E): every vertex is discovered once and every edge looked at once", space: "O(V): the recursion can go V calls deep, plus color[], d[] and f[]", callVals: { u: "0" } },
   });
 
-  D.classes(CODE, [{
+  const FULL = D.classes(CODE, [{
     keys: ["bfs", "dfs"], name: "Graph",
     note: "Vertices are numbered 0 … V − 1 (drawn as A, B, C, …). adj is the adjacency list on the right of the canvas.",
     pseudo: [
@@ -562,22 +561,9 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     D.Practice(PRACTICE);
-    const dock = D.CodeDock("#code", CODE, { recv: "graph" });
+    const dock = D.CodeDock("#code", CODE, { full: FULL, recv: "graph" });
     player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock });
     wireHost(q("gr-canvas"));
-    /* canvas clicks and drags are not form controls, so a shared link stores the graph itself */
-    if (D.share) D.share.state("graph", () => ({ pos: G.pos, adj: G.adj }), (v) => {
-      /* a link is outside input: use it only if it really is a graph */
-      const pos = v && Array.isArray(v.pos) ? v.pos : null, adj = v && Array.isArray(v.adj) ? v.adj : null;
-      const n = pos ? pos.length : -1;
-      const fine = pos && adj && n <= 12 && adj.length === n &&
-        pos.every((p) => p && Number.isFinite(p.x) && Number.isFinite(p.y)) &&
-        adj.every((l) => Array.isArray(l) && l.every((t) => Number.isInteger(t) && t >= 0 && t < n));
-      if (!fine) { D.toast("This link's graph could not be read.", true); return; }
-      G.pos = pos.map((p) => ({ x: D.clamp(p.x, R + 4, VW - R - 4), y: D.clamp(p.y, R + 4, VH - R - 4) }));
-      G.adj = adj;
-      refresh("The graph from the shared link.");
-    });
 
     D.$$("[data-tool]").forEach((b) =>
       b.addEventListener("click", () => {

@@ -53,7 +53,8 @@
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-anchor: none; }   /* a step may change the picture's height; the page must not follow it */
+.stage { scroll-margin-top: 4.5rem; }
 body {
   margin: 0;
   background: var(--bg);
@@ -328,7 +329,12 @@ input[type="range"] { accent-color: var(--accent); width: 100%; }
 .code-class .cls-head .mono { font-weight: 600; }
 .code-class .cls-sub { color: var(--muted-2); font-size: .78rem; margin-right: auto; }
 .code-class .cls-toggle { padding: .1rem .5rem; font-size: .76rem; }
-.code-class .code { max-height: 300px; margin: 0 6px 6px; }
+.code-class .code { max-height: 340px; margin: 0 6px 6px; }
+.code-class .cls-pick { font-family: var(--mono); font-size: .8rem; padding: .1rem .3rem; max-width: 100%; }
+/* the running function is a region here, not a step: a quiet tint, and the arrow stays in the listing above */
+.full-code .code .ln.on { background: #eef1f6; }
+.full-code .code .ln.on .cm { color: #4b5563; }
+.full-code .code .ln.on::before { content: none; }
 .code-class .cls-note { margin: 0; padding: .45rem .8rem .55rem; font-size: .8rem; color: var(--muted); }
 
 /* ---------- LeetCode practice ---------- */

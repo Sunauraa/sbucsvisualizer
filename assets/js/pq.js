@@ -325,10 +325,11 @@
       "}",
     ],
   });
-  D.classes(CODE, [
-    Object.assign({ keys: /^u_/ }, listClass("UnsortedListPQ", "ArrayList", false)),
-    Object.assign({ keys: /^s_/ }, listClass("SortedListPQ", "LinkedList", true)),
-    { keys: /^a_/, name: "HeapPQ", note: "The tree drawn under the array is only a way of reading the array: parent(i) = (i − 1) / 2, children 2i + 1 and 2i + 2.",
+  const emptyCheck = (pseudo, java) => [{ pseudo: ["isEmpty():", "  return " + pseudo], java: ["boolean isEmpty() {", "  return " + java + ";", "}"] }];
+  const FULL = D.classes(CODE, [
+    Object.assign({ keys: /^u_/, helpers: emptyCheck("the list is empty", "list.isEmpty()") }, listClass("UnsortedListPQ", "ArrayList", false)),
+    Object.assign({ keys: /^s_/, helpers: emptyCheck("the list is empty", "list.isEmpty()") }, listClass("SortedListPQ", "LinkedList", true)),
+    { keys: /^a_/, helpers: emptyCheck("n == 0", "heap.isEmpty()"), name: "HeapPQ", note: "The tree drawn under the array is only a way of reading the array: parent(i) = (i − 1) / 2, children 2i + 1 and 2i + 2.",
       pseudo: [
         "class HeapPQ:",
         "  H                          // array; H[0] is the root (the minimum)",
@@ -347,7 +348,7 @@
         "  // insert, removeMin, upHeap and downHeap (below) use heap",
         "}",
       ] },
-    { keys: /^t_/, name: "LinkedHeapPQ",
+    { keys: /^t_/, helpers: emptyCheck("n == 0", "n == 0"), name: "LinkedHeapPQ",
       pseudo: [
         "class LinkedHeapPQ:",
         "  class Node:                // one circle on the stage",
@@ -987,7 +988,10 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     D.Practice(PRACTICE);
-    dock = D.CodeDock("#code", CODE, { recv: "pq" });
+    dock = D.CodeDock("#code", CODE, { full: FULL.concat([{ name: "pqSort", title: "PQ-Sort", keys: /^sort_/, helpers: [{
+      pseudo: ["P is any priority queue:      // what pqSort needs from it", "  P.insert(k)", "  P.removeMin()", "  P.isEmpty()"],
+      java: ["interface PQ {                  // UnsortedListPQ, SortedListPQ, HeapPQ and LinkedHeapPQ all have these", "  void insert(double k);", "  double removeMin();", "  boolean isEmpty();", "}"],
+    }] }]), recv: "pq" });
     player = new D.Player({ mount: "#player", render: render, code: dock });
     /* keys may be negative or decimal; empty means random */
     const val = () => D.readNum(q("val"), () => D.randInt(1, 99));

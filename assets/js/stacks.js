@@ -295,7 +295,7 @@
   /* ============================================================
      CLASSES: the fields each method above reads and writes
      ============================================================ */
-  D.classes(CODE, [
+  const CLASSES = D.classes(CODE, [
     { name: "ArrayStack", keys: /^st_/,
       note: "This page's stack was created with <span class='mono'>new ArrayStack(8)</span>.",
       pseudo: [
@@ -425,6 +425,39 @@
         "}",
       ] },
   ]);
+  /* the two applications are plain functions; these are the helpers evalPostfix calls */
+  const FULL = CLASSES.concat([{
+    name: "Applications", title: "Applications of a stack", keys: ["brackets", "postfix"],
+    helpers: [{
+      pseudo: [
+        "isNumber(t):                 // \"-3\" and \"2.5\" are numbers; \"-\" alone is an operator",
+        "  return t is an optional minus sign, then digits, then an optional decimal part",
+        "",
+        "apply(op, a, b):             // a came before b in the expression",
+        "  if op is + − × ÷ % or ^: return a op b",
+        "  error if b is 0 and op is ÷;  error for any other op",
+      ],
+      java: [
+        "static boolean isNumber(String t) {   // \"-3\" and \"2.5\" are numbers; \"-\" alone is an operator",
+        "  return t.matches(\"-?\\\\d+(\\\\.\\\\d+)?\");",
+        "}",
+        "",
+        "static double apply(String op, double a, double b) {   // a came before b in the expression",
+        "  switch (op) {",
+        "    case \"+\": return a + b;",
+        "    case \"-\": return a - b;",
+        "    case \"*\": return a * b;",
+        "    case \"/\":",
+        "      if (b == 0) throw new ArithmeticException(\"division by zero\");",
+        "      return a / b;",
+        "    case \"%\": return a % b;",
+        "    case \"^\": return Math.pow(a, b);",
+        "    default: throw new IllegalArgumentException(\"unknown operator \" + op);",
+        "  }",
+        "}",
+      ],
+    }],
+  }]);
 
   /* ============================================================
      STATE
@@ -1064,9 +1097,9 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     D.Practice(PRACTICE);
-    dock = D.CodeDock("#code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue") });
-    dockL = D.CodeDock("#L-code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "aq_dequeue" });
-    dockR = D.CodeDock("#R-code", CODE, { recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "cq_dequeue" });
+    dock = D.CodeDock("#code", CODE, { full: FULL, recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue") });
+    dockL = D.CodeDock("#L-code", CODE, { full: FULL, recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "aq_dequeue" });
+    dockR = D.CodeDock("#R-code", CODE, { full: FULL, recv: (k) => (/^st_/.test(k) ? "stack" : /^dq_/.test(k) ? "deque" : "queue"), initial: "cq_dequeue" });
     player = new D.Player({ mount: "#player", render: render, code: dock });
     /* any number, negative or decimal; empty means a random one */
     const val = () => { const t = q("val").value.trim(), v = Number(t); return t === "" || isNaN(v) ? D.randInt(10, 99) : v; };

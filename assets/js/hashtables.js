@@ -113,7 +113,7 @@
     const lin = mode === "linear";
     const P = {
       pseudo: lin ? "(h(k) + i) mod m                // linear probing" : "(h(k) + i²) mod m               // quadratic probing",
-      java: lin ? "(hash(k) + i) % m;          // linear probing" : "(hash(k) + i * i) % m;      // quadratic probing",
+      java: lin ? "Math.floorMod(hash(k) + i, m);       // linear probing" : "Math.floorMod(hash(k) + i * i, m);   // quadratic probing",
     };
     const name = lin ? "linear probing" : "quadratic probing";
     CODE["oa_put_" + mode] = {
@@ -314,6 +314,76 @@
     const str = /_s$/.test(k);
     CODE[k].cls = classFor(/^ch_/.test(k) ? "chain" : /_linear/.test(k) ? "linear" : "quad", str);
   });
+  /* the helpers rehash and the integer tables call */
+  const PRIMES = {
+    pseudo: [
+      "nextPrime(x):                // the first prime at or after x",
+      "  while x is not prime: x ← x + 1",
+      "  return x",
+      "",
+      "isPrime(x):                  // no divisor up to √x",
+      "  if x < 2: return false",
+      "  for d ← 2 while d·d ≤ x: if d divides x: return false",
+      "  return true",
+    ],
+    java: [
+      "static int nextPrime(int x) {   // the first prime at or after x",
+      "  while (!isPrime(x)) x++;",
+      "  return x;",
+      "}",
+      "",
+      "static boolean isPrime(int x) { // no divisor up to the square root",
+      "  if (x < 2) return false;",
+      "  for (int d = 2; d * d <= x; d++) if (x % d == 0) return false;",
+      "  return true;",
+      "}",
+    ],
+  };
+  const INT_HASH = {
+    pseudo: ["h(k):                         // an integer key is its own hash", "  return k"],
+    java: ["static int hash(int k) {        // an integer key is its own hash", "  return k;", "}"],
+  };
+  const tableHelpers = (mode, K) => (mode === "chain" ? {
+    pseudo: ["keysOf(old):                  // every key in every bucket", "  return the keys of old[0], then old[1], and so on"],
+    java: [
+      "private LinkedList<" + K + ">[] newTable(int m) {   // m empty buckets",
+      "  LinkedList<" + K + ">[] t = new LinkedList[m];",
+      "  for (int b = 0; b < m; b++) t[b] = new LinkedList<>();",
+      "  return t;",
+      "}",
+      "",
+      "private List<" + K + "> keysOf(LinkedList<" + K + ">[] old) {   // every key in every bucket",
+      "  List<" + K + "> keys = new ArrayList<>();",
+      "  for (LinkedList<" + K + "> bucket : old) keys.addAll(bucket);",
+      "  return keys;",
+      "}",
+    ],
+  } : {
+    pseudo: ["keysOf(old):                  // tombstones and empty slots are left behind", "  return every slot of old that holds a key"],
+    java: [
+      "private " + K + "[] newTable(int m) {   // m slots, all EMPTY",
+      "  return new " + K + "[m];",
+      "}",
+      "",
+      "private List<" + K + "> keysOf(" + K + "[] old) {   // tombstones and empty slots are left behind",
+      "  List<" + K + "> keys = new ArrayList<>();",
+      "  for (" + K + " x : old) if (x != EMPTY && x != DELETED) keys.add(x);",
+      "  return keys;",
+      "}",
+    ],
+  });
+  /* one box per class and key type; rehash and hash(s) belong to several */
+  const FULL = [];
+  [false, true].forEach((str) => ["chain", "linear", "quad"].forEach((mode) => {
+    const c = classFor(mode, str);
+    const pre = mode === "chain" ? "ch_" : "oa_";
+    const tail = mode === "chain" ? "" : mode === "linear" ? "_linear" : "_quad";
+    const sfx = str ? "_s" : "";
+    c.title = "class " + c.name + (str ? " · String keys" : " · integer keys");
+    c.methods = ["put", "get", "remove"].map((m) => pre + m + tail + sfx).concat(["rehash" + sfx], str ? ["hash_s"] : []);
+    c.helpers = [tableHelpers(mode, str ? "String" : "Integer"), PRIMES].concat(str ? [] : [INT_HASH]);
+    FULL.push(c);
+  }));
   const shareClass = () => { CODE.rehash.cls = classFor(T.mode, false); CODE.rehash_s.cls = classFor(T.mode, true); };
 
   /* ---------------- recorder ---------------- */
@@ -734,7 +804,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     D.Practice(PRACTICE);
-    dock = D.CodeDock("#code", CODE, { recv: "table" });
+    dock = D.CodeDock("#code", CODE, { full: FULL, recv: "table" });
     player = new D.Player({ mount: "#player", render: render, code: dock });
 
     D.Tabs("#tabs", Object.keys(MODES).map((id) => ({ id: id, label: MODES[id].label })), (id) => {

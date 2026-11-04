@@ -1640,7 +1640,7 @@
       }
       throw new CompileError(cn + "." + name + " isn't available in the playground" + (cn in { Math: 1, Arrays: 1, Integer: 1, Collections: 1, Character: 1, System: 1 } ? "." : ", or " + cn + " isn't declared."), line);
     }
-    /* Math.random and new Random must repeat, or stepping back and shared links would mean nothing */
+    /* Math.random and new Random must repeat, or stepping back would mean nothing */
     let lseed = 42;
     const lehmer = () => { lseed = (lseed * 48271) % 2147483647; return lseed / 2147483647; };
     function randomMethod(h, name, a, line) {

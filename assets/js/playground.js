@@ -8,7 +8,7 @@
 
    The interpreter runs in a Web Worker (java-interp.js) and returns
    frames, exactly like a module records its own, so the same Player,
-   animation, quiz, Why? and shared links all work here too.
+   animation, quiz and Why? all work here too.
    ============================================================ */
 (function () {
   "use strict";
@@ -311,7 +311,6 @@
   }
   function runInto(autoplay, resolve) {
     const code = editor.value;
-    if (D.share) D.share.note("playground");
     setError("");
     if (worker) worker.terminate();
     clearTimeout(timer);
@@ -469,15 +468,8 @@
     const main = D.$(".panel.main");
     openBtn = q("pg-open");
     if (!main || !openBtn) return;
-    panel = D.el("section", { class: "panel playground", id: "playground", hidden: "", "data-noshare": "", "aria-labelledby": "pg-title" });
+    panel = D.el("section", { class: "panel playground", id: "playground", hidden: "", "aria-labelledby": "pg-title" });
     main.parentNode.insertBefore(panel, main.nextSibling);
     openBtn.addEventListener("click", () => toggle());
-    /* a shared link carries the code itself, and reruns it */
-    if (D.share) D.share.state("playground", () => (editor && !panel.hidden ? editor.value : null), async (code) => {
-      await toggle(true);
-      setCode(code);
-      edited = true;
-      return runCode(false);
-    }, { live: true });
   });
 })();
