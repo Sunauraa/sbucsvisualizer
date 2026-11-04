@@ -1233,7 +1233,7 @@
       const g = D.svg("g", {});
       g.appendChild(D.svg("circle", { cx: nd._x, cy: nd._y, r: rr, class: "node-c " + cls }));
       g.appendChild(D.sText(nd._x, nd._y, nd.v, { "font-size": String(nd.v).length > 3 ? 9 : String(nd.v).length > 2 ? 10 : 12 }));
-      if (f.sub && f.sub[nd.id]) g.appendChild(D.sText(nd._x, nd._y + rr + 9, f.sub[nd.id], { class: "lbl-s", "font-size": 9, fill: "#16a34a" }));
+      if (f.sub && f.sub[nd.id]) g.appendChild(D.sText(nd._x, nd._y + rr + 9, f.sub[nd.id], { class: "lbl-s", "font-size": 9, fill: "#15803d" }));
       if (mode === "avl") {
         const b = (nd.left ? nd.left.h : 0) - (nd.right ? nd.right.h : 0);
         g.appendChild(D.sText(nd._x + rr + 13, nd._y - 6, "h" + nd.h, { class: "lbl-s", "font-size": 9 }));

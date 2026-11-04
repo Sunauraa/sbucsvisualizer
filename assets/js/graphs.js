@@ -272,7 +272,7 @@
         row.appendChild(D.el("div", { class: "cell filled " + (k === 0 && f.queue ? "target" : k === list.length - 1 && f.stack ? "active" : "cmp"), text: name(i), style: "min-width:36px;height:32px;font-size:.78rem" }))
       );
       fr.appendChild(row);
-      if (f.order && f.order.length) fr.appendChild(D.el("div", { class: "small mono", style: "margin-top:.5rem;color:var(--c-done)", text: "visited: " + f.order.map(name).join(" ") }));
+      if (f.order && f.order.length) fr.appendChild(D.el("div", { class: "small mono", style: "margin-top:.5rem;color:var(--t-done)", text: "visited: " + f.order.map(name).join(" ") }));
     }
 
     /* matrix */
@@ -280,7 +280,7 @@
     mv.innerHTML = "";
     const n = nCount();
     const tbl = D.el("table", { class: "tbl" });
-    let head = "<tr><th></th>";
+    let head = "<tr><td></td>";
     for (let j = 0; j < n; j++) head += "<th" + (f.mhl && f.mhl.c === j ? ' class="hl"' : "") + ">" + name(j) + "</th>";
     head += "</tr>";
     let body = "";
@@ -566,7 +566,18 @@
     player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock });
     wireHost(q("gr-canvas"));
     /* canvas clicks and drags are not form controls, so a shared link stores the graph itself */
-    if (D.share) D.share.state("graph", () => ({ pos: G.pos, adj: G.adj }), (v) => { G.pos = v.pos; G.adj = v.adj; refresh("The graph from the shared link."); });
+    if (D.share) D.share.state("graph", () => ({ pos: G.pos, adj: G.adj }), (v) => {
+      /* a link is outside input: use it only if it really is a graph */
+      const pos = v && Array.isArray(v.pos) ? v.pos : null, adj = v && Array.isArray(v.adj) ? v.adj : null;
+      const n = pos ? pos.length : -1;
+      const fine = pos && adj && n <= 12 && adj.length === n &&
+        pos.every((p) => p && Number.isFinite(p.x) && Number.isFinite(p.y)) &&
+        adj.every((l) => Array.isArray(l) && l.every((t) => Number.isInteger(t) && t >= 0 && t < n));
+      if (!fine) { D.toast("This link's graph could not be read.", true); return; }
+      G.pos = pos.map((p) => ({ x: D.clamp(p.x, R + 4, VW - R - 4), y: D.clamp(p.y, R + 4, VH - R - 4) }));
+      G.adj = adj;
+      refresh("The graph from the shared link.");
+    });
 
     D.$$("[data-tool]").forEach((b) =>
       b.addEventListener("click", () => {
@@ -625,7 +636,7 @@
     intro:
       "<p><b>BFS</b> uses a queue and explores by distance. It finishes every vertex at distance k before touching distance k+1. That's why it finds shortest paths in unweighted graphs.</p><p><b>DFS</b> uses a stack (usually the call stack) and goes as deep as it can before backtracking. That's why it exposes cycles, components and topological order.</p><p>Both visit every vertex and every edge exactly once: <b>O(V + E)</b> with adjacency lists.</p>",
     bfs:
-      "<p><b>BFS invariant:</b> the queue always holds vertices from at most two consecutive levels.</p><p>Each vertex enters the queue once. It's marked discovered the moment it enters, not when it leaves. Each edge gets examined once from each endpoint, so the running time is O(V + E).</p><p>The <span style='color:#16a34a'>green tree edges</span> form a shortest-path tree. Follow parents from any vertex back to the source and you get a path of exactly <span class='mono'>dist</span> edges. No shorter one exists.</p>",
+      "<p><b>BFS invariant:</b> the queue always holds vertices from at most two consecutive levels.</p><p>Each vertex enters the queue once. It's marked discovered the moment it enters, not when it leaves. Each edge gets examined once from each endpoint, so the running time is O(V + E).</p><p>The <span style='color:#15803d'>green tree edges</span> form a shortest-path tree. Follow parents from any vertex back to the source and you get a path of exactly <span class='mono'>dist</span> edges. No shorter one exists.</p>",
     dfs:
       "<p><b>DFS timestamps:</b> each vertex gets a discovery time and a finish time, so it owns the interval [d, f]. The <b>parenthesis theorem</b> says two such intervals are either nested or disjoint.</p><p>A <b>back edge</b> (an edge to a vertex still on the stack) exists if and only if the graph has a cycle. That's the standard cycle test.</p><p>Sort the vertices by <em>decreasing finish time</em> and you get a topological order of a DAG.</p>",
     forest:

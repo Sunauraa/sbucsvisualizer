@@ -174,6 +174,9 @@
       asked = q.at;                      /* let the gate pass this frame */
       const wasPlaying = q.wasPlaying;
       player.goto(q.at + 1);
+      /* the panel that had the focus is gone, so hand it back to the player */
+      const play = player.mount.querySelector('[data-a="play"]');
+      if (play) play.focus({ preventScroll: true });
       if (wasPlaying) player.play();
     }
 
@@ -184,7 +187,8 @@
       player.pause();
       panel.hidden = false;
       panel.innerHTML = "";
-      const head = D.el("div", { class: "learn-head" }, [D.el("h3", { text: q.ask })]);
+      const title = D.el("h3", { text: q.ask, tabindex: "-1" });
+      const head = D.el("div", { class: "learn-head" }, [title]);
       const skip = D.el("button", { type: "button", class: "ghost", text: "Skip" });
       skip.addEventListener("click", () => advance(q));
       head.appendChild(skip);
@@ -202,6 +206,7 @@
       panel.appendChild(D.el("div", { class: "quiz-result", role: "status", "aria-live": "polite" }));
       open.choices = choices;
       panel.scrollIntoView({ block: "nearest" });
+      title.focus({ preventScroll: true });
     }
 
     player.gate = function (i) {

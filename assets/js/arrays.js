@@ -1541,16 +1541,16 @@
       old.style.opacity = ".75";
       stage.appendChild(old);
     }
-    stage.appendChild(D.el("div", { class: "small mono muted", style: "margin-top:.3rem", html: "capacity history: " + f.history.join(" → ") + (f.history.length > 1 ? (f.geo ? "   <span style='color:var(--c-done)'>(×2 each time, geometric)</span>" : "   <span style='color:var(--c-warn)'>(+2 each time, arithmetic)</span>") : "") }));
+    stage.appendChild(D.el("div", { class: "small mono muted", style: "margin-top:.3rem", html: "capacity history: " + f.history.join(" → ") + (f.history.length > 1 ? (f.geo ? "   <span style='color:var(--t-done)'>(×2 each time, geometric)</span>" : "   <span style='color:var(--t-warn)'>(+2 each time, arithmetic)</span>") : "") }));
   }
 
   function renderG2(stage, f) {
     const wrap = D.el("div", { style: "display:flex;gap:1.6rem;flex-wrap:wrap;align-items:flex-start" });
     const grid = D.el("div", { class: "grid2d", style: "grid-template-columns: 1.4rem repeat(" + f.cols + ", auto)" });
     grid.appendChild(D.el("div"));
-    for (let c = 0; c < f.cols; c++) grid.appendChild(D.el("div", { class: "ch" + (f.marks["c" + c] ? " hl" : ""), text: "c" + c, style: f.marks["c" + c] ? "color:var(--c-cmp)" : "" }));
+    for (let c = 0; c < f.cols; c++) grid.appendChild(D.el("div", { class: "ch" + (f.marks["c" + c] ? " hl" : ""), text: "c" + c, style: f.marks["c" + c] ? "color:var(--t-cmp)" : "" }));
     for (let r = 0; r < f.rows; r++) {
-      grid.appendChild(D.el("div", { class: "rh", text: "r" + r, style: f.marks["r" + r] ? "color:var(--c-cmp)" : "" }));
+      grid.appendChild(D.el("div", { class: "rh", text: "r" + r, style: f.marks["r" + r] ? "color:var(--t-cmp)" : "" }));
       for (let c = 0; c < f.cols; c++) grid.appendChild(D.el("div", { class: "cell filled " + (f.marks[r + "," + c] || ""), text: f.m[r][c] }));
     }
     const left = D.el("div");
@@ -1664,7 +1664,7 @@
     }
     if (!n && !circ) svg.appendChild(D.sText(w / 2, 40, "empty list", { class: "lbl-s", "font-size": 13 }));
     stage.appendChild(svg);
-    if (f.out) stage.appendChild(D.el("div", { class: "small mono", style: "color:var(--c-done);margin-top:.3rem", text: "output: " + (f.out.join(", ") || "none") }));
+    if (f.out) stage.appendChild(D.el("div", { class: "small mono", style: "color:var(--t-done);margin-top:.3rem", text: "output: " + (f.out.join(", ") || "none") }));
   }
 
   function marker(id, color) {

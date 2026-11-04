@@ -18,6 +18,9 @@
   const LS = "dsa.playground." + PAGE + ".v1";
   const RUN_LIMIT_MS = 6000;
   const MINE = "__mine";
+  /* only if the starter programs fail to load */
+  const FALLBACK = "public class Main {\n  public static void main(String[] args) {\n    System.out.println(\"Hello\");\n  }\n}\n";
+  let cancelRun = null;
 
   const q = (id) => D.$("#" + id);
   let editor = null, player = null, worker = null, timer = 0, output = "", panel = null, openBtn = null, examples = [], building = null;
@@ -107,7 +110,7 @@
       const L = lf.find((k) => /left/i.test(k)) || lf[0], R = lf.find((k) => /right/i.test(k)) || lf[1];
       /* in-order x, depth y, the same layout the Trees page uses */
       const build = (id, seen) => {
-        if (id == null || seen.has(id)) return null;
+        if (id == null || seen.has(id) || !f.heap[id]) return null;
         seen.add(id);
         shown.add(id);
         const h = f.heap[id];
@@ -190,7 +193,7 @@
     const top = cards[cards.length - 1];
     const returning = f.event === "return" && top ? top.id : null;
     box.appendChild(D.el("h3", { text: "Call stack (top is running)" }));
-    box.appendChild(D.callStack(cards, { returning, retVal: f.retVal == null ? "nothing" : f.retVal, err: false, compact: true, fmt: String }));
+    box.appendChild(D.callStack(cards, { returning, retVal: f.retVal == null ? "nothing" : f.retVal, err: false, compact: true, fmt: String, hidden: f.hiddenFrames || 0 }));
 
     /* arrays and lists, under the name of the variable that holds them */
     const shownLinks = drawChains(f, box, prev);
@@ -316,7 +319,8 @@
     btn.disabled = true;
     const label = btn.textContent;
     btn.textContent = "Running…";
-    const finish = () => { btn.disabled = false; btn.textContent = label; clearTimeout(timer); if (worker) { worker.terminate(); worker = null; } resolve(); };
+    const finish = () => { btn.disabled = false; btn.textContent = label; clearTimeout(timer); if (worker) { worker.terminate(); worker = null; } cancelRun = null; resolve(); };
+    cancelRun = finish;
     try {
       worker = new Worker(D.ROOT + "assets/js/java-interp.js");
     } catch (e) {
@@ -396,17 +400,18 @@
         '<button type="button" class="primary" id="pg-run" title="Ctrl or Cmd + Enter">Run code</button>' +
         "</div>" +
         '<p class="pg-err" id="pg-err" role="alert"></p>' +
-        '<div class="pg-grid"><div class="pg-editor" id="pg-editor"></div><div class="stage pg-stage"><div id="pg-view"></div><h3>Output</h3><pre class="pg-out" id="pg-out" aria-label="Program output"></pre></div></div>' +
+        '<div class="pg-grid"><div class="pg-editor" id="pg-editor"></div><div class="stage pg-stage" tabindex="0" role="group" aria-label="What the program is doing"><div id="pg-view"></div><h3>Output</h3><pre class="pg-out" id="pg-out" role="log" aria-label="Program output" tabindex="0"></pre></div></div>' +
         '<div id="pg-player"></div><div id="pg-legend"></div>' +
         '<details class="pg-help"><summary>What Java works here?</summary>' +
         '<p>Your code runs entirely in your browser and is saved on this device. Nothing is uploaded.</p>' +
+        '<p>In the editor, Tab indents your code. To move on with the keyboard, press Esc and then Tab.</p>' +
         '<p>This is a teaching interpreter, not a full JDK, so check a program with <span class="mono">javac</span> before you hand it in. Some type errors only appear once the line actually runs.</p>' +
         '<p><b>Works:</b> classes, fields, constructors, static and instance methods, inheritance with <span class="mono">super</span>, generics, recursion, arrays of any dimension, loops, <span class="mono">switch</span>, <span class="mono">try</span> / <span class="mono">catch</span> / <span class="mono">throw</span>, <span class="mono">String</span>, <span class="mono">StringBuilder</span>, <span class="mono">Math</span>, <span class="mono">Arrays</span>, <span class="mono">Collections</span>, <span class="mono">ArrayList</span>, <span class="mono">LinkedList</span>, <span class="mono">Stack</span>, <span class="mono">ArrayDeque</span>, <span class="mono">PriorityQueue</span>, <span class="mono">HashMap</span>, <span class="mono">HashSet</span>.</p>' +
         '<p><b>Not yet:</b> interfaces, enums, lambdas, streams, anonymous classes, threads, files and <span class="mono">Scanner</span> input. <span class="mono">long</span> is exact only up to 2<sup>53</sup>, and <span class="mono">HashMap</span> keeps insertion order rather than Java\'s order.</p>' +
         "</details>";
 
       const mine = saved();
-      const start = mine != null ? mine : (exampleForTab() || { code: "" }).code;
+      const start = mine != null ? mine : (exampleForTab() || { code: FALLBACK }).code;
       edited = mine != null;
       fillSelect(mine != null ? MINE : String(examples.indexOf(exampleForTab())));
 
@@ -445,7 +450,7 @@
     openBtn.classList.toggle("on", on);
     if (!on) {
       if (player) player.pause();
-      if (worker) { worker.terminate(); worker = null; }
+      if (cancelRun) cancelRun();
       openBtn.focus({ preventScroll: true });
       return;
     }
@@ -461,19 +466,12 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    const main = D.$(".panel.main"), head = D.$(".page-head .wrap");
-    if (!main || !head) return;
+    const main = D.$(".panel.main");
+    openBtn = q("pg-open");
+    if (!main || !openBtn) return;
     panel = D.el("section", { class: "panel playground", id: "playground", hidden: "", "data-noshare": "", "aria-labelledby": "pg-title" });
     main.parentNode.insertBefore(panel, main.nextSibling);
-    openBtn = D.el("button", { type: "button", class: "btn primary pg-open", id: "pg-open", "data-noshare": "", "aria-expanded": "false", "aria-controls": "playground", title: "Write Java here and watch it run step by step", text: "Code playground" });
     openBtn.addEventListener("click", () => toggle());
-    /* the heading and the button share one row */
-    const title = D.el("div", { class: "page-title" });
-    while (head.firstChild) title.appendChild(head.firstChild);
-    head.classList.add("has-action");
-    head.appendChild(title);
-    head.appendChild(openBtn);
-
     /* a shared link carries the code itself, and reruns it */
     if (D.share) D.share.state("playground", () => (editor && !panel.hidden ? editor.value : null), async (code) => {
       await toggle(true);

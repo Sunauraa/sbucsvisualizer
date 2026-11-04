@@ -661,7 +661,9 @@
 
   /* ---------- the interpreter ---------- */
   function run(src, opts) {
-    const o = Object.assign({ maxFrames: 4000, maxOps: 6000000, maxDepth: 400, maxOutput: 20000, maxShown: 120 }, opts || {});
+    const o = Object.assign({ maxFrames: 4000, maxOps: 6000000, maxDepth: 600, maxOutput: 20000, maxShown: 120, maxHeapPerFrame: 300, heapBudget: 200000 }, opts || {});
+    const DEEP = "the call stack passed this playground's limit of about " + o.maxDepth + " nested calls. Real Java allows thousands, so if your base case is right, try a smaller input.";
+    let heapLeft = o.heapBudget;
     const classes = dict();
     parse(src).forEach((c) => {
       if (classes[c.name]) throw new CompileError("Class " + c.name + " is declared twice.", c.line);
@@ -694,9 +696,11 @@
       return text(val);
     }
     function snapshot(line, extra) {
-      if (frames.length >= o.maxFrames) { truncated = true; return; }
+      if (frames.length >= o.maxFrames || heapLeft <= 0) { truncated = true; return; }
       const seen = new Set();
-      const st = stack.map((fr) => {
+      /* a very deep recursion keeps only its two ends: the middle would cost memory on every step, and is never drawn */
+      const kept = stack.length > 24 ? stack.slice(0, 2).concat(stack.slice(-20)) : stack;
+      const st = kept.map((fr) => {
         const vars = {};
         if (fr.self) vars.this = snapVal(fr.self, seen);
         fr.scopes.forEach((sc) => sc.forEach((val, name) => { vars[name] = snapVal(val, seen); }));
@@ -707,10 +711,11 @@
       Object.values(classes).forEach((c) => Object.keys(c.staticVals).forEach((k) => { statics[c.name + "." + k] = snapVal(c.staticVals[k], seen); }));
       const heap = {};
       const todo = Array.from(seen), done = new Set();
-      while (todo.length) {
+      while (todo.length && done.size < o.maxHeapPerFrame) {
         const h = todo.pop();
         if (done.has(h)) continue;
         done.add(h);
+        heapLeft -= 1 + (h.data ? Math.min(h.data.length, o.maxShown) : 0);
         const nest = (x) => { const s = new Set(); const r = snapVal(x, s); s.forEach((q) => todo.push(q)); return r; };
         if (h.kind === "array") heap[h.id] = { kind: "array", elem: h.elem, length: h.data.length, data: h.data.slice(0, o.maxShown).map(nest) };
         else if (h.kind === "obj") { const f = {}; h.fields.forEach((v, k) => { f[k] = nest(v); }); heap[h.id] = { kind: "obj", cls: h.cls, fields: f }; }
@@ -720,7 +725,7 @@
         else if (h.kind === "sb") heap[h.id] = { kind: "obj", cls: h.cls, fields: { value: '"' + h.s + '"' } };
         else heap[h.id] = { kind: "obj", cls: h.cls || "Object", fields: {} };
       }
-      frames.push(Object.assign({ line, stack: st, heap, statics, out: output.length }, extra || {}));
+      frames.push(Object.assign({ line, stack: st, heap, statics, out: output.length, hiddenFrames: stack.length - kept.length }, extra || {}));
     }
 
     /* ---------- printing ---------- */
@@ -831,7 +836,7 @@
       return cands.slice().sort((a, b) => score(b) - score(a))[0];
     }
     function invoke(fn, self, argv, line) {
-      if (stack.length >= o.maxDepth) raise("StackOverflowError", "the call stack passed " + o.maxDepth + " frames: is the base case ever reached?", line);
+      if (stack.length >= o.maxDepth) raise("StackOverflowError", DEEP, line);
       const scope = new Map();
       scope.types = new Map();
       fn.params.forEach((p, i) => { scope.set(p.name, coerce(argv[i], p.type, line, "parameter " + p.name)); scope.types.set(p.name, p.type); });
@@ -1056,7 +1061,7 @@
         default: throw new CompileError("This statement is not supported in the playground.", s.line);
       }
     }
-    const wrapOverflow = () => new JavaThrow("StackOverflowError", "the call stack grew too deep: is the base case ever reached?", curLine);
+    const wrapOverflow = () => new JavaThrow("StackOverflowError", DEEP, curLine);
 
     /* ---------- expressions ---------- */
     const numOf = (val, line) => {
@@ -1785,7 +1790,7 @@
         result.error = { kind: "runtime", cls: err.cls, message: err.jmsg, line: err.line };
         print("Exception in main: " + err.cls + (err.jmsg != null ? ": " + err.jmsg : "") + "\n");
       } else if (err instanceof RangeError) {
-        result.error = { kind: "runtime", cls: "StackOverflowError", message: "the call stack grew too deep: is the base case ever reached?", line: curLine };
+        result.error = { kind: "runtime", cls: "StackOverflowError", message: DEEP, line: curLine };
         print("Exception in main: StackOverflowError\n");
       } else if (err instanceof StepLimit) {
         result.stepLimit = true;

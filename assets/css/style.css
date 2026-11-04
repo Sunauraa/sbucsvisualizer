@@ -17,7 +17,7 @@
   --ink: #3f4652;         /* outlines inside visualizations */
   --txt: #172030;
   --muted: #4e5868;
-  --muted-2: #717b8b;
+  --muted-2: #5f6979;
 
   --brand: #1b365d;       /* navy: site bar, headings */
   --brand-2: #274b7a;
@@ -36,6 +36,11 @@
   --c-pivot: #db2777;
   --c-warn: #ea580c;
   --c-target: #0891b2;
+  /* the same states as text, dark enough to read on white */
+  --t-done: #15803d;
+  --t-warn: #c2410c;
+  --t-cmp: #b45309;
+  --t-target: #0e7490;
 
   --radius: 8px;
   --radius-sm: 4px;
@@ -231,7 +236,7 @@ button.ghost { background: #fff; }
 /* a picked choice: language, mode */
 button.active, button.active:hover { background: var(--brand); border-color: var(--brand); color: #fff; }
 /* the operation whose animation is on screen */
-button.current, button.current:hover, .toolbar button.current { background: var(--c-done); border-color: var(--c-done); color: #fff; }
+button.current, button.current:hover, .toolbar button.current { background: #15803d; border-color: #15803d; color: #fff; }
 
 input[type="text"], input[type="number"], select {
   font: inherit; font-size: .88rem; font-family: var(--mono);
@@ -621,6 +626,14 @@ footer.site {
 .growth-table summary { cursor: pointer; font-size: .86rem; color: var(--accent); padding: .2rem 0; }
 .growth-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 
+/* A module builds its tabs, toolbar and player when its scripts run. The page's content waits for that, so it
+   appears finished rather than jumping into place. If the scripts never finish, it appears anyway after a moment. */
+html:not(.ready) main:has(.panel.main) { visibility: hidden; animation: show-anyway 0s linear 4s forwards; }
+@keyframes show-anyway { to { visibility: visible; } }
+@media print { html:not(.ready) main:has(.panel.main) { visibility: visible; animation: none; } }
+.noscript { margin: 0; padding: .7rem 1rem; text-align: center; color: #7f1d1d; background: #fef2f2; border-bottom: 1px solid #f7caca; }
+/* a phone zooms the page when a small input takes focus */
+@media (pointer: coarse) { input[type="text"], input[type="number"], input:not([type]), select, textarea, .pg-editor .cm-editor { font-size: 16px; } }
 .page-head .wrap.has-action { display: flex; align-items: flex-end; justify-content: space-between; gap: .75rem 1.5rem; flex-wrap: wrap; }
 .page-head .pg-open { flex: none; }
 .pg-open.on, .pg-open.on:hover { background: var(--brand-2); }

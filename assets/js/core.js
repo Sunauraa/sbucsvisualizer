@@ -706,7 +706,7 @@
     frames.forEach((fr, k) => {
       const top = k === frames.length - 1;
       if (frames.length > max + 1 && k < frames.length - max) {
-        if (k === 0) col.appendChild(DSA.el("div", { class: "small muted", text: "… " + (frames.length - max) + " more frame(s) below" }));
+        if (k === 0) col.appendChild(DSA.el("div", { class: "small muted", text: "… " + (frames.length - max + (o.hidden || 0)) + " more frame(s) below" }));
         return;
       }
       const returning = o.returning != null && o.returning === fr.id;
@@ -861,7 +861,7 @@
       '<button class="icon" data-a="next" title="Step forward (&rarr;)">&#9654;</button>' +
       '<button class="icon" data-a="last" title="Last frame">&#9654;&#124;</button>' +
       '<div class="sep"></div>' +
-      '<div class="field"><label>Speed</label><select data-a="speed">' +
+      '<div class="field"><label>Speed</label><select data-a="speed" aria-label="Playback speed">' +
       '<option value="0.35">0.35&times;</option><option value="0.6">0.6&times;</option>' +
       '<option value="1" selected>1&times;</option><option value="2">2&times;</option>' +
       '<option value="4">4&times;</option></select></div>' +
@@ -869,7 +869,7 @@
       '<div class="spacer" style="flex:1"></div>' +
       '<div class="counter" data-a="counter">0 / 0</div>' +
       "</div>" +
-      '<div class="track"><input type="range" min="0" max="0" value="0" data-a="track"></div>' +
+      '<div class="track"><input type="range" min="0" max="0" value="0" data-a="track" aria-label="Step"></div>' +
       "</div>" +
       '<div class="note" data-a="note" role="status" aria-live="polite"></div>' +
       '<div class="player-extra" data-a="extra"></div>';
@@ -1024,6 +1024,8 @@
   document.addEventListener("keydown", (e) => {
     const t = e.target;
     if (t && (/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName) || t.isContentEditable)) return;
+    /* on a focused button or link, Space and Enter belong to that control */
+    if (e.code === "Space" && t && t.closest && t.closest("button, a, summary")) return;
     let p = activePlayer && activePlayer.isVisible() ? activePlayer : null;
     if (!p) p = nearestToViewportCentre();
     if (!p || !p.ctlShown) return;
@@ -1128,11 +1130,14 @@
         '<div class="wrap">keyboard: <span class="mono">space</span> play/pause, <span class="mono">&larr; &rarr;</span> step</div>';
     }
     const bar = DSA.$(".topbar-in");
-    if (bar && !DSA.$(".fb-btn", bar)) {
+    /* no form connected yet: show nothing rather than a button that goes nowhere */
+    if (DSA.FEEDBACK_URL && bar && !DSA.$(".fb-btn", bar)) {
       const btn = feedbackLink("fb-btn", '<span aria-hidden="true">✉</span> <span class="fb-long">Send </span>feedback');
       const pill = DSA.$(".pill", bar);
       bar.insertBefore(btn, pill || null);
     }
   };
   document.addEventListener("DOMContentLoaded", DSA.footer);
+  /* after every page script's own DOMContentLoaded work: see "show-anyway" in style.css */
+  document.addEventListener("DOMContentLoaded", () => setTimeout(() => document.documentElement.classList.add("ready")));
 })();

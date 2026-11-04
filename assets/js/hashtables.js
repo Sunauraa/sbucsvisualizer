@@ -567,7 +567,7 @@
         ptrs: chars.reduce((m, ch, i) => { m[i] = String(ch.charCodeAt(0)); return m; }, {}),
         index: false, w: 34, h: 34, roomBelow: true,
       }));
-      box.appendChild(D.el("div", { class: "mono", style: "font-size:1.05rem;padding-bottom:1.4rem", html: "h = <b style='color:var(--c-" + (f.hc.done ? "done" : "active") + ")'>" + f.hc.h + "</b>" }));
+      box.appendChild(D.el("div", { class: "mono", style: "font-size:1.05rem;padding-bottom:1.4rem", html: "h = <b style='color:var(--" + (f.hc.done ? "t-done" : "c-active") + ")'>" + f.hc.h + "</b>" }));
       view.appendChild(box);
     }
 

@@ -7,12 +7,11 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
+import { startServer, ROOT } from "./server.mjs";
 
 const require = createRequire(import.meta.url);
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PAGES = ["arrays", "recursion", "stacks-queues", "trees", "priority-queues", "hashtables", "graphs", "sorting"];
 const SHOTS = path.join(ROOT, "tests", "shots");
 const only = process.argv.slice(2);
@@ -27,22 +26,9 @@ const ok = (cond, label, detail) => {
   return false;
 };
 
-/* ---------- a local copy of what Vercel serves: static files plus the function ---------- */
-const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".json": "application/json" };
+/* ---------- a local copy of what Vercel serves: see server.mjs ---------- */
 let aiKey = null;
-const handler = require(path.join(ROOT, "api", "tutor.js"));
-const server = http.createServer((req, res) => {
-  const url = new URL(req.url, "http://x");
-  if (url.pathname === "/api/tutor") {
-    if (aiKey) process.env.AI_API_KEY = aiKey; else delete process.env.AI_API_KEY;
-    return handler(req, res);
-  }
-  const file = path.join(ROOT, decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname));
-  if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.statusCode = 404; return res.end("not found"); }
-  res.setHeader("content-type", MIME[path.extname(file)] || "application/octet-stream");
-  fs.createReadStream(file).pipe(res);
-});
-await new Promise((r) => server.listen(0, "127.0.0.1", r));
+const server = await startServer(0, { key: () => aiKey });
 const BASE = "http://127.0.0.1:" + server.address().port;
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -531,34 +517,30 @@ if (want("tutor")) {
 if (want("growth")) {
   console.log("growth");
   const { page, ctx, errors } = await openPage("sorting");
-  const src = fs.readFileSync(path.join(ROOT, "assets/js/growth-worker.js"), "utf8");
-  const parity = await page.evaluate((src) => {
-    const scope = {};
-    new Function("self", src + "\nself.SORTS = SORTS; self.makeInput = makeInput;")(scope);
-    const SHAPES = ["random", "sorted", "reverse", "nearly", "few"];
+  /* the worker's sorts run here in Node, the visualizer's in the page, on identical inputs */
+  const scope = {};
+  new Function("self", fs.readFileSync(path.join(ROOT, "assets/js/growth-worker.js"), "utf8") + "\nself.SORTS = SORTS; self.makeInput = makeInput;")(scope);
+  const cases = [];
+  let seed = 1;
+  const rand = () => { seed = (seed * 48271) % 2147483647; return seed / 2147483647; };
+  Object.keys(scope.SORTS).forEach((id) => ["random", "sorted", "reverse", "nearly", "few"].forEach((shape) => [2, 3, 5, 10, 13, 14, 30, 50].forEach((n) => {
+    if (id === "twothird" && n > 14) return;
+    const input = scope.makeInput(n, shape, rand);
+    const b = input.slice();
+    const fast = scope.SORTS[id](b);
+    cases.push({ id, shape, n, input, cmp: fast.cmp, mov: fast.mov, sortedByWorker: b.join() === input.slice().sort((x, y) => x - y).join() });
+  })));
+  const parity = await page.evaluate((cases) => {
     const bad = [];
-    let checked = 0;
-    let seed = 1;
-    const rand = () => { seed = (seed * 48271) % 2147483647; return seed / 2147483647; };
-    Object.keys(scope.SORTS).forEach((id) => {
-      SHAPES.forEach((shape) => {
-        [2, 3, 5, 10, 13, 14, 30, 50].forEach((n) => {
-          if (id === "twothird" && n > 14) return;
-          const input = scope.makeInput(n, shape, rand);
-          const fast = scope.SORTS[id](input.slice());
-          const a = input.slice();
-          const s = { cmp: 0, mov: 0, done: new Set(), stop: () => false, snap() {} };
-          DSA.sortAlgos[id].run(a, s);
-          const sorted = input.slice().sort((x, y) => x - y).join();
-          const b = input.slice(); scope.SORTS[id](b);
-          checked++;
-          if (fast.cmp !== s.cmp || fast.mov !== s.mov) bad.push(id + " " + shape + " n=" + n + ": worker " + fast.cmp + "/" + fast.mov + ", visualizer " + s.cmp + "/" + s.mov);
-          if (a.join() !== sorted || b.join() !== sorted) bad.push(id + " " + shape + " n=" + n + " did not sort");
-        });
-      });
+    cases.forEach((c) => {
+      const a = c.input.slice();
+      const s = { cmp: 0, mov: 0, done: new Set(), stop: () => false, snap() {} };
+      DSA.sortAlgos[c.id].run(a, s);
+      if (c.cmp !== s.cmp || c.mov !== s.mov) bad.push(c.id + " " + c.shape + " n=" + c.n + ": worker " + c.cmp + "/" + c.mov + ", visualizer " + s.cmp + "/" + s.mov);
+      if (!c.sortedByWorker || a.join() !== c.input.slice().sort((x, y) => x - y).join()) bad.push(c.id + " " + c.shape + " n=" + c.n + " did not sort");
     });
-    return { bad: bad.slice(0, 10), checked };
-  }, src);
+    return { bad: bad.slice(0, 10), checked: cases.length };
+  }, cases);
   ok(!parity.bad.length && parity.checked > 100, "worker counts match the visualizer on " + parity.checked + " runs", parity.bad);
   await page.locator("#growth").scrollIntoViewIfNeeded();
   await page.waitForFunction(() => /Stopped early|Measured every/.test(document.querySelector(".growth-status").textContent), null, { timeout: 40000 });
@@ -713,7 +695,7 @@ if (want("playground")) {
   /* a link carries the code, reopens the panel, and lands on the same step */
   await setCode('public class Main {\n  public static void main(String[] args) {\n    int x = 41;\n    x++;\n    System.out.println("from a link " + x);\n  }\n}\n');
   await page.click("#pg-run");
-  await page.waitForFunction(`${pgPlayer}.frames.length > 3 && !document.querySelector("#pg-run").disabled`, null, { timeout: 8000 });
+  await page.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 3 && !document.querySelector("#pg-run").disabled; }, null, { timeout: 8000 });
   const link = await page.evaluate(`(() => { const p = ${pgPlayer}; p.pause(); p.goto(p.frames.length - 1); return { index: p.index, link: DSA.share.link() }; })()`);
   const ctx2 = await browser.newContext();
   const page2 = await ctx2.newPage();
@@ -848,6 +830,305 @@ function firstDiff(a, b) {
   const A = a.split("\n"), B = b.split("\n");
   for (let i = 0; i < Math.max(A.length, B.length); i++) if (A[i] !== B[i]) return { line: i + 1, jvm: A[i], playground: B[i] };
   return null;
+}
+
+/* ---------- injection: text a student types, or a crafted link supplies, must never become markup ---------- */
+if (want("xss")) {
+  console.log("injection");
+  const PAYLOADS = ['<img src=x onerror="window.__xss=1">', '"><svg onload="window.__xss=1">', "'><b class=__xss>x</b>"];
+  const sweep = (page) => page.evaluate(async (PAYLOADS) => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const found = new Set();
+    const check = (where) => {
+      DSA._players.forEach((p) => {
+        p.pause();
+        const n = p.frames.length, step = Math.max(1, Math.floor(n / 40));
+        p.noMotion = true;
+        for (let i = 0; i < n; i += step) {
+          p.goto(i);
+          if (document.querySelector("main img, main .__xss, main svg[onload], [onerror], [onload]")) found.add(where + " frame " + i);
+        }
+        p.noMotion = false;
+      });
+    };
+    const tabs = Array.from(document.querySelectorAll(".tabs button"));
+    for (let t = 0; t < Math.max(1, tabs.length); t++) {
+      if (tabs[t]) tabs[t].click();
+      await sleep(0);
+      /* hash tables only take text once the keys switch says Strings */
+      document.querySelectorAll(".panel.main .seg button").forEach((b) => { if (/string/i.test(b.textContent) && b.offsetParent) b.click(); });
+      const fields = () => Array.from(document.querySelectorAll(".panel.main input:not([type=range]):not([type=checkbox])")).filter((x) => x.offsetParent);
+      const buttons = () => Array.from(document.querySelectorAll(".panel.main .toolbar button, .panel.main #inputs button")).filter((x) => x.offsetParent);
+      const count = buttons().length;
+      for (let b = 0; b < count; b++) {
+        for (const v of PAYLOADS) {
+          fields().forEach((f) => { f.value = v; f.dispatchEvent(new Event("input", { bubbles: true })); f.dispatchEvent(new Event("change", { bubbles: true })); });
+          const x = buttons()[b];
+          if (!x) continue;
+          x.click();
+          await sleep(0);
+          check((tabs[t] ? tabs[t].textContent.trim() : "page") + " / " + x.textContent.trim());
+        }
+      }
+      fields().forEach((f) => { f.value = PAYLOADS[0]; f.dispatchEvent(new Event("input", { bubbles: true })); });
+      await sleep(520);
+      check((tabs[t] ? tabs[t].textContent.trim() : "page") + " / after typing");
+    }
+    return { hits: [...found].slice(0, 8), fired: !!window.__xss };
+  }, PAYLOADS);
+  /* with the headers off, so this proves the code is safe by itself and not just that the policy caught it */
+  const bareX = await startServer(0, { headers: false });
+  for (const name of PAGES) {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await c.newPage();
+    await page.goto("http://127.0.0.1:" + bareX.address().port + "/cse214/" + name + ".html");
+    await page.waitForLoadState("load");
+    const r = await sweep(page);
+    ok(!r.hits.length && !r.fired, name + " keeps typed text as text", r);
+    await c.close();
+  }
+  bareX.close();
+  /* a crafted link: the page must refuse to act on anything outside its own controls */
+  const { page, ctx } = await openPage("sorting");
+  const crafted = await page.evaluate(() => {
+    const enc = (o) => location.pathname + "#s=" + LZString.compressToEncodedURIComponent(JSON.stringify(o));
+    return [
+      enc({ v: 1, seed: 1, acts: [{ t: "c", q: ".fb-btn" }], players: [0] }),
+      enc({ v: 1, seed: 1, acts: [{ t: "c", q: "a" }], players: [0] }),
+      enc({ v: 1, seed: 1, acts: [{ t: "i", q: "#custom", v: '<img src=x onerror="window.__xss=1">' }, { t: "c", q: "#btn-load" }], players: [0] }),
+      enc({ v: 1, seed: 1, acts: "nope", players: "nope", lang: '"]bad' }),
+      enc({ v: 1, seed: 1, acts: [{ t: "s", q: "__proto__", v: {} }], players: [999999, -1, "x"] }),
+      enc({ v: 1, seed: "x", acts: new Array(5000).fill({ t: "c", q: "#btn-new" }), players: [] }),
+      "not-base64-at-all",
+    ];
+  });
+  for (const c of crafted) {
+    const x = await browser.newContext();
+    const pg = await x.newPage();
+    const errs = [];
+    pg.on("pageerror", (e) => errs.push(e.message));
+    const url = c.startsWith("not-") ? BASE + "/cse214/sorting.html#s=" + c : BASE + c;
+    await pg.goto(url);
+    await pg.waitForLoadState("load");
+    await pg.waitForTimeout(350);
+    const st = await pg.evaluate(() => ({ url: location.pathname, fired: !!window.__xss, working: DSA._players[0].frames.length >= 1 }));
+    ok(st.url.endsWith("sorting.html") && !st.fired && st.working && !errs.length, "a crafted link does no harm: " + c.slice(-24), { st, errs });
+    await x.close();
+  }
+  await ctx.close();
+  /* a graph from a link is checked before it is used */
+  {
+    const { page: gp, ctx: gc } = await openPage("graphs");
+    const url = await gp.evaluate(() => location.pathname + "#s=" + LZString.compressToEncodedURIComponent(JSON.stringify({ v: 1, seed: 1, acts: [{ t: "s", q: "graph", v: { pos: [{ x: "<b>", y: null }], adj: [[99, "x"]] } }], players: [0] })));
+    const x = await browser.newContext();
+    const pg = await x.newPage();
+    const errs = [];
+    pg.on("pageerror", (e) => errs.push(e.message));
+    await pg.goto(BASE + url);
+    await pg.waitForLoadState("load");
+    await pg.waitForTimeout(350);
+    await pg.click("#btn-bfs").catch(() => {});
+    await pg.waitForTimeout(50);
+    ok(!errs.length, "a malformed graph in a link causes no errors", errs);
+    await x.close();
+    await gc.close();
+  }
+}
+
+/* ---------- accessibility: axe on every page, in the states students actually see ---------- */
+if (want("a11y")) {
+  console.log("accessibility");
+  const axeSource = fs.readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
+  const scan = async (page, label) => {
+    const r = await page.evaluate(async (src) => {
+      if (!window.axe) { const s = document.createElement("script"); s.textContent = src; document.head.appendChild(s); }
+      /* the editor's own scroller is reached through its text, which already takes the keyboard */
+      const res = await window.axe.run({ exclude: [[".cm-scroller"]] }, { runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] });
+      return res.violations.map((v) => ({ id: v.id, impact: v.impact, n: v.nodes.length, sample: v.nodes[0].target.join(" "), html: v.nodes[0].html.slice(0, 90) }));
+    }, axeSource);
+    ok(!r.length, label + " has no accessibility violations", r);
+  };
+  /* axe has to inject itself, which a strict policy rightly refuses, so this suite runs without the headers */
+  const bare = await startServer(0, { headers: false });
+  const b = "http://127.0.0.1:" + bare.address().port;
+  const open = async (p) => { const c = await browser.newContext({ viewport: { width: 1280, height: 900 } }); const g = await c.newPage(); await g.goto(b + p); await g.waitForLoadState("load"); return { g, c }; };
+  for (const p of ["/index.html", "/cse214/index.html", "/cse373/index.html", "/404.html"]) {
+    if (!fs.existsSync(path.join(ROOT, p))) continue;
+    const { g, c } = await open(p);
+    await scan(g, p);
+    await c.close();
+  }
+  for (const name of PAGES) {
+    const { g, c } = await open("/cse214/" + name + ".html");
+    await scan(g, name);
+    /* a running visualizer with the Why? panel and the code open */
+    await g.evaluate(async () => {
+      const b = Array.from(document.querySelectorAll(".panel.main .toolbar button")).find((x) => x.offsetParent && !x.matches(".danger, [data-tool]"));
+      if (b) b.click();
+      const p = DSA._players[0];
+      await new Promise((r) => setTimeout(r, 30));
+      p.pause();
+      p.showControls(true);
+      const h = document.querySelector(".code-hide"); if (h) h.click();
+      Array.from(p.tools.querySelectorAll("button")).find((x) => x.textContent === "Why?").click();
+      await new Promise((r) => setTimeout(r, 200));
+    });
+    await scan(g, name + " with code and Why? open");
+    await g.click("#pg-open");
+    await g.waitForSelector("#pg-run");
+    await g.click("#pg-run");
+    await g.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 3 && !document.querySelector("#pg-run").disabled; });
+    await g.evaluate(() => { const p = DSA._players[DSA._players.length - 1]; p.pause(); p.noMotion = true; p.goto(Math.floor(p.frames.length / 2)); });
+    await scan(g, name + " with the playground open");
+    await c.close();
+  }
+  bare.close();
+
+  /* the keyboard, which a scanner cannot judge */
+  const { page, ctx } = await openPage("sorting");
+  await page.click("#btn-run");
+  await page.evaluate(() => DSA._players[0].pause());
+  await page.getByRole("button", { name: "Why?", exact: true }).focus();
+  await page.keyboard.press("Space");
+  ok(await page.locator(".why").isVisible(), "Space activates a focused button instead of playing");
+  const playing = await page.evaluate(() => DSA._players[0].playing);
+  ok(!playing, "Space on a button doesn't start the player");
+  await page.getByRole("button", { name: "Why?", exact: true }).click();
+  await page.getByRole("button", { name: "Quiz me" }).click();
+  await page.evaluate(() => { const p = DSA._players[0]; p.pause(); p.goto(0); });
+  await page.locator("[data-a=next]").first().click();
+  await page.waitForSelector(".quiz:not([hidden])");
+  await page.waitForTimeout(50);
+  const quizFocus = await page.evaluate(() => { const a = document.activeElement; return !!(a && a.closest(".quiz")); });
+  ok(quizFocus, "a quiz question takes the keyboard focus");
+  await page.keyboard.press("1");
+  ok(await page.locator(".quiz-result button").isVisible(), "a number key answers the quiz");
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(50);
+  const afterQuiz = await page.evaluate(() => { const a = document.activeElement; return !!(a && a.closest(".player")); });
+  ok(afterQuiz, "focus returns to the player after a question");
+  /* the editor must not trap the Tab key */
+  await page.click("#pg-open");
+  await page.waitForSelector("#pg-run");
+  await page.click(".cm-content");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Tab");
+  const escaped = await page.evaluate(() => !document.activeElement.closest(".cm-editor"));
+  ok(escaped, "Esc then Tab leaves the code editor");
+  await ctx.close();
+}
+
+/* ---------- production details ---------- */
+if (want("prod")) {
+  console.log("production");
+  const files = fs.readdirSync(path.join(ROOT, "cse214")).map((f) => "/cse214/" + f).concat(["/index.html", "/cse373/index.html"]);
+  /* every internal link and asset exists; every page has the basics */
+  for (const f of files) {
+    const res = await fetch(BASE + f);
+    const html = await res.text();
+    ok(res.status === 200, f + " loads");
+    ok(/<title>[^<]{3,}<\/title>/.test(html), f + " has a title");
+    ok(/<meta name="description" content="[^"]{20,}"/.test(html), f + " has a description");
+    ok(/<html lang="en"/.test(html), f + " declares its language");
+    ok(/name="viewport"/.test(html), f + " has a viewport");
+    ok(/<noscript>/.test(html), f + " explains itself without JavaScript");
+    const refs = Array.from(html.matchAll(/(?:href|src)="([^"#]+)(?:#[^"]*)?"/g)).map((m) => m[1]).filter((r) => !/^(https?:|mailto:|data:)/.test(r));
+    for (const r of refs) {
+      const u = new URL(r, BASE + f);
+      const a = await fetch(u);
+      ok(a.status === 200, f + " links to something real: " + r, a.status);
+    }
+  }
+  /* headers */
+  const h = await fetch(BASE + "/cse214/sorting.html");
+  const csp = h.headers.get("content-security-policy") || "";
+  ok(/default-src 'self'/.test(csp) && /script-src 'self'/.test(csp) && !/script-src[^;]*unsafe/.test(csp), "a strict content security policy is set", csp);
+  ok(/frame-ancestors 'none'/.test(csp), "other sites can't frame the page");
+  ok(h.headers.get("x-content-type-options") === "nosniff", "nosniff is set");
+  ok(!!h.headers.get("referrer-policy"), "a referrer policy is set");
+  ok(!!h.headers.get("permissions-policy"), "a permissions policy is set");
+  /* nothing breaks under that policy, including workers and the lazy-loaded editor */
+  for (const name of PAGES) {
+    const { page, ctx, errors } = await openPage(name);
+    const blocked = [];
+    page.on("console", (m) => { if (/Content Security Policy|violates/i.test(m.text())) blocked.push(m.text().slice(0, 200)); });
+    await page.click("#pg-open");
+    await page.waitForSelector("#pg-run");
+    await page.click("#pg-run");
+    await page.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 3 && !document.querySelector("#pg-run").disabled; }, null, { timeout: 8000 });
+    await page.getByRole("button", { name: "Why?", exact: true }).last().click();
+    await page.waitForTimeout(150);
+    if (name === "sorting") {
+      await page.locator("#growth").scrollIntoViewIfNeeded();
+      await page.waitForFunction(() => /Stopped early|Measured every/.test(document.querySelector(".growth-status").textContent), null, { timeout: 40000 });
+    }
+    ok(!blocked.length, name + " runs under the security policy", blocked);
+    ok(!errors.length, name + " has no errors under the security policy", errors.slice(0, 3));
+    await ctx.close();
+  }
+  /* the 404 page and the things that must not be public */
+  const nf = await fetch(BASE + "/nope.html");
+  ok(nf.status === 404 && /Page not found/i.test(await nf.text()), "a missing page gets a real 404 page");
+  const ignore = fs.readFileSync(path.join(ROOT, ".vercelignore"), "utf8").split("\n");
+  ["tests", "tools", "Ultron", ".github", "README.md"].forEach((x) => ok(ignore.includes(x), x + " is not deployed"));
+  ok(fs.existsSync(path.join(ROOT, "assets/vendor/THIRD-PARTY-NOTICES.txt")) && /CodeMirror|Marijn/.test(fs.readFileSync(path.join(ROOT, "assets/vendor/THIRD-PARTY-NOTICES.txt"), "utf8")), "third-party licenses ship with the code");
+  /* page weight: what a student downloads before they touch anything */
+  const sizes = await (async () => {
+    const { page, ctx } = await openPage("sorting");
+    const r = await page.evaluate(() => performance.getEntriesByType("resource").filter((e) => /assets\//.test(e.name)).map((e) => e.name.split("/").pop().split("?")[0]));
+    await ctx.close();
+    return r;
+  })();
+  ok(!sizes.includes("editor.js") && !sizes.includes("playground-examples.js") && !sizes.includes("why-data.js"), "heavy files wait until they're needed", sizes);
+  /* a playground run that gets interrupted leaves the button usable */
+  {
+    const { page, ctx } = await openPage("sorting");
+    await page.click("#pg-open");
+    await page.waitForSelector("#pg-run");
+    await page.click(".cm-content");
+    await page.keyboard.press("ControlOrMeta+A");
+    await page.keyboard.insertText("while (true) { int x = 1; }");
+    await page.click("#pg-run");
+    await page.click("#pg-close");
+    await page.click("#pg-open");
+    await page.waitForTimeout(100);
+    ok(await page.locator("#pg-run").isEnabled(), "closing the panel mid-run leaves Run code usable");
+    await ctx.close();
+  }
+  /* a slow or failing network never leaves the tutor stuck, and the playground says when it can't load */
+  {
+    const { page, ctx } = await openPage("sorting");
+    await page.route("**/assets/vendor/editor.js*", (r) => r.abort());
+    await page.click("#pg-open");
+    await page.waitForSelector("#pg-run");
+    ok((await page.locator(".pg-editor textarea").count()) === 1, "if the editor can't load, a plain text box takes over");
+    await ctx.close();
+    const c2 = await browser.newContext();
+    const p2 = await c2.newPage();
+    await p2.route("**/playground-examples.js*", (r) => r.abort());
+    await p2.goto(BASE + "/cse214/sorting.html");
+    await p2.click("#pg-open");
+    await p2.waitForSelector("#pg-run");
+    await p2.waitForTimeout(50);
+    ok(await p2.locator("#pg-run").isVisible(), "if the starter programs can't load, the playground still opens");
+    await c2.close();
+  }
+  /* a very large program must not exhaust the student's memory */
+  {
+    const { runJava } = require(path.join(ROOT, "assets/js/java-interp.js"));
+    const big = runJava("class N { int v; N next; } public class M { public static void main(String[] a) { N h = null; for (int i = 0; i < 20000; i++) { N n = new N(); n.v = i; n.next = h; h = n; } int c = 0; for (N x = h; x != null; x = x.next) c++; System.out.println(c); } }");
+    const size = JSON.stringify(big.frames).length;
+    ok(!big.error && big.output === "20000\n", "a 20,000-node list still runs to the right answer", big.error);
+    ok(big.truncated && size < 60e6, "its recording stays bounded", Math.round(size / 1e6) + " MB");
+    const deep = runJava("static int f(int n) { int[] a = new int[50]; return n == 0 ? 0 : 1 + f(n - 1); } public static void main(String[] x) { for (int i = 0; i < 40; i++) f(500); System.out.println(\"done\"); }");
+    ok(JSON.stringify(deep.frames).length < 60e6, "deep recursion in a loop stays bounded", Math.round(JSON.stringify(deep.frames).length / 1e6) + " MB");
+  }
+  /* playground: deep recursion that real Java would allow gets an honest message */
+  {
+    const { runJava } = require(path.join(ROOT, "assets/js/java-interp.js"));
+    const r = runJava("static int f(int n){ if (n == 0) return 0; return 1 + f(n - 1); } public static void main(String[] a){ System.out.println(f(1000)); }");
+    ok(r.error ? /playground/i.test(r.error.message) : /1000/.test(r.output), "deep recursion is either right or says the playground's limit is why", r.error);
+  }
 }
 
 /* ---------- screenshots for a human to look at ---------- */

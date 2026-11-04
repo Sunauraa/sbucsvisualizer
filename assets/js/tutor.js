@@ -167,8 +167,11 @@
   }
   const CLIENT_LIMITS = { question: 400, note: 800, code: 1600 };
   async function ask(player, f, info, question, why) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 15000);
     const res = await fetch(D.ROOT + "api/tutor", {
       method: "POST",
+      signal: ctl.signal,
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         question: question.slice(0, CLIENT_LIMITS.question),
@@ -178,6 +181,7 @@
         saved: why.map(plain).join(" ").slice(0, CLIENT_LIMITS.note),
       }),
     });
+    clearTimeout(timer);
     let j = {};
     try { j = await res.json(); } catch (e) {}
     if (res.ok && j.answer) return { answer: j.answer };

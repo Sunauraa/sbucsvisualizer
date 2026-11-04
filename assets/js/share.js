@@ -36,9 +36,30 @@
   function readHash() {
     if (!location.hash.startsWith(PREFIX) || !window.LZString) return null;
     try {
-      const v = JSON.parse(window.LZString.decompressFromEncodedURIComponent(location.hash.slice(PREFIX.length)));
-      return v && v.v === VERSION ? v : null;
+      return clean(JSON.parse(window.LZString.decompressFromEncodedURIComponent(location.hash.slice(PREFIX.length))));
     } catch (e) { return null; }
+  }
+
+  /* A link can be written by anyone, so nothing in it is trusted: wrong shapes are dropped here. */
+  function clean(d) {
+    if (!d || d.v !== VERSION || !Array.isArray(d.acts) || d.acts.length > MAX_ACTIONS) return null;
+    const acts = d.acts.filter((a) => a && typeof a.q === "string" && a.q.length < 300 &&
+      (a.t === "c" || a.t === "s" || (a.t === "i" && (typeof a.v === "string" || typeof a.v === "boolean") && String(a.v).length < 2000)));
+    return {
+      v: VERSION,
+      seed: Number.isInteger(d.seed) ? d.seed : 1,
+      acts: acts,
+      players: Array.isArray(d.players) ? d.players.filter((p) => Number.isInteger(p) && p >= 0).slice(0, 8) : [],
+      lang: d.lang === "java" || d.lang === "pseudo" ? d.lang : null,
+      codeOpen: d.codeOpen === true,
+    };
+  }
+  /* a replay may only press this page's own controls, never a link or anything outside the page's content */
+  function controlFor(selector) {
+    let el = null;
+    try { el = document.querySelector(selector); } catch (e) { return null; }
+    if (!el || !el.closest("main") || el.closest(IGNORE)) return null;
+    return el.matches("button, input, select, textarea, [data-tool]") ? el : null;
   }
 
   /* ---------- naming a control so a replay can find it again ---------- */
@@ -92,7 +113,7 @@
         const a = data.acts[n];
         reseed(n + 1);
         if (a.t === "s") { const c = custom.get(a.q); if (c) await c.set(a.v); continue; }
-        const el = document.querySelector(a.q);
+        const el = controlFor(a.q);
         if (!el) continue;
         if (a.t === "c") el.click();
         else {

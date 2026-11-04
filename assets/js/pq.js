@@ -782,7 +782,7 @@
       st.appendChild(D.heapTree(f.a.length, { label: (i) => f.a[i], marks: f.marks }));
     } else if (f.kind === "theap") {
       const onPath = new Set(f.path || []);
-      st.appendChild(D.el("div", { class: "cells-cap", html: "linked nodes: each has <span class='mono'>key, left, right, parent</span>. Labels show each node's level-order position in binary." + (f.bits ? "   <b style='color:var(--c-cmp)'>walking to " + f.bits.pos + " = " + f.bits.pos.toString(2) + "₂</b>" : "") }));
+      st.appendChild(D.el("div", { class: "cells-cap", html: "linked nodes: each has <span class='mono'>key, left, right, parent</span>. Labels show each node's level-order position in binary." + (f.bits ? "   <b style='color:var(--t-cmp)'>walking to " + f.bits.pos + " = " + f.bits.pos.toString(2) + "₂</b>" : "") }));
       st.appendChild(D.heapTree(f.a.length, {
         label: (i) => f.a[i], marks: f.marks,
         sub: (i) => (i + 1).toString(2),
