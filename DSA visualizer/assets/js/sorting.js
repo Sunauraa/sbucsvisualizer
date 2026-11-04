@@ -576,7 +576,7 @@
       const C = new Array(k + 1).fill(0);
       const B = new Array(n).fill(null);
       const rows = (cm, bm) => [
-        { label: "C (counts; index i counts the key i + lo = " + (lo < 0 ? "i − " + -lo : "i + " + lo) + ")", arr: C, marks: cm || {}, showIndex: true },
+        { label: "C (counts; index i counts the key i + lo = " + (lo < 0 ? "i − " + -lo : "i + " + lo) + ")", arr: C, marks: cm || {}, showIndex: true, noMotion: true },
         { label: "B (output)", arr: B, marks: bm || {} },
       ];
       s.snap({}, "alloc", "C gets k + 1 = " + (k + 1) + " zeros and B gets " + n + " empty slots.", { rows: rows() });
@@ -622,6 +622,7 @@
 
   function cellsRow(row, max) {
     const wrap = D.el("div", { style: "margin-top:1rem" });
+    if (row.noMotion) wrap.dataset.motion = "off";   /* counters change in place; a value does not travel between them */
     wrap.appendChild(D.el("div", { class: "small muted", text: row.label, style: "margin-bottom:.15rem" }));
     const cells = D.el("div", { class: "cells" });
     row.arr.forEach((v, i) => {
@@ -648,6 +649,7 @@
     twothird: sortSpec("Sorts the first two-thirds, the last two-thirds, then the first two-thirds again, correct, but famously slow.", "O(n^2.71): T(n) = 3T(2n/3) + O(1)", "O(log n): the recursion depth", { params: M("A") + ": the array · " + M("i") + ", " + M("j") + ": the range (call with 0 and n − 1)", callVals: { i: "0", j: HI } }),
     counting: sortSpec("Counts how many times each key occurs, turns the counts into positions, then places every key directly, no comparisons. Stable.", "O(n + k): k = max − min", "O(n + k): C and B", { params: M("A") + ": integer keys (negative is fine; a decimal makes it throw)", errors: "IllegalArgumentException if a key is not an integer" }),
   });
+  D.sortAlgos = ALGO;   /* the growth-chart test checks its operation counts against these */
   const dock = D.CodeDock("#code", LISTINGS);
   const player = new D.Player({
     mount: "#player",
@@ -667,6 +669,7 @@
         b.style.height = Math.max(0.7, (Math.abs(v) / span) * 100) + "%";
         b.style.bottom = ((Math.min(v, 0) - lo) / span) * 100 + "%";
         b.firstChild.textContent = f.arr.length <= 32 ? v : "";
+        b.dataset.v = v;
       }
       /* heap-sort boundary */
       const hb = q("heapline");

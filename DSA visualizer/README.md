@@ -1,9 +1,10 @@
 # DSA Visualizer: CSE 214 / CSE 373
 
-Interactive data structure and algorithm visualizers. Pure static HTML/CSS/JS: no build step, no
-dependencies, no framework. Drop it on GitHub Pages and it works.
+Interactive data structure and algorithm visualizers. Static HTML/CSS/JS with no build step and no framework:
+it runs on Vercel, GitHub Pages or from a folder. One small optional Vercel Function adds an AI tutor, and every
+feature costs nothing to run.
 
-**Live pages:** `index.html` → course picker → CSE 214 → eight modules.
+**Live pages:** `index.html` → course picker → CSE 214 → eight modules, each with its own Code playground.
 
 ## What's built
 
@@ -37,6 +38,46 @@ the Java parameter is an `int` (recursion's n, hash-table keys, counting sort ke
 message saying why, and counting sort runs its own "not an integer" error branch.
 
 CSE 373 (`cse373/index.html`) is a placeholder listing the planned modules.
+
+## Learning tools
+
+These sit in the player of every module, and none of them needs changes to a module's own code.
+
+| Tool | File | What it does |
+|---|---|---|
+| Animation | `assets/js/motion.js` | Values slide to their new place on each step, and tree edges follow their nodes. It compares the pictures before and after each repaint (FLIP), so stepping back works too. The slider jumps without animating, and `prefers-reduced-motion` fades instead of moving. Add `data-motion="off"` to anything whose text is not a value that travels, such as a counter. |
+| Why? | `assets/js/tutor.js`, `assets/js/why-data.js` | A hand-written reason for every line of every listing, loaded on first use. Add a key to `why-data.js` when you add a line: the tests fail if an entry names a line that no longer exists. |
+| Quiz me | `assets/js/quiz.js` | Stops before some steps and asks which line runs next or what happens next. Questions are built from the recorded frames, and the right answer is simply the next frame. |
+| Copy link | `assets/js/share.js` | A link that reopens this input at this step. It stores the controls used and a random seed in the URL hash, then replays them, so nothing goes to a server. State that lives outside form controls registers with `D.share.state(name, get, set)` and reports changes with `D.share.note(name)`. |
+| Growth chart | `assets/js/growth.js`, `assets/js/growth-worker.js` | On the Sorting page: runs all eight sorts up to n = 10,000 in a Web Worker and plots the operation counts. The worker has its own fast copies of the sorts, and the tests check their counts match the visualizer's. |
+| Code playground | `assets/js/playground.js`, `assets/js/playground-examples.js`, `assets/js/java-interp.js` | The button by each module's title opens a panel under the visualizer, where a student types Java and steps through it. It opens on a starter program for the current tab, and keeps the student's own code per module. `java-interp.js` is a small interpreter in a Web Worker: it never uses `eval`, and it records frames like any module, so all the tools above work there too. The panel lists what it supports. The editor and starter programs load the first time it opens. Add a starter by adding an entry to `playground-examples.js`: the tests compile it with `javac` and compare the output. |
+
+`assets/vendor/` holds two MIT-licensed files, committed so the site still has no build step: `lz-string.min.js`, and
+`editor.js` (CodeMirror 6). To rebuild the editor: `cd tools && npm install && npm run build:editor`.
+
+## Deploying on Vercel
+
+1. Import the repository in Vercel and pick the free Hobby plan.
+2. Under **Settings → General → Root Directory**, enter `DSA visualizer`. **This matters:** the Git root also holds
+   `Ultron/` and an older copy of this site from the first commit, and that old copy is what you get otherwise.
+3. Leave the framework as **Other**, with no build command. Deploy.
+
+That is the whole site. There is no `package.json` at this level, so Vercel has nothing to install, and
+`.vercelignore` keeps `tests/` and `tools/` out of the deployment.
+
+### Optional: switch on Ask AI for free
+
+Without a key the site works fully, using the saved explanations, and no question box appears. To add it:
+
+1. Create a free API key at [console.groq.com](https://console.groq.com). Do not add a payment method: with no card
+   on file, it can only run out, not charge you.
+2. In Vercel, under **Settings → Environment Variables**, add `AI_API_KEY`, then redeploy.
+3. Optional: any OpenAI-compatible provider works if you also set `AI_BASE_URL` and `AI_MODEL`. Model names change,
+   so if answers stop, check the provider's model list and set `AI_MODEL`.
+
+All students share the key's limit. When it runs out, the page says so and keeps showing the saved explanation. Each
+visitor is also limited to 8 questions a minute per running copy of the function, and other sites are refused.
+Questions go to the provider but are not stored by this site, so check the provider's data terms and limits.
 
 ## How it works
 
@@ -125,9 +166,13 @@ r.code("push").at("inc").snap({ note: "t ← t + 1" });
 index.html              course picker
 cse214/*.html           the eight modules
 cse373/index.html       planned
+api/tutor.js            optional Vercel Function behind Ask AI
 assets/css/style.css    one stylesheet for everything
 assets/js/core.js       player, recorder, code dock (spec, class, call line), call-stack cards, cells/heap-tree drawing, tabs, compare helper
-assets/js/*.js          one file per module
+assets/js/*.js          one file per module, plus the learning tools below
+assets/vendor/          committed third-party files
+tests/                  headless-browser checks (not deployed)
+tools/                  rebuilds the vendored editor (not deployed)
 ```
 
 All paths are relative, so the site works from a repository subpath
@@ -199,18 +244,30 @@ Reuse the shared state classes so colours mean the same thing everywhere: `activ
 
 ## Testing
 
-Two headless-Chrome scripts drive real clicks on every page:
+```sh
+cd tests && npm install && npm test        # everything; takes a few minutes
+npm test -- motion quiz                    # only some suites
+```
 
-- **Fuzzer**: every tab, every toolbar button, every select and mode switch, with empty, negative, decimal, zero,
-  out-of-range and non-numeric input. It walks every frame and flags: uncaught errors and console errors; a frame
-  whose highlighted anchor is missing from its listing in either language; `undefined` / `NaN` / `[object …]`
-  reaching the stage or captions; horizontal overflow at a 390 px phone width.
-- **Static checks**: every listing has the same anchor set in pseudocode and Java, no other languages, and a spec
-  with both `time` and `space`.
-- **Scenarios**: scripted sequences (fill a dynamic array until it grows, AVL deletes for each rotation case, hash
-  tables filled until probing fails, every recursion function with negative input, counting sort with a decimal …)
-  so that, together with the fuzzer, **every anchor of every listing is reached**, error branches included.
+`tests/run.mjs` drives the Chrome installed on your computer, against a local copy of what Vercel serves (the static
+files plus the function, with a stand-in for the AI provider, so it uses no key and costs nothing).
 
-Earlier model checks still apply: BST / AVL / (2,4) / B-tree invariants after random operations, all sorts verified
-sorted on many input shapes, priority queues and lists against reference models, BFS distances and DFS
-parenthesis structure on every preset.
+- **static**: every listing has the same anchors in pseudocode and Java, no other languages, and a time and space spec.
+- **fuzz**: every tab, button and select, with empty, negative, decimal, zero, out-of-range and non-numeric input. It
+  flags uncaught and console errors, a frame naming an anchor missing from its listing, `undefined` / `NaN` /
+  `[object …]` reaching the page, and horizontal overflow at 390 px. It prints which code lines no run reached.
+- **motion**: a swap moves exactly two bars, an AVL rotation moves its nodes, everything lands clean, a jump does not
+  animate, and reduced motion fades.
+- **quiz**: every module asks questions, and each answer marked correct really is the next step.
+- **share**: on every module, a link rebuilds the same frame, caption and picture in a fresh browser.
+- **why**: every anchored line has a saved explanation, and every saved explanation names a real line. This checks that
+  they exist and match, not that they are true: that takes a person reading them against the code.
+- **tutor**: the function with no key, with a key, over the limit, with a provider outage, oversized and malformed
+  input, a request from another site, and per-visitor limiting. AI answers must show as text, never as HTML.
+- **growth**: the worker's counts equal the visualizer's across every algorithm and input shape, and the measured
+  growth rates are about ×100, ×13 and ×10.
+- **playground**: on every module, the button opens the panel on the right program for the tab, and every starter runs
+  and draws cleanly, at phone width too. Also errors, a student's code surviving a reload, and links carrying code.
+- **jvm**: every starter program, plus programs aimed at Java's trickier rules, compiled with `javac` and run on a real
+  JVM. The playground must print exactly the same. It is skipped if `javac` is not installed.
+- **shots**: writes screenshots to `tests/shots/`, including values caught in mid-flight, for a person to look at.

@@ -127,6 +127,7 @@
         "      T[tomb ≥ 0 ? tomb : j] ← k;  n ← n + 1;  return @@store",
         "    if T[j] is DELETED: if tomb < 0: tomb ← j @@tomb",
         "    else if T[j] == k: return        // already present @@dup",
+        "  if tomb ≥ 0: T[tomb] ← k;  n ← n + 1;  return @@late",
         "  error \"no free slot found\" @@full",
       ],
       java: [
@@ -140,6 +141,7 @@
         "    if (table[j] == DELETED) { if (tomb < 0) tomb = j; } @@tomb",
         "    else if (table[j] == k) return; @@dup",
         "  }",
+        "  if (tomb >= 0) { table[tomb] = k;  n++;  return; } @@late",
         "  throw new IllegalStateException(\"no free slot\"); @@full",
         "}",
       ],
@@ -446,8 +448,14 @@
       if (String(T.slots[p]) === String(k)) { c.at(["empty^", "tomb^", "dup"]).snap({ [p]: "done" }, "Not EMPTY, not DELETED, and it holds " + fmtk(k) + " itself: the key is already present, so put does nothing."); return; }
       c.at(["empty^", "tomb^", "dup^"]).snap({ [p]: "cmp" }, "Not EMPTY, not DELETED, and " + fmtk(T.slots[p]) + " ≠ " + fmtk(k) + ": a <b>collision</b>. Try the next probe.");
     }
-    c.at("loop").snap({}, "i has reached m = " + T.m + ": every probe is used up.");
-    c.at("full").snap({}, "Probed all " + T.m + " slots without finding room. " + (T.mode === "quad" ? "Quadratic probing only guarantees a free slot while α &lt; 0.5 and m is prime. This is that failure." : "The table is full."));
+    c.at("loop").snap(firstTomb >= 0 ? { [firstTomb]: "visit" } : {}, "i has reached m = " + T.m + ": every probe is used up.");
+    if (firstTomb >= 0) {
+      T.slots[firstTomb] = k;
+      T.n++;
+      c.at("late").snap({ [firstTomb]: "done" }, "No probe found an EMPTY slot, but none found " + fmtk(k) + " either, so it is safe to reuse the tombstone we remembered. Store it at <b>" + firstTomb + "</b>. Probes used: " + c.probes + ".");
+      return;
+    }
+    c.at("full").snap({}, "Probed all " + T.m + " slots without finding room. " + (T.mode === "quad" ? "Quadratic probing only guarantees a free slot while α &lt; 0.5 and m is prime. This is that failure." : "Every slot holds a key, so the table is full."));
   }
   function openSearch(c, k) {
     c.code(listing("get"));
@@ -569,7 +577,7 @@
         const row = D.el("div", { style: "display:flex;align-items:center;gap:6px" });
         row.appendChild(D.el("div", {
           class: "cell " + (f.marks[i] || "") + (chain.length ? " filled" : " empty"),
-          text: i, style: "min-width:34px;height:32px;font-size:.76rem",
+          text: i, style: "min-width:34px;height:32px;font-size:.76rem", "data-motion": "off",
         }));
         row.appendChild(D.el("span", { class: "muted mono", text: chain.length ? "→" : "→ ∅", style: "font-size:.8rem" }));
         chain.forEach((k, j) => {

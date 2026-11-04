@@ -13,6 +13,14 @@
   const SVGNS = "http://www.w3.org/2000/svg";
   const DSA = (window.DSA = {});
 
+  /* the site root, from this script's own URL (assets/js/core.js), so pages at any depth can find the
+     Vercel function and the vendored files */
+  DSA.ROOT = (function () {
+    try { return new URL("../../", document.currentScript.src).href; } catch (e) { return "../"; }
+  })();
+  /* Features in their own files (motion, quiz, why, share) add themselves to every Player through this list. */
+  DSA.playerAddons = [];
+
   /* ---------------- feedback ----------------
      Every page gets a "Send feedback" button in the top bar that opens this link in a new tab.
      Paste your Google Form link between the quotes. While it is empty the button says the form is not
@@ -857,16 +865,25 @@
       '<option value="0.35">0.35&times;</option><option value="0.6">0.6&times;</option>' +
       '<option value="1" selected>1&times;</option><option value="2">2&times;</option>' +
       '<option value="4">4&times;</option></select></div>' +
+      '<div class="player-tools" data-a="tools"></div>' +
       '<div class="spacer" style="flex:1"></div>' +
       '<div class="counter" data-a="counter">0 / 0</div>' +
       "</div>" +
       '<div class="track"><input type="range" min="0" max="0" value="0" data-a="track"></div>' +
       "</div>" +
-      '<div class="note" data-a="note" role="status" aria-live="polite"></div>';
+      '<div class="note" data-a="note" role="status" aria-live="polite"></div>' +
+      '<div class="player-extra" data-a="extra"></div>';
 
     const q = (a) => mount.querySelector('[data-a="' + a + '"]');
     const btnPlay = q("play"), track = q("track"), counter = q("counter"), note = q("note"), ctl = q("ctl");
     this.ctlShown = false;
+    this.tools = q("tools");            /* addons put their controls here */
+    this.extra = q("extra");            /* and their panels here, under the caption */
+    this.gate = null;                   /* gate(index) → true holds the player on this frame (the quiz) */
+    this.frameHooks = [];               /* run after every painted frame */
+    this.loadHooks = [];                /* run when a new frame list is loaded */
+    this.noMotion = false;
+    let prevIndex = 0, prevFrames = null;
     this.showControls = function (on) { this.ctlShown = !!on; ctl.hidden = !on; };
 
     mount.addEventListener("click", (e) => {
@@ -883,6 +900,7 @@
       self.speed = parseFloat(e.target.value);
       if (self.playing) self._arm();
     });
+    /* dragging the timeline jumps, it does not animate */
     track.addEventListener("input", (e) => { self.pause(); self.goto(parseInt(e.target.value, 10)); });
 
     this._sync = function () {
@@ -893,8 +911,14 @@
       note.innerHTML = f.note == null ? "" : f.note;
       btnPlay.innerHTML = this.playing ? "&#10073;&#10073; Pause" : "&#9654; Play";
       try { if (this.code) this.code.sync(f); } catch (err) { console.error(err); }
+      /* one step forward or back slides things to their new places; a jump just repaints */
+      const oneStep = prevFrames === this.frames && Math.abs(this.index - prevIndex) === 1;
+      const motion = DSA.motion ? DSA.motion.begin(this, oneStep && !this.noMotion) : null;
       try { this.render(f, this.index, this.frames); } catch (err) { console.error(err); }
+      if (motion) motion.play();
+      prevIndex = this.index; prevFrames = this.frames;
       if (this.onFrame) this.onFrame(f, this.index);
+      this.frameHooks.forEach((fn) => { try { fn(f, this.index); } catch (err) { console.error(err); } });
     };
 
     this.load = function (frames, autoplay) {
@@ -907,6 +931,7 @@
       else if (performance.now() - lastUser < 1500) this.showControls(true);
       DSA.annotateArgs(this.frames);
       this.index = 0;
+      this.loadHooks.forEach((fn) => { try { fn(this.frames); } catch (err) { console.error(err); } });
       this._sync();
       if (autoplay !== false) this.play();
       return this;
@@ -915,7 +940,10 @@
       this.index = DSA.clamp(i, 0, this.frames.length - 1);
       this._sync();
     };
-    this.step = function (d) { this.goto(this.index + d); };
+    this.step = function (d) {
+      if (d > 0 && this.gate && this.gate(this.index)) return;
+      this.goto(this.index + d);
+    };
     this.play = function () {
       if (this.frames.length < 2) {
         if (this.onIdle) this.onIdle();
@@ -937,6 +965,7 @@
       clearTimeout(this._t);
       this._t = setTimeout(() => {
         if (!this.playing) return;
+        if (this.gate && this.gate(this.index)) return;
         if (this.index < this.frames.length - 1) { this.index++; this._sync(); this._arm(); }
         else this.pause();
       }, Math.max(24, this.baseDelay / this.speed));
@@ -947,6 +976,7 @@
 
     players.push(this);
     markMulti();
+    DSA.playerAddons.forEach((fn) => { try { fn(self); } catch (err) { console.error(err); } });
     this._sync();
   };
 
@@ -993,7 +1023,7 @@
   /* keyboard: space = play/pause, arrows = step, on the active player */
   document.addEventListener("keydown", (e) => {
     const t = e.target;
-    if (t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)) return;
+    if (t && (/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName) || t.isContentEditable)) return;
     let p = activePlayer && activePlayer.isVisible() ? activePlayer : null;
     if (!p) p = nearestToViewportCentre();
     if (!p || !p.ctlShown) return;

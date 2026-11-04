@@ -462,7 +462,7 @@
       const v = S.a[S.t];
       r.at("save").snap({ marks: { [S.t]: "target" }, note: "x = data[" + S.t + "] = " + v + "." });
       S.a[S.t] = null;
-      r.at("clear").snap({ marks: { [S.t]: "swap" }, note: "Null out the slot so the old element can be garbage-collected." });
+      r.at("clear").snap({ marks: { [S.t]: "swap" }, note: "Clear the slot. Only t decides what is on the stack, so this just marks the slot as unused." });
       S.t--;
       r.at("dec").snap({ note: "t ← " + S.t + "." });
       r.at("ret").snap({ note: "Return " + v + ". <b>LIFO</b>: the last element pushed is the first to leave. <b>O(1)</b>." });

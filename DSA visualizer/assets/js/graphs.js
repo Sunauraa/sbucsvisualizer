@@ -364,8 +364,9 @@
       down = null;
       dragging = -1;
       try { host.releasePointerCapture(ev.pointerId); } catch (e) {}
-      if (d.moved) return;
+      if (d.moved) { if (D.share) D.share.note("graph"); return; }
       click(d.i, d.pt);
+      if (D.share) D.share.note("graph");
     };
     host.addEventListener("pointerup", up);
     host.addEventListener("pointercancel", () => { down = null; dragging = -1; });
@@ -564,6 +565,8 @@
     const dock = D.CodeDock("#code", CODE, { recv: "graph" });
     player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock });
     wireHost(q("gr-canvas"));
+    /* canvas clicks and drags are not form controls, so a shared link stores the graph itself */
+    if (D.share) D.share.state("graph", () => ({ pos: G.pos, adj: G.adj }), (v) => { G.pos = v.pos; G.adj = v.adj; refresh("The graph from the shared link."); });
 
     D.$$("[data-tool]").forEach((b) =>
       b.addEventListener("click", () => {
