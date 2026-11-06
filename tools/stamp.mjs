@@ -39,9 +39,11 @@ export function currentVersion() {
   return h.digest("hex").slice(0, 12);
 }
 
-/** every page that links to assets */
+/** every page that links to assets (not, for example, Google's site-verification file in the root) */
 export function pages() {
-  return fs.readdirSync(ROOT).filter((f) => f.endsWith(".html")).sort().concat(fs.readdirSync(path.join(ROOT, "cse214")).filter((f) => f.endsWith(".html")).map((f) => "cse214/" + f));
+  const html = fs.readdirSync(ROOT).filter((f) => f.endsWith(".html")).sort()
+    .concat(fs.readdirSync(path.join(ROOT, "cse214")).filter((f) => f.endsWith(".html")).map((f) => "cse214/" + f));
+  return html.filter((p) => /assets\//.test(fs.readFileSync(path.join(ROOT, p), "utf8")));
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

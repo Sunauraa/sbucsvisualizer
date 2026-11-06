@@ -23,7 +23,14 @@ Why it's built this way: `notes/design-decisions.md`, decision 7.
    test users you list can sign in.
    - **Branding: don't upload a logo.** A logo means submitting the app for Google's verification review (it can
      take weeks); without one, the basic scopes need no review.
-   - **Application home page:** your site's address. The privacy policy and terms of service links are optional.
+   - **Application home page:** your site's address (`https://sbu-dsa-visualizer.vercel.app`). Privacy policy:
+     `…/privacy.html`; terms of service: `…/terms.html` (both pages are in the site root).
+   - If Google says the home page "is not registered to you", prove you own it in
+     [Google Search Console](https://search.google.com/search-console), signed in with the account that owns the Cloud
+     project: **Add property → URL prefix** → the site's address → **HTML file** method. Put the
+     `google….html` file it gives you in the site root, deploy, click **Verify**, then save Branding again. Keep that
+     file: Google checks it again from time to time. (A `vercel.app` address can't use the *Domain* method, which
+     needs DNS.)
    - **Authorized domains:** add your site's domain (e.g. `your-site.vercel.app`) and `<your-project-ref>.supabase.co`,
      where Google sends students back after they sign in.
    - Google's screen will say "continue to `<ref>.supabase.co`". That's normal on Supabase's free plan; showing your
