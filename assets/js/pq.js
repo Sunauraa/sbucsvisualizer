@@ -870,6 +870,20 @@
       "kth-largest-element-in-an-array",
       "Medium",
       "Compare O(n·k) scanning with a heap."
+     ],
+     [
+      1464,
+      "Maximum Product of Two Elements in an Array",
+      "maximum-product-of-two-elements-in-an-array",
+      "Easy",
+      "removeMax twice: the unsorted list scans for each one."
+     ],
+     [
+      2558,
+      "Take Gifts From the Richest Pile",
+      "take-gifts-from-the-richest-pile",
+      "Easy",
+      "Repeatedly take the max, change it and put it back."
      ]
     ]
    },
@@ -889,6 +903,20 @@
       "last-stone-weight",
       "Easy",
       "removeMax is O(1) on a sorted list; insert is not."
+     ],
+     [
+      2336,
+      "Smallest Number in Infinite Set",
+      "smallest-number-in-infinite-set",
+      "Medium",
+      "Removing the min is cheap when the order is kept up to date."
+     ],
+     [
+      295,
+      "Find Median from Data Stream",
+      "find-median-from-data-stream",
+      "Hard",
+      "Keep the data ordered so the middle is always at hand (or use two heaps)."
      ]
     ]
    },
@@ -929,6 +957,27 @@
       "merge-k-sorted-lists",
       "Hard",
       "Always removeMin across k lists."
+     ],
+     [
+      1337,
+      "The K Weakest Rows in a Matrix",
+      "the-k-weakest-rows-in-a-matrix",
+      "Easy",
+      "A heap of (strength, row) pairs, k removals."
+     ],
+     [
+      692,
+      "Top K Frequent Words",
+      "top-k-frequent-words",
+      "Medium",
+      "A heap with a custom comparison: count, then alphabetical order."
+     ],
+     [
+      621,
+      "Task Scheduler",
+      "task-scheduler",
+      "Medium",
+      "A max-heap of counts, run one cooldown window at a time."
      ]
     ]
    },
@@ -955,6 +1004,13 @@
       "last-stone-weight",
       "Easy",
       "Same ADT: try it with your own linked heap."
+     ],
+     [
+      919,
+      "Complete Binary Tree Inserter",
+      "complete-binary-tree-inserter",
+      "Medium",
+      "Insert at the next free spot of a complete tree, as a linked heap does."
      ]
     ]
    },
@@ -981,6 +1037,20 @@
       "find-the-kth-largest-integer-in-the-array",
       "Medium",
       "Same idea with a custom comparator."
+     ],
+     [
+      451,
+      "Sort Characters By Frequency",
+      "sort-characters-by-frequency",
+      "Medium",
+      "Count, then pull from a max-heap in order."
+     ],
+     [
+      1636,
+      "Sort Array by Increasing Frequency",
+      "sort-array-by-increasing-frequency",
+      "Easy",
+      "PQ-sort with a two-part key."
      ]
     ]
    }

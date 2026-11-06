@@ -227,7 +227,7 @@
       status.textContent = "Measuring…";
       draw();
       try {
-        worker = new Worker(D.ROOT + "assets/js/growth-worker.js");
+        worker = new Worker(D.asset("assets/js/growth-worker.js"));
       } catch (e) {
         status.textContent = "This browser blocked the measuring script. Open the site over http instead of from a file.";
         return;
@@ -252,10 +252,12 @@
     }
     shapeSel.addEventListener("change", run);
 
-    /* wait until the panel is on screen: no one should pay for a chart they never scroll to */
+    /* wait until the chart is on screen: no one should pay for a chart they never scroll to. Watch the toolbar,
+       not the box: a hidden box (DSA.collapsible) still shows its heading, but its toolbar is not displayed,
+       so measuring waits until the student opens it. */
     if ("IntersectionObserver" in window) {
       const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); run(); } }, { rootMargin: "200px" });
-      io.observe(root);
+      io.observe(bar);
     } else run();
   }
   document.addEventListener("DOMContentLoaded", init);

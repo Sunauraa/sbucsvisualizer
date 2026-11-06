@@ -128,7 +128,7 @@
     if (D.WHY) return Promise.resolve(D.WHY);
     if (!dataPromise) dataPromise = new Promise((res) => {
       const s = document.createElement("script");
-      s.src = D.ROOT + "assets/js/why-data.js";
+      s.src = D.asset("assets/js/why-data.js");
       s.onload = () => res(D.WHY || {});
       s.onerror = () => res({});
       document.head.appendChild(s);

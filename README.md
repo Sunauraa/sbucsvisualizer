@@ -1,8 +1,8 @@
 # DSA Visualizer: CSE 214 / CSE 373
 
 Interactive data structure and algorithm visualizers. Static HTML/CSS/JS with no build step and no framework:
-it runs on Vercel, GitHub Pages or from a folder. One small optional Vercel Function adds an AI tutor, and every
-feature costs nothing to run.
+it runs on Vercel, GitHub Pages or from a folder, keeps a copy of itself for offline use, and every feature costs
+nothing to run.
 
 **Live pages:** `index.html` → course picker → CSE 214 → eight modules, each with its own Code playground.
 
@@ -21,13 +21,21 @@ feature costs nothing to run.
 
 Every module shares the same layout: site bar with breadcrumbs → page heading (course and module number, title) →
 tabs → toolbar → **code dock** (worst-case time/space badge, spec, the running function, all the code of its structure, and the
-running line highlighted in pseudocode or Java) → stage → player → legend → **Study notes** (always visible: key
-terms, cost tables, LeetCode practice) → footer.
+running line highlighted in pseudocode or Java) → stage → player → legend → **Study notes** (key terms, cost
+tables, LeetCode practice; starts hidden) → footer.
 
 The pages are written to be information-first: semantic landmarks (`header`, `nav`, `main`, `footer`), one `h1`
 per page with no skipped heading levels, a "Skip to content" link, and the step caption announced to screen readers
 (`aria-live`). A print stylesheet drops the controls and prints the current frame, the notes and the practice
 links with their URLs, one column wide.
+
+Every box except the visualizer itself (the growth chart, Study notes, and each box inside it, such as the cheat
+sheet and the LeetCode list) **starts hidden**, showing only its heading and a **show** button, so a newcomer sees the
+animation first and the headings read as a table of contents. The boxes a student opens are remembered per page
+(`localStorage` key `dsa.shownBoxes.v1`). Printing shows every box, and without JavaScript nothing is hidden. The
+growth chart only starts measuring once its box is opened. It lives in `DSA.collapsible(box)` in `core.js`, which finds boxes by itself: a new `.panel` in `main` or in the
+Study notes gets the button with no extra code. Call it again after redrawing a box's contents, as the practice list
+does.
 
 The code dock starts **collapsed**: a newcomer sees only the running operation's name and its time/space badge.
 "show code" opens the spec, listing and all the code, and that choice is remembered from page to page (`localStorage`
@@ -61,19 +69,42 @@ These sit in the player of every module, and none of them needs changes to a mod
 That is the whole site. There is no `package.json` at this level, so Vercel has nothing to install, and
 `.vercelignore` keeps `tests/` and `tools/` out of the deployment.
 
-### Optional: switch on Ask AI for free
+### Caching and offline
 
-Without a key the site works fully, using the saved explanations, and no question box appears. To add it:
+- **Assets are cached for two weeks.** `vercel.json` sends `Cache-Control: public, max-age=1209600, immutable` for
+  `/assets/*`. That is safe only because every asset URL carries the version (`?v=…`): a new version is a new
+  address. Pages keep Vercel's default (checked on every visit), and `sw.js` is `no-cache`, so a new deploy reaches
+  students at once. Scripts loaded later (the editor, starter programs, `why-data.js`, both Web Workers) get the
+  version from `DSA.asset(path)` in `core.js`; never build an asset URL by hand.
+- **The site works offline.** `sw.js` saves every page and every script a page loads up front on the first visit,
+  and the heavy tools the first time they are used. Pages are network first (falling back to the saved copy after
+  3.5 s or with no connection); versioned assets come straight from the saved copy. Each version has its own
+  cache, and the old one is deleted when the new one takes over. When you add a page or a page script, add it to
+  `PAGES` or `ASSETS` in `sw.js` (the `prod` tests fail until you do).
+- The offline copy is off over `file://` (browsers forbid it) and on `localhost`, so edits show up while you work.
+  `npm run serve` also leaves out the two-week cache header.
 
-1. Create a free API key at [console.groq.com](https://console.groq.com). Do not add a payment method: with no card
-   on file, it can only run out, not charge you.
-2. In Vercel, under **Settings → Environment Variables**, add `AI_API_KEY`, then redeploy.
-3. Optional: any OpenAI-compatible provider works if you also set `AI_BASE_URL` and `AI_MODEL`. Model names change,
-   so if answers stop, check the provider's model list and set `AI_MODEL`.
+### Accounts and sync (optional)
 
-All students share the key's limit. When it runs out, the page says so and keeps showing the saved explanation. Each
-visitor is also limited to 8 questions a minute per running copy of the function, and other sites are refused.
-Questions go to the provider but are not stored by this site, so check the provider's data terms and limits.
+Students can **sign in with Google** to get, on every computer they use, a **progress map** (per module: tabs opened,
+operations run, quiz answers, LeetCode solved, notes; on the CSE 214 page), a **status on every LeetCode problem**
+(To do / Solved / Revisit) and **notes pinned to a step**: a note on one exact moment of an animation that reopens
+that moment, with the steps around it, on any computer. Signed out, the site is exactly as before.
+
+- `assets/js/account.js` talks straight to Supabase (login + Postgres) with `fetch`: no SDK, no server of our own.
+  Changes are saved on the computer at once and synced in the background (they wait while offline); the newest
+  change to a record wins, and progress from two computers is merged, not overwritten.
+- `supabase/schema.sql` is the database, with row-level security so each student reads and writes only their own
+  rows. `api/keepalive.js` runs daily on Vercel Cron so the free project never pauses, and restores it if it does.
+- It stays off until `DSA.ACCOUNT` in `core.js` has a URL and key. **To turn it on, follow `supabase/SETUP.md`**
+  (one time, about 20 minutes; no upkeep after that).
+- Modules don't know about accounts: they announce what happens through `DSA.emit` (`tab`, `run`, `quiz`, `practice`)
+  and `account.js` listens.
+
+### The AI tutor is archived
+
+The optional Ask AI function now lives in `archive/ai-tutor/`, out of the deployment. Its README says how to bring
+it back and what to fix first. Without it, **Why?** works fully on the saved explanations and shows no question box.
 
 ## How it works
 
@@ -130,8 +161,9 @@ anchor in whichever language is showing, so the languages never need index maps.
 - **Call stacks.** `D.callStack(frames, opts)` draws one card per stack frame (label, variables, what it is
   waiting on, the value it returns). Recursion and the recursive tree operations use it.
 - **LeetCode practice.** Each page registers `D.Practice({ part: { label, items } })` and calls `D.practiceShow(part)`
-  when the tab changes; the panel appears under the visualizer. Every problem's number, title, difficulty and free
-  status was checked against LeetCode.
+  when the tab changes; the panel appears under the visualizer. Every problem is free (not Premium), and its number,
+  title and difficulty match LeetCode: re-check all of them with `node tools/check-leetcode.mjs` (needs the network,
+  so it is not part of `npm test`; run it after adding problems and once a term).
 - **Hash tables with String keys.** The *keys* switch picks Integers or Strings. String mode uses `String` / `equals`
   versions of every listing and steps through `hash(s)` (h = 31·h + code(c), the same value as Java's
   `String.hashCode`) before each operation.
@@ -166,7 +198,12 @@ r.code("push").at("inc").snap({ note: "t ← t + 1" });
 ```
 index.html              course picker
 cse214/*.html           the eight modules
-api/tutor.js            optional Vercel Function behind Ask AI
+sw.js                   offline copy of the site (service worker)
+api/keepalive.js        daily Vercel Cron job that keeps the free Supabase project awake (and restores it)
+supabase/               the database (schema.sql) and the one-time setup guide (SETUP.md); not deployed
+archive/ai-tutor/       the archived Ask AI function, and how to bring it back
+notes/                  problems met while building this, and the system design decisions with their reasons (not deployed)
+abilities/              third-party AI design skills, kept for reference (not deployed, not in git)
 assets/css/style.css    one stylesheet for everything
 assets/js/core.js       player, recorder, code dock (spec, class, call line), call-stack cards, cells/heap-tree drawing, tabs, compare helper
 assets/js/*.js          one file per module, plus the learning tools below
@@ -195,13 +232,15 @@ The site appears at `https://<you>.github.io/<repo>/` within a minute or two.
 
 `.nojekyll` is included so GitHub serves the files as-is.
 
-**After every update, bump the asset version.** Every page loads `style.css` and the scripts as `…?v=202610042131`.
-GitHub Pages lets browsers cache files for about 10 minutes, and a new page running next to an old cached
-`core.js` breaks. Changing the number makes every browser fetch the matching files:
+**After changing anything under `assets/` (or `sw.js`), stamp the version:**
 
 ```sh
-NEW=$(date +%Y%m%d%H%M); sed -i '' -E "s/\?v=[0-9]+/?v=$NEW/g" index.html cse214/*.html
+node tools/stamp.mjs
 ```
+
+It writes a hash of those files into every page as `?v=…`, so the version changes exactly when they do. Browsers
+keep assets for two weeks and the offline copy keeps them indefinitely, so a page left on an old version would keep
+running old scripts. `npm test` (and CI) fails while the version is stale.
 
 ## Feedback button
 
@@ -248,6 +287,7 @@ Reuse the shared state classes so colours mean the same thing everywhere: `activ
 cd tests && npm install && npm test        # everything; takes a few minutes
 npm test -- motion quiz                    # only some suites
 npm run serve                              # the site at http://localhost:3000, as Vercel serves it
+npm run serve:accounts                     # the same, with accounts on against a stand-in Supabase (nothing is saved)
 ```
 
 `tests/run.mjs` drives the Chrome installed on your computer, against a local copy of what Vercel serves (the static
@@ -262,8 +302,8 @@ files plus the function, with a stand-in for the AI provider, so it uses no key 
 - **quiz**: every module asks questions, and each answer marked correct really is the next step.
 - **why**: every anchored line has a saved explanation, and every saved explanation names a real line. This checks that
   they exist and match, not that they are true: that takes a person reading them against the code.
-- **tutor**: the function with no key, with a key, over the limit, with a provider outage, oversized and malformed
-  input, a request from another site, and per-visitor limiting. AI answers must show as text, never as HTML.
+- **tutor**: with the function archived, Why? still works and offers no question box. If `api/tutor.js` is put back,
+  the full suite runs: no key, a key, over the limit, a provider outage, bad input, another site, per-visitor limits.
 - **growth**: the worker's counts equal the visualizer's across every algorithm and input shape, and the measured
   growth rates are about ×100, ×13 and ×10.
 - **playground**: on every module, the button opens the panel on the right program for the tab, and every starter runs
@@ -277,8 +317,22 @@ files plus the function, with a stand-in for the AI provider, so it uses no key 
 - **xss**: hostile text in every input and crafted share links, with the security headers off, so the code has to be safe
   by itself.
 - **a11y**: axe on every page in its common states, plus the keyboard paths a scanner cannot judge.
-- **prod**: every internal link, page metadata, security headers, every feature under that policy, the 404 page,
+- **prod**: every internal link, page metadata, security headers, cache headers, a current asset version, every asset
+  request (workers included) carrying it, `sw.js` saving what the pages really load, every feature under that policy, the 404 page,
   licenses, what loads when, and failure cases such as an editor that will not load or a program too big to record.
+- **boxes**: on every page, every box but the visualizer starts hidden with its heading and a labelled button; show
+  opens each one; the choice survives a reload and a tab change (the practice list is redrawn); hide closes them
+  again; the growth chart doesn't measure until opened; printing shows every box.
+- **account**: against a stand-in Supabase (`tests/fake-supabase.mjs`): no Sign in button until configured; Google
+  sign-in with PKCE; nothing personal shown signed out; LeetCode status, progress and notes sync between a laptop and
+  a school computer (session not kept); a note reopens its exact step on another computer and on every module page;
+  the newest change wins; offline changes survive a reload and sync later; an expiring session refreshes; sign out
+  leaves nothing behind; "Delete my account" removes everything; note text is shown as text, never HTML.
+- **keepalive**: the daily job is in `vercel.json`, only Vercel Cron can run it, a healthy project gets three real
+  database calls, a paused one is restored, and other outages are reported.
+- **offline**: with the real service worker, on its own server that is then shut down: pages and their scripts are
+  saved on the first visit and heavy tools only once used; with no network, a page never opened still loads and runs,
+  the playground runs code, and an unsaved address says it is offline; a new version deletes the old copy.
 - **shots**: writes screenshots to `tests/shots/`, including values caught in mid-flight, for a person to look at.
 
 GitHub Actions runs all of this on every push to `main` and every pull request (`.github/workflows/test.yml`).
@@ -286,5 +340,5 @@ GitHub Actions runs all of this on every push to `main` and every pull request (
 ## Before a release
 
 1. `cd tests && npm test`.
-2. Bump the asset version (see above), or browsers may mix old and new files.
+2. `node tools/stamp.mjs` (see above), or browsers keep running the old files.
 3. Look at `tests/shots/` at phone and desktop width.

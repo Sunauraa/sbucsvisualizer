@@ -10,6 +10,8 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import { chromium } from "playwright";
 import { startServer, ROOT } from "./server.mjs";
+import { currentVersion, pages as stampedPages, VERSION_RE } from "../tools/stamp.mjs";
+import { fakeSupabase, ANON } from "./fake-supabase.mjs";
 
 const require = createRequire(import.meta.url);
 const PAGES = ["arrays", "recursion", "stacks-queues", "trees", "priority-queues", "hashtables", "graphs", "sorting"];
@@ -28,10 +30,17 @@ const ok = (cond, label, detail) => {
 
 /* ---------- a local copy of what Vercel serves: see server.mjs ---------- */
 let aiKey = null;
-const server = await startServer(0, { key: () => aiKey });
+const fake = fakeSupabase();      /* a stand-in Supabase at /__supabase, for the account and keepalive suites */
+const server = await startServer(0, { key: () => aiKey, fake });
 const BASE = "http://127.0.0.1:" + server.address().port;
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
+/* The offline copy (sw.js) would answer requests before page.route sees them and keep files between pages, so
+   every suite runs without it except "offline", which turns it on itself. */
+{
+  const newContext = browser.newContext.bind(browser);
+  browser.newContext = (o) => newContext(Object.assign({ serviceWorkers: "block" }, o || {}));
+}
 const openPage = async (name, opts) => {
   const ctx = await browser.newContext(Object.assign({ viewport: { width: 1280, height: 900 } }, opts || {}));
   const page = await ctx.newPage();
@@ -41,6 +50,16 @@ const openPage = async (name, opts) => {
   await page.goto(BASE + "/cse214/" + name + ".html" + ((opts && opts.hash) || ""));
   await page.waitForLoadState("load");
   return { page, ctx, errors };
+};
+
+/* boxes other than the visualizer start hidden (DSA.collapsible): open one the way a student would */
+const openBox = async (page, sel) => {
+  /* a box inside a hidden box (the LeetCode list inside Study notes) needs the outer one opened first */
+  const outer = await page.evaluate((s) => { const out = []; let b = document.querySelector(s); while (b && (b = b.parentElement && b.parentElement.closest(".box-hidden"))) out.unshift("#" + b.id); return out; }, sel);
+  for (const o of outer) if (o !== "#") await page.locator(o + " > .box-head > .box-hide").click();
+  const btn = page.locator(sel + " > .box-head > .box-hide");
+  if ((await btn.textContent()) === "show") await btn.click();
+  await page.locator(sel).scrollIntoViewIfNeeded();
 };
 
 /* ---------- static: listings carry the same anchors in both languages, plus a spec ---------- */
@@ -350,7 +369,21 @@ if (want("why")) {
 }
 
 /* ---------- Ask AI: off, on, and out of free answers ---------- */
-if (want("tutor")) {
+/* The AI tutor is archived (archive/ai-tutor). Without the function the Why? panel must still work and offer no
+   question box; put api/tutor.js back and the full suite below runs again. */
+const HAS_TUTOR = fs.existsSync(path.join(ROOT, "api", "tutor.js"));
+if (want("tutor") && !HAS_TUTOR) {
+  console.log("tutor (archived)");
+  const { page, ctx, errors } = await openPage("sorting");
+  await page.click("#btn-run");
+  await page.getByRole("button", { name: "Why?", exact: true }).click();
+  await page.waitForTimeout(300);
+  ok(await page.locator(".why").isVisible(), "the saved explanation shows with the tutor archived");
+  ok((await page.locator(".ask-form").count()) === 0, "no question box with the tutor archived");
+  ok(!errors.length, "no errors with the tutor archived", errors);
+  await ctx.close();
+}
+if (want("tutor") && HAS_TUTOR) {
   console.log("tutor function");
   /* a stand-in for the provider */
   let upstream = "ok", lastBody = null, lastAuth = null;
@@ -467,7 +500,7 @@ if (want("growth")) {
     return { bad: bad.slice(0, 10), checked: cases.length };
   }, cases);
   ok(!parity.bad.length && parity.checked > 100, "worker counts match the visualizer on " + parity.checked + " runs", parity.bad);
-  await page.locator("#growth").scrollIntoViewIfNeeded();
+  await openBox(page, "#growth");
   await page.waitForFunction(() => /Stopped early|Measured every/.test(document.querySelector(".growth-status").textContent), null, { timeout: 40000 });
   const g = await page.evaluate(() => ({
     status: document.querySelector(".growth-status").textContent,
@@ -1013,7 +1046,7 @@ if (want("a11y")) {
   const bare = await startServer(0, { headers: false });
   const b = "http://127.0.0.1:" + bare.address().port;
   const open = async (p) => { const c = await browser.newContext({ viewport: { width: 1280, height: 900 } }); const g = await c.newPage(); await g.goto(b + p); await g.waitForLoadState("load"); return { g, c }; };
-  for (const p of ["/index.html", "/cse214/index.html", "/404.html"]) {
+  for (const p of ["/index.html", "/cse214/index.html", "/404.html", "/privacy.html", "/terms.html"]) {
     if (!fs.existsSync(path.join(ROOT, p))) continue;
     const { g, c } = await open(p);
     await scan(g, p);
@@ -1100,6 +1133,21 @@ if (want("prod")) {
       ok(a.status === 200, f + " links to something real: " + r, a.status);
     }
   }
+  /* the privacy policy and terms: real pages, linked from every page's footer (Google's sign-in checks this) */
+  for (const f of ["/privacy.html", "/terms.html"]) {
+    const res = await fetch(BASE + f);
+    const html = await res.text();
+    ok(res.status === 200 && /<title>[^<]{3,}<\/title>/.test(html) && /<meta name="description" content="[^"]{20,}"/.test(html) && /<html lang="en"/.test(html), f + " is a complete page");
+    ok(/Last updated: /.test(html), f + " says when it was last updated");
+    for (const m of html.matchAll(/(?:href|src)="([^"#]+)"/g)) {
+      if (/^(https?:|mailto:)/.test(m[1])) continue;
+      ok((await fetch(new URL(m[1], BASE + f))).status === 200, f + " links to something real: " + m[1]);
+    }
+  }
+  for (const f of files) {
+    const html = fs.readFileSync(path.join(ROOT, f), "utf8");
+    ok(/href="(\.\.\/)?privacy\.html"/.test(html) && /href="(\.\.\/)?terms\.html"/.test(html), f + " links to the privacy policy and terms");
+  }
   /* CSE 373 is a notice on the home page, not somewhere to go */
   {
     const { page: home, ctx: homeCtx } = await (async () => { const c = await browser.newContext(); const g = await c.newPage(); await g.goto(BASE + "/index.html"); return { page: g, ctx: c }; })();
@@ -1117,11 +1165,45 @@ if (want("prod")) {
   ok(h.headers.get("x-content-type-options") === "nosniff", "nosniff is set");
   ok(!!h.headers.get("referrer-policy"), "a referrer policy is set");
   ok(!!h.headers.get("permissions-policy"), "a permissions policy is set");
+  /* caching: assets are kept for two weeks at their versioned address, pages and sw.js are always checked */
+  const VER = currentVersion();
+  ok(!/immutable|max-age=[1-9]/.test(h.headers.get("cache-control") || ""), "pages are not cached long", h.headers.get("cache-control"));
+  ok(/max-age=1209600/.test((await fetch(BASE + "/assets/js/core.js?v=" + VER)).headers.get("cache-control") || "") , "assets are cached for two weeks");
+  ok((await fetch(BASE + "/sw.js")).headers.get("cache-control") === "no-cache", "sw.js is always checked for updates");
+  {
+    const stale = stampedPages().filter((p) => {
+      const vs = fs.readFileSync(path.join(ROOT, p), "utf8").match(VERSION_RE) || [];
+      return !vs.length || vs.some((v) => v !== "?v=" + VER);
+    });
+    ok(!stale.length, "every page carries the current asset version (run: node tools/stamp.mjs)", stale);
+  }
+  /* every asset a page asks for, now or later, carries that version, or a browser would keep an old copy for two weeks */
+  const unversioned = new Set();
+  const watchAssets = (page) => {
+    const see = (u) => { if (/\/assets\//.test(u) && !u.includes("?v=" + VER)) unversioned.add(u.replace(BASE, "")); };
+    page.on("request", (r) => see(r.url()));
+    page.on("worker", (w) => see(w.url()));
+  };
+  /* sw.js saves what the pages load up front: its lists must match them */
+  {
+    const src = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
+    const list = (name) => JSON.parse(new RegExp("const " + name + " = (\\[[^\\]]*\\]);").exec(src)[1].replace(/,\s*\]/, "]"));
+    const swPages = list("PAGES"), swAssets = list("ASSETS");
+    const sitePages = files.map((f) => f.slice(1)).sort();
+    ok(JSON.stringify(swPages.slice().sort()) === JSON.stringify(sitePages), "sw.js saves every page", { sw: swPages, site: sitePages });
+    const loaded = new Set();
+    for (const f of files) {
+      const html = fs.readFileSync(path.join(ROOT, f), "utf8");
+      for (const m of html.matchAll(/(?:href|src)="([^"]*assets\/[^"?]+)\?v=/g)) loaded.add(new URL(m[1], "http://x" + f).pathname.slice(1));
+    }
+    ok(JSON.stringify(swAssets.slice().sort()) === JSON.stringify([...loaded].sort()), "sw.js saves every asset the pages load up front", { sw: swAssets, pages: [...loaded] });
+  }
   /* nothing breaks under that policy, including workers and the lazy-loaded editor */
   for (const name of PAGES) {
     const { page, ctx, errors } = await openPage(name);
     const blocked = [];
     page.on("console", (m) => { if (/Content Security Policy|violates/i.test(m.text())) blocked.push(m.text().slice(0, 200)); });
+    watchAssets(page);
     await page.click("#pg-open");
     await page.waitForSelector("#pg-run");
     await page.click("#pg-run");
@@ -1129,10 +1211,11 @@ if (want("prod")) {
     await page.getByRole("button", { name: "Why?", exact: true }).last().click();
     await page.waitForTimeout(150);
     if (name === "sorting") {
-      await page.locator("#growth").scrollIntoViewIfNeeded();
+      await openBox(page, "#growth");
       await page.waitForFunction(() => /Stopped early|Measured every/.test(document.querySelector(".growth-status").textContent), null, { timeout: 40000 });
     }
     ok(!blocked.length, name + " runs under the security policy", blocked);
+    ok(!unversioned.size, name + ": every asset it loads carries the version", [...unversioned]);
     ok(!errors.length, name + " has no errors under the security policy", errors.slice(0, 3));
     await ctx.close();
   }
@@ -1140,7 +1223,7 @@ if (want("prod")) {
   const nf = await fetch(BASE + "/nope.html");
   ok(nf.status === 404 && /Page not found/i.test(await nf.text()), "a missing page gets a real 404 page");
   const ignore = fs.readFileSync(path.join(ROOT, ".vercelignore"), "utf8").split("\n");
-  ["tests", "tools", ".github", "README.md"].forEach((x) => ok(ignore.includes(x), x + " is not deployed"));
+  ["tests", "tools", ".github", "README.md", "archive", "abilities", "notes", "supabase"].forEach((x) => ok(ignore.includes(x), x + " is not deployed"));
   ok(fs.existsSync(path.join(ROOT, "assets/vendor/THIRD-PARTY-NOTICES.txt")) && /CodeMirror|Marijn/.test(fs.readFileSync(path.join(ROOT, "assets/vendor/THIRD-PARTY-NOTICES.txt"), "utf8")), "third-party licenses ship with the code");
   /* page weight: what a student downloads before they touch anything */
   const sizes = await (async () => {
@@ -1201,6 +1284,334 @@ if (want("prod")) {
   }
 }
 
+/* ---------- boxes: every box but the visualizer starts hidden, opens on request, and is remembered ---------- */
+if (want("boxes")) {
+  console.log("hide / show boxes");
+  const BOXES = "main > .panel, main > .about, .about-body .panel";
+  for (const name of PAGES) {
+    const { page, ctx, errors } = await openPage(name);
+    const info = () => page.evaluate((sel) => DSA.$$(sel).filter((b) => getComputedStyle(b).display !== "none").map((b) => ({
+      key: b.dataset.box, main: b.classList.contains("main") || b.classList.contains("playground"),
+      btn: !!b.querySelector(":scope > .box-head > .box-hide"), hidden: b.classList.contains("box-hidden"),
+    })), BOXES);
+    const boxes = await info();
+    ok(boxes.filter((b) => b.main).every((b) => !b.btn && !b.hidden), name + ": the visualizer has no button and is never hidden");
+    const others = boxes.filter((b) => !b.main);
+    ok(others.length >= 3 && others.every((b) => b.btn), name + ": every other box has a button", others);
+    ok(others.every((b) => b.hidden), name + ": every other box starts hidden", others);
+    ok(new Set(others.map((b) => b.key)).size === others.length, name + ": each box has its own key", others.map((b) => b.key));
+    /* boxes inside a hidden box are hidden twice over, so only the outermost ones show a heading */
+    const heads = await page.evaluate(() => DSA.$$(".box-hidden").filter((b) => !b.parentElement.closest(".box-hidden")).map((b) => ({ head: !!b.querySelector(":scope > .box-head").offsetParent, label: b.querySelector(".box-hide").getAttribute("aria-label"), exp: b.querySelector(".box-hide").getAttribute("aria-expanded") })));
+    ok(heads.every((h) => h.head && /^Show \S/.test(h.label) && h.exp === "false"), name + ": a hidden box shows its heading and a button saying what it opens", heads);
+    /* open them all, outer boxes first (a box inside a hidden one can't be clicked) */
+    const n = await page.locator(".box-hide").count();
+    for (let i = 0; i < n; i++) { const b = page.locator(".box-hide").nth(i); if ((await b.textContent()) === "show") await b.click(); }
+    const opened = await page.evaluate((sel) => DSA.$$(sel).filter((b) => b.dataset.box && getComputedStyle(b).display !== "none").map((b) => ({
+      key: b.dataset.box, hidden: b.classList.contains("box-hidden"),
+      body: Array.from(b.children).filter((c) => !c.classList.contains("box-head")).some((c) => c.offsetParent),
+    })), BOXES);
+    ok(opened.every((b) => !b.hidden && b.body), name + ": show opens every box", opened);
+    await page.reload();
+    await page.waitForLoadState("load");
+    ok((await info()).filter((b) => !b.main).every((b) => !b.hidden), name + ": opened boxes stay open after a reload");
+    /* a tab change redraws the practice list: it keeps one button and its state */
+    const tabs = page.locator(".tabs button");
+    if (await tabs.count() > 1) {
+      await tabs.nth(1).click();
+      const pr = await page.evaluate(() => { const m = document.getElementById("practice"); return m ? { btn: m.querySelectorAll(".box-hide").length, hidden: m.classList.contains("box-hidden") } : null; });
+      ok(!pr || (pr.btn === 1 && !pr.hidden), name + ": the practice list keeps one button and stays open on a tab change", pr);
+    }
+    /* hide them all again, inner boxes first */
+    for (let i = n - 1; i >= 0; i--) { const b = page.locator(".box-hide").nth(i); if ((await b.textContent()) === "hide") await b.click(); }
+    await page.reload();
+    await page.waitForLoadState("load");
+    ok((await info()).filter((b) => !b.main).every((b) => b.hidden), name + ": hidden again, and remembered");
+    ok(!errors.length, name + ": no errors hiding and showing boxes", errors);
+    await ctx.close();
+  }
+  /* the growth chart measures nothing until a student opens it */
+  {
+    const { page, ctx } = await openPage("sorting");
+    await page.locator("#growth").scrollIntoViewIfNeeded();
+    await page.waitForTimeout(600);
+    ok(!(await page.evaluate(() => document.querySelector(".growth-status").textContent)), "a hidden growth chart does not start measuring");
+    await openBox(page, "#growth");
+    await page.waitForFunction(() => document.querySelector(".growth-status").textContent, null, { timeout: 5000 }).catch(() => {});
+    ok(!!(await page.evaluate(() => document.querySelector(".growth-status").textContent)), "opening it starts the measurement");
+    await ctx.close();
+  }
+  /* printing shows every box, hidden or not */
+  {
+    const { page, ctx } = await openPage("sorting");
+    await page.emulateMedia({ media: "print" });
+    ok(await page.locator(".about-body").isVisible() && await page.locator("#practice .lc-list").isVisible(), "hidden boxes still print");
+    await ctx.close();
+  }
+}
+
+/* ---------- accounts: optional Google sign-in that syncs progress, LeetCode status and step notes ---------- */
+if (want("account")) {
+  console.log("accounts and sync");
+  const S = fake.state;
+  const CFG = { url: BASE + "/__supabase", anonKey: ANON };
+  /* a "computer": its own browser profile, with the site configured for the stand-in Supabase */
+  const computer = async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await ctx.addInitScript((cfg) => { window.DSA_ACCOUNT = cfg; }, CFG);
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push("uncaught: " + e.message));
+    page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) errors.push("console: " + m.text()); });
+    page.on("dialog", (d) => d.accept());
+    return { ctx, page, errors };
+  };
+  const go = async (page, path) => { await page.goto(BASE + path); await page.waitForLoadState("load"); };
+  const settled = (page) => page.waitForFunction(() => DSA.account.state === "saved", null, { timeout: 8000 }).then(() => true, () => false);
+  const signIn = async (page, keep) => {
+    await page.click(".acct-btn");
+    if (keep === false) await page.uncheck("#acct-keep");
+    await Promise.all([page.waitForURL(/[?&]code=/, { waitUntil: "commit" }), page.click(".acct-menu button.primary")]);
+    await page.waitForLoadState("load");
+    return page.waitForFunction(() => window.DSA && DSA.account && DSA.account.user, null, { timeout: 8000 }).then(() => true, () => false);
+  };
+  /* start a real run on this page, the way the quiz suite does */
+  const startRun = (page) => page.evaluate(async () => {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const big = () => DSA._players.find((x) => x.frames.length > 6 && x.isVisible() && !x.mount.closest("#playground"));
+    const tabs = Array.from(document.querySelectorAll(".tabs button"));
+    search: for (let t = 0; t < Math.max(1, tabs.length); t++) {
+      if (tabs[t]) tabs[t].click();
+      await sleep(0);
+      const btns = Array.from(document.querySelectorAll(".panel.main button")).filter((b) => b.offsetParent && !b.closest(".player, .code-dock, .seg") && !b.matches(".danger, [data-tool]"));
+      for (const b of btns) { b.click(); await sleep(0); if (big()) break search; }
+    }
+    const p = big();
+    if (!p) return null;
+    p.pause(); p.noMotion = true; p.showControls(true); p.goto(Math.min(4, p.frames.length - 1));
+    return { caption: document.querySelector("#" + p.mount.id + " .note, .note") && p.frames[p.index].note, index: p.index, frames: p.frames.length, mount: p.mount.id };
+  });
+  const saveNote = async (page, text) => {
+    const btn = page.locator(".note-btn:visible").first();
+    await btn.click();
+    await page.fill(".note-panel:visible textarea", text);
+    await page.click(".note-panel:visible button.primary");
+  };
+  const mine = (table, uid) => [...S.tables[table].values()].filter((r) => r.user_id === uid);
+
+  /* not configured: nothing changes */
+  {
+    const { page, ctx } = await openPage("trees");
+    ok((await page.locator(".acct-btn").count()) === 0, "without a Supabase URL there is no Sign in button");
+    await ctx.close();
+  }
+
+  /* computer A: a laptop, signed in and kept signed in */
+  S.nextUser = { id: "u-alice", email: "alice@example.edu", name: "Alice Student" };
+  const A = await computer();
+  await go(A.page, "/cse214/trees.html");
+  ok((await A.page.locator(".acct-btn").textContent()) === "Sign in", "signed out: a Sign in button");
+  ok((await A.page.locator(".lc-status").count()) === 0 && (await A.page.locator(".note-btn:visible").count()) === 0 && (await A.page.locator("#my-notes").count()) === 0, "signed out: no LeetCode status, notes or progress");
+  ok(await signIn(A.page), "Google sign-in completes (PKCE checked by the server)");
+  ok(!/code=/.test(A.page.url()), "the sign-in code is removed from the address", A.page.url());
+  ok(await A.page.evaluate(() => !!localStorage.getItem("dsa.session.v1")), "'keep me signed in' keeps the session in localStorage");
+  ok(/Alice/.test(await A.page.locator(".acct-btn").textContent()), "the button shows who is signed in");
+
+  /* LeetCode status */
+  await openBox(A.page, "#practice");
+  const firstN = await A.page.locator(".lc-cell").first().getAttribute("data-n");
+  await A.page.locator(".lc-status").first().selectOption("solved");
+  ok(await settled(A.page), "a status change syncs");
+  ok(mine("leetcode", "u-alice").some((r) => String(r.problem) === firstN && r.status === "solved"), "the server has it", mine("leetcode", "u-alice"));
+
+  /* progress and a note pinned to a step */
+  const run = await startRun(A.page);
+  ok(!!run, "a run starts on Trees", run);
+  await saveNote(A.page, "Why does it go <b>left</b> here? <img src=x onerror=alert(1)>");
+  ok(await settled(A.page), "the note and progress sync");
+  const prog = mine("progress", "u-alice").find((r) => r.page === "trees");
+  ok(prog && prog.data.ops.length > 0 && prog.data.tabs.length > 0 && prog.data.lc.includes(+firstN), "the progress row lists tabs, operations and problems", prog && prog.data);
+  const note = mine("notes", "u-alice")[0];
+  ok(note && note.frames.length > 1 && note.meta.mount === run.mount && note.frames[note.meta.step].note === run.caption, "the note keeps the steps around the pinned one", note && note.meta);
+  await openBox(A.page, "#my-notes");
+  const shown = await A.page.locator("#my-notes .note-body").first().innerHTML();
+  ok(/&lt;img/.test(shown) && !/<img/.test(shown), "a note's text is shown as text, never as HTML", shown);
+
+  /* computer B: a school computer, not kept signed in */
+  const B = await computer();
+  await go(B.page, "/cse214/index.html");
+  ok((await B.page.locator("#my-progress").count()) === 0, "signed out: no progress map");
+  ok(await signIn(B.page, false), "sign-in on a second computer");
+  ok(await B.page.evaluate(() => !localStorage.getItem("dsa.session.v1") && !!sessionStorage.getItem("dsa.session.v1")), "unticked: the session lasts only until the browser closes");
+  await B.page.waitForFunction(() => document.querySelector("#my-progress"), null, { timeout: 8000 }).catch(() => {});
+  await openBox(B.page, "#my-progress");
+  const treesRow = await B.page.locator("#my-progress tr", { hasText: "Trees" }).innerText();
+  ok(/1 solved/.test(treesRow) && !/Not started/.test(treesRow), "the progress map shows the laptop's work", treesRow);
+  ok(/Not started/.test(await B.page.locator("#my-progress tr", { hasText: "Sorting" }).innerText()), "and modules never opened as not started");
+  await Promise.all([B.page.waitForURL(/trees\.html#note=/), B.page.locator("#my-progress .note-list a").first().click()]);
+  await B.page.waitForFunction((cap) => DSA._players.some((p) => p.frames.some((f) => f.note === cap) && p.frames[p.index].note === cap), run.caption, { timeout: 8000 }).catch(() => {});
+  ok(await B.page.evaluate((cap) => DSA._players.some((p) => p.frames[p.index] && p.frames[p.index].note === cap), run.caption), "a note opens the exact step on another computer");
+
+  /* both ways, and the newest change wins */
+  await openBox(B.page, "#practice");
+  await B.page.locator(".lc-cell[data-n='" + firstN + "'] .lc-status").selectOption("revisit");
+  ok(await settled(B.page), "the school computer's change syncs");
+  await A.page.evaluate(() => DSA.account.sync());
+  ok((await A.page.locator(".lc-cell[data-n='" + firstN + "'] .lc-status").inputValue()) === "revisit", "the laptop picks it up", await A.page.locator(".lc-cell[data-n='" + firstN + "'] .lc-status").inputValue());
+  const second = await A.page.locator(".lc-cell").nth(1).getAttribute("data-n");
+  S.tables.leetcode.set("u-alice|" + second, { user_id: "u-alice", problem: +second, status: "todo", updated_at: new Date(Date.now() + 60000).toISOString() });
+  await A.page.locator(".lc-cell[data-n='" + second + "'] .lc-status").selectOption("solved");
+  await settled(A.page);
+  await A.page.evaluate(() => DSA.account.sync());
+  ok((await A.page.locator(".lc-cell[data-n='" + second + "'] .lc-status").inputValue()) === "todo", "an older change doesn't overwrite a newer one");
+
+  /* offline: changes wait on the computer and sync later, even across a reload */
+  const third = await A.page.locator(".lc-cell").nth(2).getAttribute("data-n");
+  await A.page.route("**/__supabase/rest/**", (r) => r.abort());
+  await A.page.locator(".lc-cell[data-n='" + third + "'] .lc-status").selectOption("solved");
+  await A.page.waitForFunction(() => /offline|error/.test(DSA.account.state), null, { timeout: 8000 }).catch(() => {});
+  ok(!mine("leetcode", "u-alice").some((r) => String(r.problem) === third), "offline: nothing reached the server");
+  await A.page.reload(); await A.page.waitForLoadState("load");
+  await A.page.unroute("**/__supabase/rest/**");
+  await A.page.evaluate(() => DSA.account.sync());
+  ok(await settled(A.page) && mine("leetcode", "u-alice").some((r) => String(r.problem) === third && r.status === "solved"), "back online: the waiting change syncs");
+
+  /* an expiring session refreshes by itself */
+  const refreshes = S.requests.filter((r) => r === "POST /auth/v1/token").length;
+  await B.page.evaluate(() => { const s = JSON.parse(sessionStorage.getItem("dsa.session.v1")); s.expires_at = Math.floor(Date.now() / 1000) + 30; sessionStorage.setItem("dsa.session.v1", JSON.stringify(s)); });
+  await B.page.reload(); await B.page.waitForLoadState("load");
+  await B.page.evaluate(() => DSA.account.sync());
+  ok(S.requests.filter((r) => r === "POST /auth/v1/token").length > refreshes && await settled(B.page), "a session about to expire is refreshed");
+
+  /* sign out, then delete the account */
+  await B.page.click(".acct-btn");
+  await B.page.click(".acct-menu button:has-text('Sign out')");
+  await B.page.waitForFunction(() => !DSA.account.user);
+  ok(await B.page.evaluate(() => !sessionStorage.getItem("dsa.session.v1") && !Object.keys(sessionStorage).some((k) => k.startsWith("dsa.sync."))), "sign out leaves nothing of the student on the school computer");
+  ok((await B.page.locator(".lc-status").count()) === 0 && (await B.page.locator("#my-notes").count()) === 0, "signed out: the personal parts disappear");
+  await A.page.click(".acct-btn");
+  await A.page.click(".acct-menu button:has-text('Delete my account')");
+  await A.page.waitForFunction(() => !DSA.account.user, null, { timeout: 8000 }).catch(() => {});
+  ok(!mine("leetcode", "u-alice").length && !mine("notes", "u-alice").length && !mine("progress", "u-alice").length && !S.users.has("u-alice"), "delete my account removes everything on the server");
+  ok(!A.errors.length && !B.errors.length, "no errors on either computer", A.errors.concat(B.errors));
+  await A.ctx.close(); await B.ctx.close();
+
+  /* a note on every module page reopens its step after a reload */
+  S.nextUser = { id: "u-bob", email: "bob@example.edu", name: "Bob" };
+  const C = await computer();
+  await go(C.page, "/cse214/index.html");
+  await signIn(C.page);
+  for (const name of PAGES) {
+    await go(C.page, "/cse214/" + name + ".html");
+    await C.page.waitForFunction(() => DSA.account.user);
+    const r = await startRun(C.page);
+    if (!r) { ok(false, name + ": a run to pin a note to"); continue; }
+    await saveNote(C.page, "note on " + name);
+    ok(await settled(C.page), name + ": the note syncs");
+    const id = [...S.tables.notes.values()].find((n) => n.user_id === "u-bob" && n.page === name).id;
+    await C.page.evaluate(() => DSA.account.sync());
+    await go(C.page, "/cse214/" + name + ".html#note=" + id);
+    await C.page.waitForFunction((cap) => DSA._players.some((p) => p.frames[p.index] && p.frames[p.index].note === cap), r.caption, { timeout: 8000 }).catch(() => {});
+    ok(await C.page.evaluate((cap) => DSA._players.some((p) => p.frames[p.index] && p.frames[p.index].note === cap && p.ctlShown), r.caption), name + ": the note reopens its step", r);
+  }
+  ok(!C.errors.length, "no errors pinning and opening notes on every page", C.errors);
+  await C.ctx.close();
+}
+
+/* ---------- keepalive: the daily job keeps the free Supabase project awake, and restores it if paused ---------- */
+if (want("keepalive")) {
+  console.log("keepalive");
+  const S = fake.state;
+  const env = { SUPABASE_URL: BASE + "/__supabase", SUPABASE_ANON_KEY: ANON, CRON_SECRET: "cron-test", SUPABASE_ACCESS_TOKEN: "mgmt-token", SUPABASE_API_URL: BASE + "/__supabase/mgmt", SUPABASE_PROJECT_REF: "proj" };
+  Object.assign(process.env, env);
+  const call = (auth) => fetch(BASE + "/api/keepalive", { headers: auth ? { authorization: auth } : {} });
+  const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, "vercel.json"), "utf8"));
+  const cron = (cfg.crons || []).find((c) => c.path === "/api/keepalive");
+  ok(cron && /^\d+ \d+ \* \* \*$/.test(cron.schedule), "vercel.json runs it once a day (the most Vercel's free plan allows)", cron);
+  ok(cfg.functions && cfg.functions["api/keepalive.js"], "the function is declared");
+  ok((await call()).status === 401 && (await call("Bearer wrong")).status === 401, "only Vercel Cron's secret can run it");
+  const before = S.pings;
+  const healthy = await call("Bearer cron-test");
+  ok(healthy.status === 200 && S.pings - before === 3, "a healthy project gets three real database calls", await healthy.json());
+  S.down = true; S.projectStatus = "INACTIVE";
+  const paused = await call("Bearer cron-test");
+  const pj = await paused.json();
+  ok(paused.status === 200 && pj.restored === true && S.restored === 1, "a paused project is restored automatically", pj);
+  S.down = true; S.projectStatus = "ACTIVE_HEALTHY";
+  ok((await call("Bearer cron-test")).status === 502 && S.restored === 1, "an outage that isn't a pause is reported, not 'restored'");
+  delete process.env.SUPABASE_ACCESS_TOKEN;
+  const noToken = await call("Bearer cron-test");
+  ok(noToken.status === 502 && (await noToken.json()).restore === "not configured", "without a token it says it can't restore");
+  S.down = false; S.projectStatus = "ACTIVE_HEALTHY";
+  Object.keys(env).forEach((k) => delete process.env[k]);
+}
+
+/* ---------- offline: sw.js saves the site and serves it with no network ---------- */
+if (want("offline")) {
+  console.log("offline");
+  const VER = currentVersion();
+  /* Playwright's setOffline does not reach a service worker's own requests, so this suite has its own server
+     and really goes offline by shutting it down. */
+  const own = await startServer(0, {});
+  const OB = "http://127.0.0.1:" + own.address().port;
+  const ctx = await browser.newContext({ serviceWorkers: "allow", viewport: { width: 1280, height: 900 } });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on("pageerror", (e) => errors.push("uncaught: " + e.message));
+  page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) errors.push("console: " + m.text()); });
+  const cached = () => page.evaluate(async () => {
+    const out = {};
+    for (const n of await caches.keys()) out[n] = (await (await caches.open(n)).keys()).map((r) => r.url.replace(location.origin, ""));
+    return out;
+  });
+  await page.goto(OB + "/cse214/sorting.html");
+  await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller, null, { timeout: 15000 });
+  let c = await cached();
+  ok(Object.keys(c).join() === "dsa-" + VER, "one saved copy, named after the asset version", Object.keys(c));
+  const saved = c["dsa-" + VER] || [];
+  ok(["/cse214/trees.html", "/index.html", "/assets/js/trees.js?v=" + VER, "/assets/css/style.css?v=" + VER].every((u) => saved.includes(u)), "pages and their scripts are saved on the first visit", saved);
+  ok(!saved.some((u) => /editor\.js|playground-examples|why-data|java-interp|growth-worker/.test(u)), "the heavy tools are not downloaded until used", saved);
+
+  /* opening the playground saves it for later */
+  await page.click("#pg-open");
+  await page.waitForSelector(".cm-content");
+  await page.click("#pg-run");
+  await page.waitForFunction(() => !document.querySelector("#pg-run").disabled, null, { timeout: 8000 });
+  await page.waitForTimeout(300);
+  c = await cached();
+  ok(["editor.js", "playground-examples.js", "java-interp.js"].every((f) => (c["dsa-" + VER] || []).some((u) => u.includes(f + "?v=" + VER))), "a tool used once is saved", c["dsa-" + VER]);
+
+  own.close(); own.closeAllConnections();
+  await page.goto(OB + "/cse214/trees.html");
+  ok(/Trees/.test(await page.title()), "offline: a page never opened before still loads", await page.title());
+  ok(await page.evaluate(() => !!(window.DSA && DSA._players && DSA._players.length)), "offline: its visualizer starts");
+  await page.goto(OB + "/");
+  ok(/Choose a course/.test(await page.textContent("h1")), "offline: the site root loads");
+  await page.goto(OB + "/cse214/sorting.html");
+  await page.click("#pg-open");
+  await page.waitForSelector(".cm-content", { timeout: 8000 }).catch(() => {});
+  ok((await page.locator(".cm-content").count()) === 1, "offline: the playground opens with its editor");
+  await page.click("#pg-run");
+  await page.waitForFunction(() => DSA._players[DSA._players.length - 1].frames.length > 3, null, { timeout: 8000 }).catch(() => {});
+  ok(await page.evaluate(() => DSA._players[DSA._players.length - 1].frames.length > 3), "offline: the playground runs code");
+  await page.goto(OB + "/cse214/nope.html");
+  ok(/You are offline/.test(await page.textContent("h1")), "offline: an unsaved address says so plainly");
+  ok(!errors.length, "no errors offline", errors);
+  await ctx.close();
+
+  /* a new version replaces the old copy */
+  {
+    const ctx2 = await browser.newContext({ serviceWorkers: "allow" });
+    const p2 = await ctx2.newPage();
+    await p2.goto(BASE + "/cse214/sorting.html");
+    await p2.waitForFunction(() => navigator.serviceWorker.controller, null, { timeout: 15000 });
+    await p2.evaluate(() => navigator.serviceWorker.register(DSA.ROOT + "sw.js?v=next"));
+    let names = [];
+    for (let i = 0; i < 50 && names.join() !== "dsa-next"; i++) { await p2.waitForTimeout(200); names = await p2.evaluate(() => caches.keys()); }
+    ok(names.join() === "dsa-next", "a new version deletes the old saved copy", names);
+    await ctx2.close();
+  }
+}
+
 /* ---------- screenshots for a human to look at ---------- */
 if (want("shots")) {
   console.log("screenshots");
@@ -1221,11 +1632,16 @@ if (want("shots")) {
   };
   await shot("sorting", quiz, { as: "quiz" });
   await shot("sorting", async (page) => { await page.click("#btn-run"); await page.evaluate(() => { const p = DSA._players[0]; p.pause(); p.goto(6); }); await page.getByRole("button", { name: "Why?", exact: true }).click(); }, { as: "why" });
-  await shot("sorting", async (page) => { await page.locator("#growth").scrollIntoViewIfNeeded(); await page.waitForFunction(() => /Stopped early|Measured every/.test(document.querySelector(".growth-status").textContent), null, { timeout: 40000 }); await page.locator("#growth").scrollIntoViewIfNeeded(); }, { as: "growth" });
+  await shot("sorting", async (page) => { await openBox(page, "#growth"); await page.waitForFunction(() => /Stopped early|Measured every/.test(document.querySelector(".growth-status").textContent), null, { timeout: 40000 }); await openBox(page, "#growth"); }, { as: "growth" });
   const inPanel = (example, back) => async (page) => {
     await page.click("#pg-open");
     await page.waitForSelector("#pg-run");
-    if (example) await page.selectOption("#pg-example", { label: example });
+    if (example) {
+      /* a renamed starter should fail one check by name, not time out and stop the whole run */
+      const names = await page.$$eval("#pg-example option", (o) => o.map((x) => x.textContent));
+      if (!ok(names.includes(example), "screenshot starter \"" + example + "\" exists", names)) return;
+      await page.selectOption("#pg-example", { label: example });
+    }
     await page.click("#pg-run");
     await page.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 5 && !document.querySelector("#pg-run").disabled; });
     await page.evaluate((back) => { const p = DSA._players[DSA._players.length - 1]; p.pause(); p.noMotion = true; p.goto(Math.max(0, p.frames.length - back)); document.querySelector("#playground").scrollIntoView(); }, back);
@@ -1233,7 +1649,7 @@ if (want("shots")) {
   await shot("trees", async (page) => { await inPanel("BST: iterative", 8)(page); }, { as: "pg-trees" });
   await shot("arrays", inPanel("singly linked list", 22), { as: "pg-phone", ctx: { viewport: { width: 390, height: 844 } }, full: true });
   await shot("hashtables", inPanel("separate chaining", 6), { as: "pg-hash" });
-  await shot("graphs", inPanel("BFS: shortest distances", 6), { as: "pg-graph" });
+  await shot("graphs", inPanel("BFS only", 6), { as: "pg-graph" });
   await shot("stacks-queues", inPanel("array stack", 5), { as: "pg-stack" });
   await shot("sorting", null, { as: "head" });
   await shot("sorting", null, { as: "head-phone", ctx: { viewport: { width: 390, height: 500 } } });

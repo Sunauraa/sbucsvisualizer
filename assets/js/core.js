@@ -18,6 +18,21 @@
   DSA.ROOT = (function () {
     try { return new URL("../../", document.currentScript.src).href; } catch (e) { return "../"; }
   })();
+  /* the asset version (?v=…) this page loaded core.js with; tools/stamp.mjs writes it into every page */
+  DSA.VERSION = (function () {
+    try { return new URL(document.currentScript.src).searchParams.get("v") || ""; } catch (e) { return ""; }
+  })();
+  /** DSA.asset("assets/js/why-data.js") → its URL with this page's version. Browsers keep assets for two
+      weeks, so anything loaded later (scripts, workers) must carry the version too or it would go stale. */
+  DSA.asset = (p) => DSA.ROOT + p + (DSA.VERSION ? "?v=" + DSA.VERSION : "");
+
+  /* Offline copy (sw.js). Not over file://, where browsers don't allow it, and not on localhost, so files
+     edited while running `npm run serve` show up on reload. */
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol) && location.hostname !== "localhost" && DSA.VERSION) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register(DSA.ROOT + "sw.js?v=" + DSA.VERSION).catch(() => {});
+    });
+  }
   /* Features in their own files (motion, quiz, why) add themselves to every Player through this list. */
   DSA.playerAddons = [];
 
@@ -30,6 +45,24 @@
      and copy the "entry.123456789" part of the link into FEEDBACK_PAGE_FIELD. */
   DSA.FEEDBACK_URL = "";
   DSA.FEEDBACK_PAGE_FIELD = "";
+
+  /* ---------------- accounts (optional) ----------------
+     Sign in with Google to sync a progress map, LeetCode status and notes pinned to a step (account.js).
+     Paste your Supabase project's URL and its public "anon" key (Project Settings → API). Both are meant to be
+     public: each student's rows are protected by the database's row-level security (supabase/schema.sql).
+     While these are empty there is no Sign in button and the site works exactly as before. */
+  DSA.ACCOUNT = { url: "", anonKey: "" };
+
+  /* ---------------- events ----------------
+     Modules and tools announce what a student does; account.js listens to build the progress map.
+       tab       { label }                      a tab was opened
+       run       { player, user, keys }         a player loaded a run of several steps (keys: listings it ran;
+                                                user: the student started it, not the page loading)
+       quiz      { ok }                         a quiz question was answered
+       practice  { mount }                      the LeetCode list was drawn */
+  DSA.events = new EventTarget();
+  DSA.emit = (type, detail) => { try { DSA.events.dispatchEvent(new CustomEvent(type, { detail: detail || {} })); } catch (e) { console.error(e); } };
+  DSA.on = (type, fn) => DSA.events.addEventListener(type, (e) => { try { fn(e.detail); } catch (err) { console.error(err); } });
 
   /* ---------------- tiny DOM helpers ---------------- */
   DSA.$ = (sel, root) => (root || document).querySelector(sel);
@@ -762,12 +795,74 @@
       const a = DSA.el("a", { class: "lc-item", href: "https://leetcode.com/problems/" + slug + "/", target: "_blank", rel: "noopener" });
       a.innerHTML = '<span class="lc-top"><span class="lc-num">' + n + '.</span> <span class="lc-title">' + title + '</span> <span class="lc-diff ' + diff.toLowerCase() + '">' + diff + "</span></span>" +
         (why ? '<span class="lc-why">' + why + "</span>" : "");
-      list.appendChild(a);
+      /* a card holds the link and, for a signed-in student, a status menu (account.js) that can't go inside a link */
+      list.appendChild(DSA.el("div", { class: "lc-cell", "data-n": String(n), "data-title": title }, [a]));
     });
     m.appendChild(list);
+    DSA.collapsible(m);
+    DSA.emit("practice", { mount: m });
   }
   DSA.Practice = function (data) { pData = data; practiceRender(); };
+
+  /* ---------------- hide / show any box ----------------
+     Every box on a page except the visualizer itself gets a "show / hide" button in its heading row. Boxes start
+     hidden, so a newcomer sees the visualizer and a list of headings, and opens what they want; the boxes a
+     student opens are remembered per page. A hidden box keeps its heading. Boxes with their own toggle (the code
+     dock, Why?, Quiz me, the playground's Close) are left alone. Printing shows every box. */
+  const LS_BOXES = "dsa.shownBoxes.v1";
+  const PAGE_KEY = (location.pathname.split("/").pop() || "index.html").replace(/\.html$/, "");
+  try { localStorage.removeItem("dsa.hiddenBoxes.v1"); } catch (e) {}  /* the old "hidden" list, from before boxes started hidden */
+  const readShown = () => { try { return JSON.parse(localStorage.getItem(LS_BOXES) || "{}") || {}; } catch (e) { return {}; } };
+  const isHidden = (key) => (readShown()[PAGE_KEY] || []).indexOf(key) < 0;
+  function rememberHidden(key, hidden) {
+    try {
+      const all = readShown();
+      const list = (all[PAGE_KEY] || []).filter((k) => k !== key);
+      if (!hidden) list.push(key);
+      if (list.length) all[PAGE_KEY] = list; else delete all[PAGE_KEY];
+      localStorage.setItem(LS_BOXES, JSON.stringify(all));
+    } catch (e) {}
+  }
+  const slug = (s) => s.split("·")[0].toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+  let boxSeq = 0;
+  /** collapsible(box): adds the hide button to box's heading row. Safe to call again after the box is redrawn. */
+  DSA.collapsible = function (box) {
+    if (!box || box.classList.contains("main") || box.classList.contains("playground")) return;
+    let head = Array.from(box.children).find((c) => c.classList.contains("panel-title") || /^H[23]$/.test(c.tagName));
+    if (!head) return;
+    if (/^H[23]$/.test(head.tagName)) {
+      const row = DSA.el("div", { class: "panel-title" });
+      box.insertBefore(row, head);
+      row.appendChild(head);
+      head = row;
+    }
+    if (head.querySelector(":scope > .box-hide")) return;
+    head.classList.add("box-head");
+    const h = head.querySelector("h2, h3");
+    const name = (h ? h.textContent : "").split("·")[0].trim() || "this box";
+    const key = box.dataset.box || (box.dataset.box = box.id || slug(name) || "box" + boxSeq++);
+    const btn = DSA.el("button", { type: "button", class: "ghost box-hide" });
+    head.appendChild(btn);
+    const paint = (hidden) => {
+      box.classList.toggle("box-hidden", hidden);
+      btn.textContent = hidden ? "show" : "hide";
+      btn.classList.toggle("primary", hidden);
+      btn.setAttribute("aria-expanded", String(!hidden));
+      btn.setAttribute("aria-label", (hidden ? "Show " : "Hide ") + name);
+    };
+    paint(isHidden(key));
+    btn.addEventListener("click", () => {
+      const hidden = !box.classList.contains("box-hidden");
+      paint(hidden);
+      rememberHidden(key, hidden);
+    });
+  };
+  document.addEventListener("DOMContentLoaded", () => {
+    DSA.$$("main > .panel, main > .about, .about-body .panel").forEach(DSA.collapsible);
+  });
   DSA.practiceShow = function (key) { pKey = key; practiceRender(); };
+  /** every problem number this page lists, in any part (account.js counts them for the progress map) */
+  DSA.practiceNumbers = () => (pData ? Array.from(new Set(Object.values(pData).flatMap((d) => (d.items || []).map((it) => it[0])))) : []);
 
   /* ---------------- segmented toggle ---------------- */
   /** Segmented(mount, [{id,label}], onChange, initialId): a small pill switch (mode pickers). */
@@ -930,6 +1025,7 @@
       cur = i;
       btns.forEach((b, k) => b.classList.toggle("active", k === i));
       onChange(items[i].id, i);
+      DSA.emit("tab", { label: items[i].label });
     }
     pick(0);
     return { pick, get current() { return items[cur] && items[cur].id; } };
@@ -1022,7 +1118,19 @@
     this.frameHooks = [];               /* run after every painted frame */
     this.loadHooks = [];                /* run when a new frame list is loaded */
     this.noMotion = false;
-    let prevIndex = 0, prevFrames = null;
+    let prevIndex = 0, prevFrames = null, heldWidth = 0;
+    /* noteHeld: while one run is stepped, the caption may grow but never shrink. A shorter caption would make the
+       page shorter, and a reader scrolled to the bottom (pages are short now that boxes start hidden) would be
+       pulled up by the browser. The height comes from a ResizeObserver, after the browser's own layout: reading
+       offsetHeight during a step would force a layout in the middle of motion.js's before/after comparison. */
+    let noteMax = 0;
+    if ("ResizeObserver" in window) {
+      new ResizeObserver((entries) => {
+        const e = entries[entries.length - 1];
+        const h = e.borderBoxSize && e.borderBoxSize[0] ? e.borderBoxSize[0].blockSize : e.target.offsetHeight;
+        if (h > noteMax + 0.5) { noteMax = h; note.style.minHeight = h + "px"; }
+      }).observe(note);
+    }
     this.showControls = function (on) { this.ctlShown = !!on; ctl.hidden = !on; };
 
     mount.addEventListener("click", (e) => {
@@ -1055,6 +1163,8 @@
       const motion = DSA.motion ? DSA.motion.begin(this, oneStep && !this.noMotion) : null;
       try { this.render(f, this.index, this.frames); } catch (err) { console.error(err); }
       if (motion) motion.play();
+      /* a new run, or a new window width, lets the caption find its height again (see noteHeld below) */
+      if (prevFrames !== this.frames || heldWidth !== innerWidth) { noteMax = 0; note.style.minHeight = ""; heldWidth = innerWidth; }
       prevIndex = this.index; prevFrames = this.frames;
       if (this.onFrame) this.onFrame(f, this.index);
       this.frameHooks.forEach((fn) => { try { fn(f, this.index); } catch (err) { console.error(err); } });
@@ -1071,6 +1181,7 @@
       DSA.annotateArgs(this.frames);
       this.index = 0;
       this.loadHooks.forEach((fn) => { try { fn(this.frames); } catch (err) { console.error(err); } });
+      if (this.frames.length > 1) DSA.emit("run", { player: this, user: performance.now() - lastUser < 1500, keys: Array.from(new Set(this.frames.map((f) => f.code).filter((k) => typeof k === "string"))) });
       this._sync();
       if (autoplay !== false) {
         if (this.frames.length > 1 && performance.now() - lastUser < 1500) this._reveal();

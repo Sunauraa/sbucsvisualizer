@@ -1625,6 +1625,34 @@
       "maximum-depth-of-binary-tree",
       "Easy",
       "Height, recursively."
+     ],
+     [
+      100,
+      "Same Tree",
+      "same-tree",
+      "Easy",
+      "The same preorder recursion, run on two trees at once."
+     ],
+     [
+      226,
+      "Invert Binary Tree",
+      "invert-binary-tree",
+      "Easy",
+      "Swap the children, recurse on both: four lines."
+     ],
+     [
+      199,
+      "Binary Tree Right Side View",
+      "binary-tree-right-side-view",
+      "Medium",
+      "Level order, keeping the last node of each level."
+     ],
+     [
+      103,
+      "Binary Tree Zigzag Level Order Traversal",
+      "binary-tree-zigzag-level-order-traversal",
+      "Medium",
+      "Level order with every other level reversed."
      ]
     ]
    },
@@ -1665,6 +1693,34 @@
       "kth-smallest-element-in-a-bst",
       "Medium",
       "In-order traversal, stopped early."
+     ],
+     [
+      938,
+      "Range Sum of BST",
+      "range-sum-of-bst",
+      "Easy",
+      "Skip a whole subtree when the BST order says it's out of range."
+     ],
+     [
+      530,
+      "Minimum Absolute Difference in BST",
+      "minimum-absolute-difference-in-bst",
+      "Easy",
+      "Inorder visits keys in sorted order: compare neighbours."
+     ],
+     [
+      235,
+      "Lowest Common Ancestor of a Binary Search Tree",
+      "lowest-common-ancestor-of-a-binary-search-tree",
+      "Medium",
+      "Walk down until the two keys split left and right."
+     ],
+     [
+      173,
+      "Binary Search Tree Iterator",
+      "binary-search-tree-iterator",
+      "Medium",
+      "Inorder traversal with an explicit stack, one step at a time."
      ]
     ]
    },
@@ -1691,6 +1747,13 @@
       "balance-a-binary-search-tree",
       "Medium",
       "Rebalance a degenerate BST."
+     ],
+     [
+      109,
+      "Convert Sorted List to Binary Search Tree",
+      "convert-sorted-list-to-binary-search-tree",
+      "Medium",
+      "Build a height-balanced tree from the middle out."
      ]
     ]
    },

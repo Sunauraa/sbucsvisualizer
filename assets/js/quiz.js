@@ -148,6 +148,7 @@
       score.total++;
       if (ok) score.right++;
       saveScore();
+      D.emit("quiz", { ok: ok });
       choices.forEach((b, j) => {
         b.disabled = true;
         b.classList.toggle("right", q.opts[j].ok);

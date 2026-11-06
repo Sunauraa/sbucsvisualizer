@@ -13,7 +13,6 @@
 (function () {
   "use strict";
   const D = window.DSA;
-  const VERSION = (document.currentScript.src.split("?")[1] || "");
   const PAGE = (location.pathname.split("/").pop() || "").replace(/\.html$/, "");
   const LS = "dsa.playground." + PAGE + ".v1";
   const RUN_LIMIT_MS = 6000;
@@ -324,7 +323,7 @@
     const finish = () => { btn.disabled = false; btn.textContent = label; clearTimeout(timer); if (worker) { worker.terminate(); worker = null; } cancelRun = null; resolve(); };
     cancelRun = finish;
     try {
-      worker = new Worker(D.ROOT + "assets/js/java-interp.js");
+      worker = new Worker(D.asset("assets/js/java-interp.js"));
     } catch (e) {
       finish();
       setError("This browser blocked the code runner. Open the site over http instead of from a file.");
@@ -368,7 +367,7 @@
   function loadScript(path) {
     return new Promise((res) => {
       const s = document.createElement("script");
-      s.src = D.ROOT + path + (VERSION ? "?" + VERSION : "");
+      s.src = D.asset(path);
       s.onload = res;
       s.onerror = res;
       document.head.appendChild(s);

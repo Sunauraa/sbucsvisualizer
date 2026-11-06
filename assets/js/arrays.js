@@ -1795,6 +1795,20 @@
       "rotate-array",
       "Medium",
       "Moving every element: O(n) no matter how you do it."
+     ],
+     [
+      26,
+      "Remove Duplicates from Sorted Array",
+      "remove-duplicates-from-sorted-array",
+      "Easy",
+      "Shift-left in place with a read index and a write index."
+     ],
+     [
+      1299,
+      "Replace Elements with Greatest Element on Right Side",
+      "replace-elements-with-greatest-element-on-right-side",
+      "Easy",
+      "One pass from the back, writing over the array in place."
      ]
     ]
    },
@@ -1828,6 +1842,20 @@
       "richest-customer-wealth",
       "Easy",
       "Lists of lists, like ArrayList<ArrayList<Integer>>."
+     ],
+     [
+      1389,
+      "Create Target Array in the Given Order",
+      "create-target-array-in-the-given-order",
+      "Easy",
+      "insert(i, x) over and over: every insert shifts the tail right."
+     ],
+     [
+      380,
+      "Insert Delete GetRandom O(1)",
+      "insert-delete-getrandom-o1",
+      "Medium",
+      "Remove in O(1) by swapping with the last slot, then shrinking size."
      ]
     ]
    },
@@ -1868,6 +1896,20 @@
       "search-a-2d-matrix",
       "Medium",
       "Treat a row-major grid as one sorted 1-D array."
+     ],
+     [
+      1572,
+      "Matrix Diagonal Sum",
+      "matrix-diagonal-sum",
+      "Easy",
+      "Index arithmetic on a square grid: a[i][i] and a[i][n-1-i]."
+     ],
+     [
+      73,
+      "Set Matrix Zeroes",
+      "set-matrix-zeroes",
+      "Medium",
+      "Row and column passes over a 2-D array, in place."
      ]
     ]
    },
@@ -1915,6 +1957,27 @@
       "merge-two-sorted-lists",
       "Easy",
       "Splice nodes instead of copying values."
+     ],
+     [
+      83,
+      "Remove Duplicates from Sorted List",
+      "remove-duplicates-from-sorted-list",
+      "Easy",
+      "Unlink a node by pointing past it."
+     ],
+     [
+      234,
+      "Palindrome Linked List",
+      "palindrome-linked-list",
+      "Easy",
+      "Find the middle, reverse the second half, compare."
+     ],
+     [
+      2,
+      "Add Two Numbers",
+      "add-two-numbers",
+      "Medium",
+      "Walk two lists at once and build a third with a tail pointer."
      ]
     ]
    },
@@ -1941,6 +2004,20 @@
       "design-linked-list",
       "Medium",
       "Try it again with prev pointers and compare removeLast."
+     ],
+     [
+      1472,
+      "Design Browser History",
+      "design-browser-history",
+      "Medium",
+      "Back and forward through pages: prev and next links."
+     ],
+     [
+      641,
+      "Design Circular Deque",
+      "design-circular-deque",
+      "Medium",
+      "Add and remove at both ends: what a doubly linked list does in O(1)."
      ]
     ]
    },
@@ -1974,6 +2051,20 @@
       "find-the-winner-of-the-circular-game",
       "Medium",
       "Josephus: round-robin elimination on a ring."
+     ],
+     [
+      202,
+      "Happy Number",
+      "happy-number",
+      "Easy",
+      "Floyd's slow and fast pointers find a cycle in any sequence."
+     ],
+     [
+      287,
+      "Find the Duplicate Number",
+      "find-the-duplicate-number",
+      "Medium",
+      "An array read as a linked list with a cycle: find where it starts."
      ]
     ]
    }

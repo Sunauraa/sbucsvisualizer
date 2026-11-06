@@ -5,7 +5,8 @@
   "description": "Headless-browser checks. Kept in this folder so the site root stays free of package.json and Vercel has nothing to build.",
   "scripts": {
     "test": "node run.mjs",
-    "serve": "node server.mjs"
+    "serve": "node server.mjs",
+    "serve:accounts": "node server.mjs --accounts"
   },
   "devDependencies": {
     "playwright": "1.56.1",

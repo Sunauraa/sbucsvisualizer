@@ -1049,6 +1049,13 @@
       "reverse-string",
       "Easy",
       "Recursion that shrinks the input by one."
+     ],
+     [
+      1006,
+      "Clumsy Factorial",
+      "clumsy-factorial",
+      "Medium",
+      "Factorial with the operators rotated: trace it by hand first."
      ]
     ]
    },
@@ -1101,6 +1108,20 @@
       "house-robber",
       "Medium",
       "The next step in dynamic programming."
+     ],
+     [
+      62,
+      "Unique Paths",
+      "unique-paths",
+      "Medium",
+      "paths(r, c) = paths(r-1, c) + paths(r, c-1), memoised."
+     ],
+     [
+      322,
+      "Coin Change",
+      "coin-change",
+      "Medium",
+      "Memoise the best answer for each amount."
      ]
     ]
    },
@@ -1120,6 +1141,20 @@
       "greatest-common-divisor-of-strings",
       "Easy",
       "The same recursion on strings."
+     ],
+     [
+      914,
+      "X of a Kind in a Deck of Cards",
+      "x-of-a-kind-in-a-deck-of-cards",
+      "Easy",
+      "The answer is whether the gcd of all the counts is at least 2."
+     ],
+     [
+      2807,
+      "Insert Greatest Common Divisors in Linked List",
+      "insert-greatest-common-divisors-in-linked-list",
+      "Medium",
+      "Euclid between each pair of neighbours."
      ]
     ]
    },
@@ -1146,6 +1181,20 @@
       "power-of-three",
       "Easy",
       "Divide until you hit the base case."
+     ],
+     [
+      342,
+      "Power of Four",
+      "power-of-four",
+      "Easy",
+      "Divide by 4 recursively, or a bit trick."
+     ],
+     [
+      372,
+      "Super Pow",
+      "super-pow",
+      "Medium",
+      "Fast power with a modulus and an exponent given as digits."
      ]
     ]
    },
@@ -1199,6 +1248,27 @@
       "search-in-rotated-sorted-array",
       "Medium",
       "Decide which half is sorted first."
+     ],
+     [
+      278,
+      "First Bad Version",
+      "first-bad-version",
+      "Easy",
+      "Binary search for the first index where a test turns true."
+     ],
+     [
+      69,
+      "Sqrt(x)",
+      "sqrtx",
+      "Easy",
+      "Binary search over answers instead of over an array."
+     ],
+     [
+      34,
+      "Find First and Last Position of Element in Sorted Array",
+      "find-first-and-last-position-of-element-in-sorted-array",
+      "Medium",
+      "Two binary searches: leftmost and rightmost."
      ]
     ]
    },
@@ -1232,6 +1302,27 @@
       "letter-combinations-of-a-phone-number",
       "Medium",
       "Backtracking over choices."
+     ],
+     [
+      77,
+      "Combinations",
+      "combinations",
+      "Medium",
+      "Choose or skip each number: the same recursion tree, cut at depth k."
+     ],
+     [
+      39,
+      "Combination Sum",
+      "combination-sum",
+      "Medium",
+      "Backtracking where a choice may repeat."
+     ],
+     [
+      22,
+      "Generate Parentheses",
+      "generate-parentheses",
+      "Medium",
+      "Backtracking with a rule: never more ')' than '('."
      ]
     ]
    }

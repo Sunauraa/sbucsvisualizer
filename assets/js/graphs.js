@@ -554,6 +554,48 @@
       "is-graph-bipartite",
       "Medium",
       "Two-colour the BFS levels."
+     ],
+     [
+      997,
+      "Find the Town Judge",
+      "find-the-town-judge",
+      "Easy",
+      "In-degree and out-degree from the edge list."
+     ],
+     [
+      841,
+      "Keys and Rooms",
+      "keys-and-rooms",
+      "Medium",
+      "Can DFS from room 0 reach every room?"
+     ],
+     [
+      133,
+      "Clone Graph",
+      "clone-graph",
+      "Medium",
+      "BFS or DFS with a map from each old vertex to its copy."
+     ],
+     [
+      1091,
+      "Shortest Path in Binary Matrix",
+      "shortest-path-in-binary-matrix",
+      "Medium",
+      "BFS gives shortest paths when every edge costs 1."
+     ],
+     [
+      210,
+      "Course Schedule II",
+      "course-schedule-ii",
+      "Medium",
+      "Topological order: DFS finish times, reversed."
+     ],
+     [
+      127,
+      "Word Ladder",
+      "word-ladder",
+      "Hard",
+      "BFS over an implicit graph of words one letter apart."
      ]
     ]
    }

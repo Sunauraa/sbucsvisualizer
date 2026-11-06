@@ -738,6 +738,27 @@
       "group-anagrams",
       "Medium",
       "String keys: the sorted word as the key."
+     ],
+     [
+      383,
+      "Ransom Note",
+      "ransom-note",
+      "Easy",
+      "Count letters in a map, then spend the counts."
+     ],
+     [
+      3,
+      "Longest Substring Without Repeating Characters",
+      "longest-substring-without-repeating-characters",
+      "Medium",
+      "A map from character to last index, plus a sliding window."
+     ],
+     [
+      560,
+      "Subarray Sum Equals K",
+      "subarray-sum-equals-k",
+      "Medium",
+      "A map from prefix sum to how often it has appeared."
      ]
     ]
    },
@@ -771,6 +792,20 @@
       "longest-consecutive-sequence",
       "Medium",
       "O(n) only because lookups are O(1)."
+     ],
+     [
+      219,
+      "Contains Duplicate II",
+      "contains-duplicate-ii",
+      "Easy",
+      "A map from value to last index: one lookup per element."
+     ],
+     [
+      349,
+      "Intersection of Two Arrays",
+      "intersection-of-two-arrays",
+      "Easy",
+      "Put one array in a set, look up the other."
      ]
     ]
    },
@@ -797,6 +832,20 @@
       "word-pattern",
       "Easy",
       "String keys mapped both ways."
+     ],
+     [
+      409,
+      "Longest Palindrome",
+      "longest-palindrome",
+      "Easy",
+      "Count characters with a hash set or map."
+     ],
+     [
+      454,
+      "4Sum II",
+      "4sum-ii",
+      "Medium",
+      "Hash the sums of two arrays, look up the other two."
      ]
     ]
    }

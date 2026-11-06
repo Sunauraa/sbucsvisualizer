@@ -811,6 +811,13 @@
       "move-zeroes",
       "Easy",
       "Stable in-place movement of elements."
+     ],
+     [
+      905,
+      "Sort Array By Parity",
+      "sort-array-by-parity",
+      "Easy",
+      "Swap out-of-place pairs until every even number comes first."
      ]
     ]
    },
@@ -830,6 +837,13 @@
       "height-checker",
       "Easy",
       "Compare an array with its sorted version."
+     ],
+     [
+      414,
+      "Third Maximum Number",
+      "third-maximum-number",
+      "Easy",
+      "Three rounds of 'find the next largest', the core of selection sort."
      ]
     ]
    },
@@ -849,6 +863,13 @@
       "search-insert-position",
       "Easy",
       "Find where one key belongs in a sorted prefix."
+     ],
+     [
+      1365,
+      "How Many Numbers Are Smaller Than the Current Number",
+      "how-many-numbers-are-smaller-than-the-current-number",
+      "Easy",
+      "Each element's final index in sorted order."
      ]
     ]
    },
@@ -868,6 +889,13 @@
       "kth-largest-element-in-an-array",
       "Medium",
       "Stop heap sort after k extractions."
+     ],
+     [
+      506,
+      "Relative Ranks",
+      "relative-ranks",
+      "Easy",
+      "Pull scores from a max-heap to assign ranks in order."
      ]
     ]
    },
@@ -901,6 +929,20 @@
       "sort-an-array",
       "Medium",
       "Full merge sort."
+     ],
+     [
+      23,
+      "Merge k Sorted Lists",
+      "merge-k-sorted-lists",
+      "Hard",
+      "The merge step, generalised from two lists to k."
+     ],
+     [
+      493,
+      "Reverse Pairs",
+      "reverse-pairs",
+      "Hard",
+      "Count during the merge step, when both halves are sorted."
      ]
     ]
    },
@@ -927,6 +969,13 @@
       "sort-an-array",
       "Medium",
       "Randomise the pivot, or sorted input will time out."
+     ],
+     [
+      973,
+      "K Closest Points to Origin",
+      "k-closest-points-to-origin",
+      "Medium",
+      "Quickselect: partition once, recurse into one side only."
      ]
     ]
    },
@@ -973,6 +1022,20 @@
       "height-checker",
       "Easy",
       "Small key range, so counting sort is O(n + k)."
+     ],
+     [
+      389,
+      "Find the Difference",
+      "find-the-difference",
+      "Easy",
+      "Count 26 letters: a counting array instead of a sort."
+     ],
+     [
+      274,
+      "H-Index",
+      "h-index",
+      "Medium",
+      "Bucket the citation counts, then scan from the top."
      ]
     ]
    }

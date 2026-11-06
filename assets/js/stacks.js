@@ -960,6 +960,27 @@
       "daily-temperatures",
       "Medium",
       "A monotonic stack."
+     ],
+     [
+      682,
+      "Baseball Game",
+      "baseball-game",
+      "Easy",
+      "Push, pop and peek, nothing else."
+     ],
+     [
+      844,
+      "Backspace String Compare",
+      "backspace-string-compare",
+      "Easy",
+      "Each '#' pops the last character."
+     ],
+     [
+      496,
+      "Next Greater Element I",
+      "next-greater-element-i",
+      "Easy",
+      "A monotonic stack: pop everything smaller than the new value."
      ]
     ]
    },
@@ -986,6 +1007,13 @@
       "number-of-students-unable-to-eat-lunch",
       "Easy",
       "Simulate a queue."
+     ],
+     [
+      950,
+      "Reveal Cards In Increasing Order",
+      "reveal-cards-in-increasing-order",
+      "Medium",
+      "Simulate the dealing with a queue of positions."
      ]
     ]
    },
@@ -1012,6 +1040,20 @@
       "time-needed-to-buy-tickets",
       "Easy",
       "People rejoin at the back: a queue that cycles round."
+     ],
+     [
+      649,
+      "Dota2 Senate",
+      "dota2-senate",
+      "Medium",
+      "Each senator who acts goes back to the end of the queue: a ring."
+     ],
+     [
+      1823,
+      "Find the Winner of the Circular Game",
+      "find-the-winner-of-the-circular-game",
+      "Medium",
+      "Josephus with a queue: dequeue k-1 people and enqueue them again."
      ]
     ]
    },
@@ -1038,6 +1080,20 @@
       "valid-palindrome",
       "Easy",
       "Compare both ends and move inwards, like the palindrome example."
+     ],
+     [
+      1438,
+      "Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit",
+      "longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit",
+      "Medium",
+      "Two monotonic deques: one for the max, one for the min."
+     ],
+     [
+      1696,
+      "Jump Game VI",
+      "jump-game-vi",
+      "Medium",
+      "Sliding-window maximum, used to build a DP."
      ]
     ]
    },
@@ -1090,6 +1146,27 @@
       "basic-calculator",
       "Hard",
       "Infix with parentheses, using a stack."
+     ],
+     [
+      394,
+      "Decode String",
+      "decode-string",
+      "Medium",
+      "Two stacks: counts and partial strings."
+     ],
+     [
+      1249,
+      "Minimum Remove to Make Valid Parentheses",
+      "minimum-remove-to-make-valid-parentheses",
+      "Medium",
+      "The bracket checker, keeping the positions of unmatched brackets."
+     ],
+     [
+      71,
+      "Simplify Path",
+      "simplify-path",
+      "Medium",
+      "'..' pops a directory, '.' does nothing."
      ]
     ]
    }
