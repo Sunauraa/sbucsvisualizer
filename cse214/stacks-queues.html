@@ -6,8 +6,8 @@
 <title>Stacks, Queues &amp; Deques</title>
 <meta name="description" content="Step through array stacks, plain and circular queues and deques, plus a bracket checker and a postfix evaluator.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=6f97670cf0ad">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=6f97670cf0ad">
+<link rel="stylesheet" href="../assets/css/style.css?v=01d6ba65c4b4">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=01d6ba65c4b4">
 </head>
 <body>
 
@@ -114,17 +114,15 @@
   <section class="about" id="about" aria-labelledby="about-h">
     <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">Three lists that only let you touch their ends.</p>
-    <p class="intro">A <b>stack</b> is <b>LIFO</b> (Last In, First Out). A <b>queue</b> is <b>FIFO</b> (First In, First Out). A <b>deque</b> does both.</p>
-    <p class="intro">Each one sits on a plain array here. Working only at the ends keeps every operation at O(1) time.</p>
+    <p class="intro">Lists you may only touch at the ends: a <b>stack</b> is a pile of plates (LIFO), a <b>queue</b> is a checkout line (FIFO), and a <b>deque</b> is a line you can join or leave at either end. Working only at the ends keeps everything O(1).</p>
     <div id="notes"></div>
   <div class="row" style="margin-bottom:2rem">
     <div class="col">
       <div class="panel" style="height:100%">
         <h3>Words to know</h3>
         <dl class="kv defs">
-          <dt>LIFO</dt><dd><b>Last In, First Out.</b> The last element you add is the first one out. Think of a pile of plates: you add to the top and take from the top. Stacks are LIFO.</dd>
-          <dt>FIFO</dt><dd><b>First In, First Out.</b> Elements leave in the order they arrived, like a checkout line where the first person in line gets served first. Queues are FIFO.</dd>
+          <dt>LIFO</dt><dd><b>Last In, First Out</b>, like a pile of plates. Stacks are LIFO.</dd>
+          <dt>FIFO</dt><dd><b>First In, First Out</b>, like a checkout line. Queues are FIFO.</dd>
           <dt>stack</dt><dd>a LIFO list. <span class="mono">push(x)</span> adds on top, <span class="mono">pop()</span>
             removes the top, <span class="mono">top()</span> (or peek) looks at it without removing it.</dd>
           <dt>queue</dt><dd>a FIFO list. <span class="mono">enqueue(x)</span> joins at the <b>rear</b>,
@@ -134,8 +132,7 @@
           <dt>underflow</dt><dd>removing from (or looking into) an empty structure.</dd>
         </dl>
         <h4 style="margin-top:1.2rem">Queues only: why a circular array?</h4>
-        <p class="small muted" style="margin-bottom:.4rem">Stacks don't need one. A stack's bottom stays at index 0 forever.</p>
-        <p class="small muted">A queue is different. It removes from the front, so the front keeps moving. You can handle that three ways:</p>
+        <p class="small muted">A stack's bottom never moves, but a queue's front does. Three ways to handle that:</p>
         <div style="overflow-x:auto" tabindex="0">
           <table class="tbl" style="min-width:470px">
             <tr><th>Array queue strategy</th><th>enqueue</th><th>dequeue</th><th>problem</th></tr>
@@ -145,8 +142,7 @@
           </table>
         </div>
         <p class="small muted" style="margin:.6rem 0 .4rem">Times are worst case, and all three use O(1) extra space.</p>
-        <p class="small muted" style="margin:0 0 .4rem">The circular array lets the front index wrap from N − 1 back to 0. Tracking <span class="mono">size</span> alongside <span class="mono">front</span> is how you tell a full queue from an empty one.</p>
-        <p class="small muted" style="margin-bottom:0">The <b>Queue: plain vs circular</b> tab runs both side by side.</p>
+        <p class="small muted" style="margin-bottom:0">In the circular one, the front wraps from N − 1 to 0, and <span class="mono">size</span> tells full from empty. The <b>plain vs circular</b> tab runs both.</p>
       </div>
     </div>
     <div class="col">
@@ -164,8 +160,7 @@
             <tr><td>whole structure</td><td>– / O(N)</td><td>– / O(N)</td><td>– / O(N)</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.5rem 0 .4rem">The last row is the structure's own memory: an array of N slots.</p>
-        <p class="small muted" style="margin:0 0 .7rem">The bracket checker and postfix evaluator each take O(n) time and O(n) space for an input of n characters or tokens.</p>
+        <p class="small muted" style="margin:.5rem 0 .7rem">The bracket checker and postfix evaluator are O(n) time and space for n characters.</p>
         <dl class="kv">
           <dt>Stack</dt><dd>call frames, undo/redo, DFS, bracket matching, postfix evaluation</dd>
           <dt>Queue</dt><dd>BFS, print/task scheduling, buffers, level-order traversal</dd>
@@ -186,12 +181,12 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/account.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/motion.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/tutor.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/quiz.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/playground.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/stacks.js?v=6f97670cf0ad"></script>
+<script src="../assets/js/core.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/account.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/motion.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/tutor.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/quiz.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/playground.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/stacks.js?v=01d6ba65c4b4"></script>
 </body>
 </html>

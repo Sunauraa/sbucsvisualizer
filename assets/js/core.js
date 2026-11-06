@@ -1074,7 +1074,7 @@
 
   DSA.Player = function Player(opts) {
     const self = this;
-    this.frames = [{ note: "Pick an operation above. Its steps load here, ready to play." }];
+    this.frames = [{ note: "Pick an operation above to load its steps." }];
     this.index = 0;
     this.playing = false;
     this.speed = 1;
@@ -1200,7 +1200,7 @@
     this.play = function () {
       if (this.frames.length < 2) {
         if (this.onIdle) this.onIdle();
-        else DSA.toast("Nothing to play yet: pick an operation above (the button runs it, then Play replays it).");
+        else DSA.toast("Nothing to play yet. Pick an operation above.");
         return;
       }
       if (this.index >= this.frames.length - 1) this.index = 0;

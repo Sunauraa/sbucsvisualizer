@@ -943,7 +943,7 @@
      ============================================================ */
   /** the operation's guard fails: light the check line, report the error, change nothing */
   function fail(r, line, why, extra) {
-    r.at(line).snap(Object.assign({ note: "<b style='color:var(--c-swap)'>✗ Error:</b> " + why + " The operation stops here and the structure is unchanged." }, extra || {}));
+    r.at(line).snap(Object.assign({ note: "<b style='color:var(--c-swap)'>✗ Error:</b> " + why + " Nothing changes." }, extra || {}));
     return r;
   }
   function faRec() {
@@ -967,7 +967,7 @@
     insert(i, v) {
       const r = faRec().code("fa_insert");
       r.snap({ marks: { [i]: "target" }, note: "<b>insert(" + i + ", " + v + ")</b>: everything from index " + i + " onwards has to slide one slot right." });
-      if (i < 0 || i > FA.n) return fail(r, "check", "index " + i + " is outside [0, n] = [0, " + FA.n + "]. An insert may go anywhere from the front up to just past the last element, and nowhere else.");
+      if (i < 0 || i > FA.n) return fail(r, "check", "index " + i + " is outside [0, n] = [0, " + FA.n + "]: an insert goes from the front to just past the end.");
       r.at("check^").snap({ marks: { [i]: "target" }, note: "0 ≤ " + i + " ≤ n = " + FA.n + ": a valid position." });
       if (FA.n === FA.cap) {
         r.at("full").snap({ marks: allMarks(FA.n, "swap"), note: "<b>Full</b>: no free slot to shift into. A fixed array fails here." });
@@ -989,7 +989,7 @@
     set(i, v) {
       const r = faRec().code("set");
       r.snap({ note: "<b>set(" + i + ", " + v + ")</b>." });
-      if (i < 0 || i >= FA.n) return fail(r, "check", "index " + i + " is outside [0, n) = [0, " + FA.n + ")." + (i >= FA.n && i < FA.cap ? " Slot " + i + " exists in memory, but it is not part of the list yet." : ""));
+      if (i < 0 || i >= FA.n) return fail(r, "check", "index " + i + " is outside [0, n) = [0, " + FA.n + ")." + (i >= FA.n && i < FA.cap ? " Slot " + i + " exists, but holds no element yet." : ""));
       r.at("check^").snap({ marks: { [i]: "target" }, note: "Index " + i + " is inside [0, n)." });
       const old = FA.a[i];
       FA.a[i] = v;
@@ -1020,9 +1020,9 @@
   function getAt(S, mk, i) {
     const r = mk().code("get");
     r.snap({ note: "<b>get(" + i + ")</b>." });
-    if (i < 0 || i >= S.n) return fail(r, "check", "index " + i + " is outside [0, n) = [0, " + S.n + ")." + (i >= S.n && i < S.cap ? " Slot " + i + " is allocated, but it holds no element; reading it would return garbage, so the check refuses." : ""));
+    if (i < 0 || i >= S.n) return fail(r, "check", "index " + i + " is outside [0, n) = [0, " + S.n + ")." + (i >= S.n && i < S.cap ? " Slot " + i + " is allocated but holds no element, so reading it would return garbage." : ""));
     r.at("check^").snap({ marks: { [i]: "cmp" }, note: "Bounds check: 0 ≤ " + i + " &lt; n = " + S.n + "." });
-    r.at("ret").snap({ marks: { [i]: "target" }, note: "Address = base + " + i + " × cellSize: one multiply and one add, then a single read: <b>A[" + i + "] = " + S.a[i] + "</b>. No scanning. <b>O(1) random access</b> is the reason arrays exist." });
+    r.at("ret").snap({ marks: { [i]: "target" }, note: "Address = base + " + i + " × cellSize: one multiply and one add, then a single read: <b>A[" + i + "] = " + S.a[i] + "</b>. No scanning: <b>O(1) random access</b>." });
     return r;
   }
   function linearSearch(S, mk, v) {
@@ -1088,7 +1088,7 @@
     insert(i, v) {
       const r = daRec().code(DA.geo ? "da_insert_geo" : "da_insert_arith");
       r.snap({ marks: { [i]: "target" }, note: "<b>insert(" + i + ", " + v + ")</b>." });
-      if (i < 0 || i > DA.n) return fail(r, "check", "index " + i + " is outside [0, n] = [0, " + DA.n + "]. Growing only adds room at the end; it never makes an index like this valid.");
+      if (i < 0 || i > DA.n) return fail(r, "check", "index " + i + " is outside [0, n] = [0, " + DA.n + "]. Growing adds room at the end, so it can't make this index valid.");
       r.at("check^").snap({ marks: { [i]: "target" }, note: "0 ≤ " + i + " ≤ n = " + DA.n + ": valid." });
       if (DA.n === DA.cap) daGrow(r);
       else r.at("full^").snap({ note: "There is a free slot, so no resize." });
@@ -1118,7 +1118,7 @@
   }
   const key2 = (r, c) => r + "," + c;
   const g2In = (r, c) => r >= 0 && r < G2.rows && c >= 0 && c < G2.cols;
-  const g2Why = (r, c) => (r < 0 || r >= G2.rows ? "row " + r + " is outside [0, " + G2.rows + ")" : "column " + c + " is outside [0, " + G2.cols + ")") + ". (Some languages let a negative index wrap around to the other end. Java throws instead, and the check makes that explicit.)";
+  const g2Why = (r, c) => (r < 0 || r >= G2.rows ? "row " + r + " is outside [0, " + G2.rows + ")" : "column " + c + " is outside [0, " + G2.cols + ")") + ". Java throws here instead of wrapping around.";
   const g2 = {
     get(r0, c0) {
       const r = g2Rec().code("g_get");
@@ -1126,7 +1126,7 @@
       r.snap({ note: "<b>get(" + r0 + ", " + c0 + ")</b> on a " + G2.rows + " × " + G2.cols + " array." });
       if (!g2In(r0, c0)) return fail(r, "check", g2Why(r0, c0));
       r.at("check^").snap({ marks: { ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, note: "Row " + r0 + " is in [0, " + G2.rows + ") and column " + c0 + " is in [0, " + G2.cols + ")." });
-      r.at("flat").snap({ marks: { [key2(r0, c0)]: "cmp", ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, flat: { [k]: "cmp" }, note: "Find the cell. In the pseudocode the array is one row-major block, so the flat index is <span class='mono'>r · cols + c = " + r0 + " · " + G2.cols + " + " + c0 + " = " + k + "</span>. In Java, <span class='mono'>m[" + r0 + "]</span> first fetches row " + r0 + "'s own array, and <span class='mono'>[" + c0 + "]</span> then indexes into it." });
+      r.at("flat").snap({ marks: { [key2(r0, c0)]: "cmp", ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, flat: { [k]: "cmp" }, note: "Find the cell. Pseudocode: one row-major block, flat index <span class='mono'>r · cols + c = " + r0 + " · " + G2.cols + " + " + c0 + " = " + k + "</span>. Java: <span class='mono'>m[" + r0 + "]</span> fetches row " + r0 + ", then <span class='mono'>[" + c0 + "]</span> indexes it." });
       r.at("ret").snap({ marks: { [key2(r0, c0)]: "target" }, flat: { [k]: "target" }, note: "One read: <b>M[" + r0 + "][" + c0 + "] = " + G2.m[r0][c0] + "</b>. Still O(1). A 2-D array is a 1-D array plus a little arithmetic." });
       return r;
     },
@@ -1162,8 +1162,8 @@
         }
       }
       r.at(null).snap({ marks: seen(order), flat: seenFlat(order), note: rowMajor
-        ? "Every step moved to the <b>next</b> memory cell. Caches load memory in blocks, so row-major traversal of a row-major array is the fast way."
-        : "Each step jumped <b>" + G2.cols + "</b> cells. Same O(rows·cols) work, but on large arrays this stride misses the cache and can be several times slower." });
+        ? "Every step moved to the <b>next</b> memory cell. Caches load memory in blocks, so this order is the fast one."
+        : "Each step jumped <b>" + G2.cols + "</b> cells. Same O(rows·cols) work, but on big arrays these jumps miss the cache and run several times slower." });
       return r;
       function seen(list, extra) { const m = {}; list.forEach((k) => (m[key2(Math.floor(k / G2.cols), k % G2.cols)] = "visit")); return Object.assign(m, extra || {}); }
       function seenFlat(list) { const m = {}; list.forEach((k) => (m[k] = "visit")); return m; }
@@ -1348,7 +1348,7 @@
       }
       r.at("loop").snap({ marks: Object.assign({}, flipped), ptrs: n ? { prev: n - 1 } : {}, flipped: n, note: "cur is null: every arrow is flipped." });
       L.reverse();
-      r.at("head").snap({ marks: { 0: "done" }, note: n < 2 ? "head ← prev. With " + n + " node" + (n === 1 ? "" : "s") + " there was nothing to reorder, but the same code handles it without a special case." : "head ← prev (the old tail). Reversed in one pass: <b>O(n)</b> time, <b>O(1)</b> extra space." });
+      r.at("head").snap({ marks: { 0: "done" }, note: n < 2 ? "head ← prev. With " + n + " node" + (n === 1 ? "" : "s") + ": nothing to reorder, and no special case needed." : "head ← prev (the old tail). Reversed in one pass: <b>O(n)</b> time, <b>O(1)</b> extra space." });
       return r;
     },
   };
@@ -1422,7 +1422,7 @@
     remove(k) {
       const L = LL.double, r = llRec("double").code("d_remove");
       r.snap({ note: "<b>remove(" + k + ")</b>: walk straight to the node itself. prev gives us its predecessor for free." });
-      if (k < 1 || k >= L.length - 1) return fail(r, "check", "i = " + k + " is outside [1, size−1) with size = " + L.length + ". This version only removes nodes that have a neighbour on both sides.");
+      if (k < 1 || k >= L.length - 1) return fail(r, "check", "i = " + k + " is outside [1, size−1) with size = " + L.length + ": only nodes with a neighbour on both sides can go.");
       r.at("check^").snap({ note: "1 ≤ " + k + " &lt; size − 1 = " + (L.length - 1) + "." });
       walk(r, L, k, "cur", "start", "walk", "");
       r.at("fwd").snap({ marks: { [k]: "swap", [k - 1]: "active" }, ptrs: { cur: k }, bypass: { from: k - 1, to: k + 1 }, note: "cur.prev.next ← cur.next." });
@@ -1474,7 +1474,7 @@
       r.code("c_addLast");
       r.at("first").snap({ marks: { 0: "done" }, note: "Back in addLast: " + v + " is at the front, right after the tail." });
       if (L.length > 1) L.push(L.shift());
-      r.at("tail").snap({ marks: { [L.length - 1]: "done" }, note: "tail ← tail.next. The ring did not change at all. We only moved which node we call the tail, so " + v + " is now last. <b>O(1)</b>." });
+      r.at("tail").snap({ marks: { [L.length - 1]: "done" }, note: "tail ← tail.next. The ring is unchanged; only the tail label moved, so " + v + " is now last. <b>O(1)</b>." });
       return r;
     },
     removeFirst() {
@@ -1502,7 +1502,7 @@
       if (!L.length) { r.at("check^").snap({ note: "tail is null: an empty ring has nothing to rotate, so the body is skipped. No error: rotate() does nothing." }); return r; }
       r.at("check").snap({ marks: { 0: "cmp", [L.length - 1]: "active" }, note: "tail ≠ null." });
       L.push(L.shift());
-      r.at("rot").snap({ marks: { [L.length - 1]: "done", 0: "active" }, note: "tail ← tail.next. One pointer move, <b>O(1)</b>. Nothing was unlinked or allocated: " + L[L.length - 1] + " is now at the back and " + L[0] + " is the new front." });
+      r.at("rot").snap({ marks: { [L.length - 1]: "done", 0: "active" }, note: "tail ← tail.next: one pointer move, <b>O(1)</b>. " + L[L.length - 1] + " is now at the back and " + L[0] + " at the front." });
       return r;
     },
     indexOf(v) {
@@ -1700,17 +1700,17 @@
      ============================================================ */
   const NOTES = {
     fixed:
-      "<p class='blurb'>A <b>fixed array</b> is one contiguous block. You set its capacity once, at <span class='mono'>new double[8]</span>, and it never changes.</p><p class='blurb'>You track how many slots are in use (<span class='mono'>n</span>) yourself. Reads and writes by index cost O(1).</p><p class='blurb'>Inserting or removing in the middle means shifting. And once every slot is used, there's no room left.</p>",
+      "<p class='blurb'><b>A row of numbered lockers.</b> You can open locker 5 directly, so reads and writes are O(1). But the row is bolted down: inserting in the middle shifts everyone over, and once it's full there's no room.</p>",
     dynamic:
-      "<div class='callout' style='margin-top:.9rem'><p><b>Growth is a geometric progression.</b> When the array fills up, a dynamic array allocates a new one with <b>twice</b> the capacity and copies everything across.</p><p>That one add costs <b>O(n) time and O(n) space</b> (the new array), which is its worst case. Every other add costs O(1).</p><p>The capacities form the geometric sequence 4, 8, 16, … and the total copying is their sum: less than 2n for n adds. So resizes stay rare.</p><p>Now compare <b>arithmetic</b> growth (+2 each time). The array fills up again after 2 more adds, so it resizes constantly and the total copying grows like n².</p><p>Switch <em>growth</em> to “+2”, keep adding, and watch the capacity history under the array. Java's <span class='mono'>ArrayList</span> grows ×1.5. Any ratio &gt; 1 keeps resizes rare.</p></div>",
+      "<p class='blurb'><b>Moving to a bigger apartment.</b> When the array fills up, get one twice the size and move everything in. That move costs O(n), but each one buys twice as much room, so adds average O(1). Switch growth to “+2” and watch it move house constantly.</p>",
     grid:
-      "<p class='blurb'>A <b>2-D array</b> is a grid addressed by (row, column). Memory, though, is one-dimensional.</p><p class='blurb'>So the grid gets laid out <b>row-major</b>: row 0, then row 1, and so on. M[r][c] lives at flat index r·C + c, and the pseudocode works this way.</p><p class='blurb'>Java does it differently. <span class='mono'>double[][]</span> is an <em>array of references to row arrays</em>. Each row is contiguous, but rows can live apart and can even have different lengths (a “jagged” array).</p><p class='blurb'>Either way, the big-O stays the same: O(1) access, O(R·C) to visit everything.</p>",
+      "<p class='blurb'><b>Seats in a theater.</b> (row, seat) is easy to find, but memory is one long line, so rows sit end to end: M[r][c] is at r·C + c. Java keeps each row as its own array instead, so rows can even differ in length.</p>",
     single:
-      "<p class='blurb'>A <b>singly linked list</b> stores <span class='mono'>next</span> only. We keep both <span class='mono'>head</span> and <span class='mono'>tail</span>, so addFirst, addLast and removeFirst cost O(1).</p><p class='blurb'>You can only move forwards, though. Anything that needs a <em>predecessor</em> has to walk from the head. That includes removeLast and remove(i), so both are O(n).</p>",
+      "<p class='blurb'><b>A scavenger hunt:</b> each clue only says where the next one is. Adding at either end is O(1), but reaching anything else, or stepping back, means following clues from the start, so removeLast is O(n).</p>",
     double:
-      "<p class='blurb'>A <b>doubly linked list</b> also stores <span class='mono'>prev</span>. Each node pays for one more pointer, and in return it reaches its predecessor in O(1).</p><p class='blurb'>removeLast drops to O(1). You can traverse backwards. Removing a node you already hold never needs a walk. Java's <span class='mono'>LinkedList</span> is doubly linked.</p>",
+      "<p class='blurb'><b>A train coupled at both ends of every car.</b> One extra link per node lets you walk backwards and unhook a car you're holding in O(1), so removeLast is O(1) too. Java's LinkedList works this way.</p>",
     circular:
-      "<p class='blurb'>A <b>circularly linked list</b> is a singly linked list whose last node points back to the first. You only store <span class='mono'>tail</span>, because the head is always <span class='mono'>tail.next</span>.</p><p class='blurb'>That one pointer gives O(1) access to both ends. <b>rotate()</b> (move the front to the back) becomes a single assignment, which makes this the natural fit for round-robin scheduling and turn-taking games.</p><p class='blurb'>There's no null to stop at, so every loop must stop after one full lap.</p>",
+      "<p class='blurb'><b>Kids in a circle passing a ball.</b> The last node points back to the first, so one tail pointer reaches both ends and rotate() is a single step: right for taking turns. There's no end to stop at, so every loop stops after one lap.</p>",
   };
 
   function load(r) { if (r.overflow) D.toast("Step limit reached.", true); player.load(r.frames, true); }
@@ -1748,7 +1748,7 @@
       grid: "A " + G2.rows + " × " + G2.cols + " array. The strip underneath is how it sits in memory.",
       single: "A singly linked list with " + LL.single.length + " node(s).",
       double: "A doubly linked list with " + LL.double.length + " node(s).",
-      circular: "A circularly linked list with " + LL.circular.length + " node(s). There is no null at the end: the tail points back to the head.",
+      circular: "A circularly linked list with " + LL.circular.length + " node(s). No null at the end: the tail points back to the head.",
     }[id];
     stillTab(msg + " Pick an operation above.");
   }

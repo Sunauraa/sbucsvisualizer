@@ -159,7 +159,7 @@
       res.innerHTML = "";
       res.appendChild(D.el("b", { text: ok ? "Correct." : "Not quite." }));
       if (q.explain) res.appendChild(document.createTextNode(" " + q.explain));
-      res.appendChild(D.el("span", { class: "quiz-score", text: score.right + " of " + score.total + " right so far" }));
+      res.appendChild(D.el("span", { class: "quiz-score", text: score.right + " of " + score.total + " right" }));
       const go = D.el("button", { type: "button", class: "primary", text: "Next step" });
       go.addEventListener("click", () => advance(q));
       res.appendChild(go);

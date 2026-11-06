@@ -727,6 +727,24 @@ html:not(.ready) main:has(.panel.main) { visibility: hidden; animation: show-any
 .note-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
 .note-list li { padding: .55rem .7rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; }
 .note-list .note-body { margin: .25rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-.progress-tbl th[scope="row"] { text-align: left; white-space: nowrap; }
-.progress-map h3 { margin: 1.1rem 0 .5rem; }
+/* the progress map: one row per module, three green bars */
+.pm-list { list-style: none; margin: 0; padding: 0; }
+.pm-row { display: grid; grid-template-columns: minmax(11rem, 1.3fr) repeat(3, minmax(0, 1fr)); gap: .4rem 1.5rem; align-items: center; padding: .7rem 0; border-top: 1px solid var(--line-soft); }
+.pm-head { padding: 0 0 .35rem; border-top: 0; font-size: .78rem; color: var(--muted-2); }
+.pm-name { display: flex; flex-direction: column; min-width: 0; }
+.pm-name a { font-weight: 600; }
+.pm-sub { font-size: .8rem; color: var(--muted-2); }
+.pm-sub:empty { display: none; }
+.pm-label { display: none; font-size: .78rem; color: var(--muted-2); }
+.pm-bar { height: 8px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+.pm-fill { height: 100%; border-radius: 999px; background: var(--c-done); }
+.pm-new .pm-name a { color: var(--muted); font-weight: 500; }
+@media (max-width: 640px) {
+  .pm-head { display: none; }
+  .pm-row { grid-template-columns: 1fr; gap: .35rem; }
+  .pm-cell { display: grid; grid-template-columns: 7.5rem 1fr; align-items: center; gap: .6rem; }
+  .pm-label { display: block; }
+  .pm-new .pm-cell { display: none; }   /* a module not started is just its name */
+}
+.progress-map h3 { margin: 1.4rem 0 .5rem; }
 @media print { .acct, .note-btn, .note-panel, .lc-status, .acct-toast { display: none !important; } }

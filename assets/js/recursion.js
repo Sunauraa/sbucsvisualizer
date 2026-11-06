@@ -71,7 +71,7 @@
     this.stack.push(n.id);
     this.calls++;
     this.maxDepth = Math.max(this.maxDepth, this.stack.length);
-    this.frame(note || "<b>Call " + label + "</b>. A new frame is pushed onto the call stack (depth " + this.stack.length + "), holding its own copy of " +
+    this.frame(note || "<b>Call " + label + "</b>: a new frame at depth " + this.stack.length + ", with its own " +
       Object.keys(n.vars).map((k) => "<span class='mono'>" + k + " = " + fmt(n.vars[k]) + "</span>").join(", ") + ".");
     return n.id;
   };
@@ -110,7 +110,7 @@
     inputs: [{ id: "n", label: "n", value: 5, min: -99, max: 10, int: true }],
     big: ["T(n) = T(n−1) + O(1)", "O(n) time", "O(n) stack space"],
     blurb:
-      "<p>The simplest shape of recursion. One call per level, so the tree is a straight chain and the stack grows to depth n.</p><p>Nothing gets computed on the way <em>down</em>. Every frame waits, holding its own n, and every multiplication happens as the frames pop back up.</p><p>Try a negative n to see the error check.</p>",
+      "<p><b>Nesting dolls.</b> factorial(n) opens a smaller doll, factorial(n−1), until the smallest one (n ≤ 1) answers directly. Nothing is multiplied on the way in: each frame waits, and the multiplying happens as the dolls close. Try a negative n.</p>",
     code: {
       pseudo: [
         "factorial(n): @@fn",
@@ -129,8 +129,8 @@
     run(t, args) {
       (function f(n) {
         const id = t.at("fn").enter("factorial(" + n + ")", { n: n });
-        if (n < 0) return t.at("neg").fail(id, "<b>Error:</b> n = " + n + " &lt; 0, and n! is only defined for n ≥ 0. Java throws <span class='mono'>IllegalArgumentException</span> and the frame is popped without returning a value.");
-        if (n <= 1) return t.at(["neg^", "base"]).exit(id, 1, "n = " + n + ": not negative, and n ≤ 1, so this is the <b>base case</b>. Return 1 without recursing. Without a base case the calls would never stop.");
+        if (n < 0) return t.at("neg").fail(id, "<b>Error:</b> n = " + n + " &lt; 0, but n! needs n ≥ 0. Java throws <span class='mono'>IllegalArgumentException</span>; nothing is returned.");
+        if (n <= 1) return t.at(["neg^", "base"]).exit(id, 1, "n = " + n + " ≤ 1: the <b>base case</b>. Return 1 without recursing.");
         t.at(["neg^", "base^"]).step("n = " + n + ": not negative, and n &gt; 1, so this is not the base case.");
         t.wait(id, "return " + n + " · factorial(" + (n - 1) + ")").at("rec").step("Evaluate n · factorial(" + (n - 1) + "). This frame has to <em>wait</em> for factorial(" + (n - 1) + ") to return before it can multiply.");
         const sub = f(n - 1);
@@ -145,7 +145,7 @@
     inputs: [{ id: "n", label: "n", value: 5, min: -99, max: 8, int: true }],
     big: ["T(n) = T(n−1) + T(n−2) + O(1)", "O(2ⁿ) time", "O(n) stack space"],
     blurb:
-      "<p>Two recursive calls per level make the tree branch, and the same subproblems get solved over and over. Count how many times <span class='mono'>fib(2)</span> appears.</p><p>That duplication makes naive Fibonacci exponential (about 1.618ⁿ calls, which is O(2ⁿ)). Memoisation removes it.</p>",
+      "<p><b>Asking two friends, who each ask two friends.</b> fib(n) calls fib(n−1) and fib(n−2), so the same questions get asked again and again: count the fib(2)s. About 1.618ⁿ calls, so O(2ⁿ).</p>",
     code: {
       pseudo: [
         "fib(n): @@fn",
@@ -183,7 +183,7 @@
     inputs: [{ id: "n", label: "n", value: 8, min: -99, max: 14, int: true }],
     big: ["O(n) time", "O(n) space", "top-down DP"],
     blurb:
-      "<p>Same code, plus a table of answers already computed.</p><p>Each value of n gets computed once. Every later request is a table lookup that returns without recursing.</p><p>The exponential tree collapses into a path with stubs: n distinct subproblems, O(1) work each, so O(n).</p>",
+      "<p><b>Write each answer down the first time.</b> A memo table turns every repeat question into a lookup, so each n is computed once: O(n) instead of exponential.</p>",
     code: {
       pseudo: [
         "fib(n, memo): @@fn",
@@ -234,7 +234,7 @@
     ],
     big: ["O(log min(a, b)) time", "O(log min(a, b)) stack space", "tail recursive"],
     blurb:
-      "<p>Euclid's insight: any common divisor of a and b also divides a mod b. So gcd(a, b) = gcd(b, a mod b).</p><p>The numbers shrink fast (every two steps at least halve the smaller one), so the depth is logarithmic.</p><p>It's also <em>tail recursive</em>. The recursive call is the whole return expression, so it turns into a loop with no stack growth at all.</p><p>With negative inputs, Java's % keeps the sign of a, so the answer can come out negative.</p>",
+      "<p><b>The biggest tile that fits two lengths exactly.</b> Anything that fits a and b also fits b and a mod b, so gcd(a, b) = gcd(b, a mod b). The numbers shrink fast, O(log n) calls, and since the call is the last step, a loop can replace it.</p>",
     code: {
       pseudo: ["gcd(a, b): @@fn", "  if b == 0: return a          // base case @@base", "  return gcd(b, a mod b)       // tail call @@rec"],
       java: ["static int gcd(int a, int b) { @@fn", "  if (b == 0) return a;        // base case @@base", "  return gcd(b, a % b);        // tail call @@rec", "}"],
@@ -260,7 +260,7 @@
     ],
     big: ["T(n) = T(n/2) + O(1)", "O(log n) time", "O(log n) stack space"],
     blurb:
-      "<p>Exponentiation by squaring. Instead of n multiplications, halve the exponent each step: x<sup>n</sup> = (x<sup>n/2</sup>)² for even n, and x·(x<sup>⌊n/2⌋</sup>)² for odd n.</p><p>Halving gives depth log₂n, the same recurrence as binary search.</p><p>x can be negative or a decimal. A negative n uses x<sup>−n</sup> = 1 / x<sup>n</sup>.</p>",
+      "<p><b>Doubling up instead of counting up.</b> x<sup>13</sup> = x · (x<sup>6</sup>)², and x<sup>6</sup> = (x<sup>3</sup>)²: halve the exponent each call instead of multiplying n times. That's log₂n levels, like binary search. A negative n computes 1 / x<sup>−n</sup>.</p>",
     code: {
       pseudo: [
         "power(x, n): @@fn",
@@ -309,7 +309,7 @@
     inputs: [{ id: "n", label: "disks", value: 3, min: 1, max: 5, int: true }],
     big: ["T(n) = 2T(n−1) + O(1)", "O(2ⁿ) time", "O(n) stack space"],
     blurb:
-      "<p>The classic “trust the recursion” problem. To move n disks from A to C: move the top n−1 out of the way onto B, move the biggest disk to C, then move those n−1 from B onto C.</p><p>You never have to think about how the n−1 sub-tower moves. That's the recursive call's job.</p><p>Two calls per level gives exactly 2ⁿ−1 moves.</p>",
+      "<p><b>Delegate and trust.</b> To move n disks from A to C, have someone move the top n−1 to B, move the biggest disk yourself, then have them move the n−1 onto C. You never plan the small moves: that's the recursive call's job. 2ⁿ − 1 moves in all.</p>",
     code: {
       pseudo: ["hanoi(n, from, to, via): @@fn", "  if n == 0: return @@base", "  hanoi(n-1, from, via, to)     // clear the way @@r1", "  move disk n: from → to @@move", "  hanoi(n-1, via, to, from)     // pile back on @@r2"],
       java: [
@@ -350,7 +350,7 @@
     inputs: [{ id: "target", label: "target", value: 47, min: -1e9, max: 1e9 }],
     big: ["T(n) = T(n/2) + O(1)", "O(log n) time", "O(log n) stack space"],
     blurb:
-      "<p>Halving recursion on a <em>sorted</em> array (negative and decimal values are fine).</p><p>Compare the target with the middle element. If it's smaller, the answer can only be in the left half. If it's larger, only in the right half.</p><p>Each call throws away half of what's left, so 2<sup>k</sup> ≥ n gives at most ⌈log₂n⌉ + 1 comparisons.</p>",
+      "<p><b>Finding a word in a dictionary.</b> Open to the middle, decide which half the word must be in, and ignore the other half. Each call halves what's left: at most ⌈log₂n⌉ + 1 comparisons. It only works on a sorted array.</p>",
     code: {
       pseudo: [
         "binarySearch(A, target, lo, hi): @@fn",
@@ -388,11 +388,11 @@
         t.set(id, { mid: mid }).at("mid").step("mid = ⌊(" + lo + " + " + hi + ")/2⌋ = " + mid + ", and A[mid] = " + num(A[mid]) + ".");
         if (A[mid] === target) return t.at("found").exit(id, mid, "A[" + mid + "] == " + num(target) + ": <b>found at index " + mid + "</b>.");
         if (target < A[mid]) {
-          t.wait(id, "return binarySearch(…, " + lo + ", " + (mid - 1) + ")").at(["found^", "left"]).step("A[" + mid + "] = " + num(A[mid]) + " ≠ " + num(target) + ", and " + num(target) + " &lt; " + num(A[mid]) + ". The array is sorted, so everything from mid rightwards is too big. Search A[" + lo + "…" + (mid - 1) + "].");
+          t.wait(id, "return binarySearch(…, " + lo + ", " + (mid - 1) + ")").at(["found^", "left"]).step("A[" + mid + "] = " + num(A[mid]) + " ≠ " + num(target) + ", and " + num(target) + " &lt; " + num(A[mid]) + ", so search the left half A[" + lo + "…" + (mid - 1) + "].");
           const r = bs(lo, mid - 1);
           return t.at("left").exit(id, r, "The recursive call returned " + r + "; pass it straight back up.");
         }
-        t.wait(id, "return binarySearch(…, " + (mid + 1) + ", " + hi + ")").at(["found^", "left^", "right"]).step("A[" + mid + "] = " + num(A[mid]) + " ≠ " + num(target) + ", and " + num(target) + " &gt; " + num(A[mid]) + ", so everything from mid leftwards is too small. Search A[" + (mid + 1) + "…" + hi + "].");
+        t.wait(id, "return binarySearch(…, " + (mid + 1) + ", " + hi + ")").at(["found^", "left^", "right"]).step("A[" + mid + "] = " + num(A[mid]) + " ≠ " + num(target) + ", and " + num(target) + " &gt; " + num(A[mid]) + ", so search the right half A[" + (mid + 1) + "…" + hi + "].");
         const r = bs(mid + 1, hi);
         return t.at("right").exit(id, r, "The recursive call returned " + r + "; pass it straight back up.");
       })(0, A.length - 1);
@@ -405,7 +405,7 @@
     stringInput: { id: "str", label: "string", value: "ABC", max: 4 },
     big: ["n! leaves", "O(n · n!) time", "O(n) stack space"],
     blurb:
-      "<p>Backtracking. At each level, choose one of the remaining characters, recurse on what's left, then undo the choice and try the next one.</p><p>The tree has n choices at the root, n−1 below that, and so on: n! leaves, each one a complete permutation.</p>",
+      "<p><b>Trying on outfits.</b> Pick a first item, arrange the rest, then put it back and try another: choose, recurse, undo. That's backtracking. n choices, then n−1, and so on: n! arrangements.</p>",
     code: {
       pseudo: [
         "permute(chosen, rest): @@fn",
@@ -442,7 +442,7 @@
           t.wait(id, "permute(\"" + chosen + rest[i] + "\", \"" + (rest.slice(0, i) + rest.slice(i + 1)) + "\")").at("call").step("Recurse with chosen = \"" + chosen + rest[i] + "\", rest = \"" + (rest.slice(0, i) + rest.slice(i + 1)) + "\".");
           p(chosen + rest[i], rest.slice(0, i) + rest.slice(i + 1));
         }
-        return t.at("loop").exit(id, out.length + " found", "The loop has tried every character, so permute(\"" + chosen + "\", \"" + rest + "\") returns. Its caller moves on to its next choice, which is the “undo” step of backtracking.");
+        return t.at("loop").exit(id, out.length + " found", "Every character tried: permute(\"" + chosen + "\", \"" + rest + "\") returns, and its caller tries its next choice (backtracking).");
       })("", args.str);
     },
   };
@@ -972,8 +972,8 @@
     FN[cur].run(t, clone(args));
     t.at(null);
     t.frame(t.threw
-      ? "Done: the exception left the method, so no value was returned and the stack is empty again."
-      : "Done. The stack is empty again: every frame that was pushed has been popped. Total calls: <b>" + t.calls + "</b>, deepest the stack ever got: <b>" + t.maxDepth + "</b> frames, which is the stack space this call used.");
+      ? "Done: the exception ended the call, so nothing was returned. The stack is empty."
+      : "Done. The stack is empty. <b>" + t.calls + "</b> calls, at most <b>" + t.maxDepth + "</b> frames deep: that's the stack space used.");
     nodes = t.nodes;
     layout(nodes);
     t.frames.forEach((fr) => (fr.code = cur + "_rec"));

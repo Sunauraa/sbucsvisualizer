@@ -25,6 +25,8 @@
 
   const BASE = String(cfg.url).replace(/\/+$/, "");
   const PAGE = (location.pathname.split("/").pop() || "index.html").replace(/\.html$/, "") || "index";
+  /* a module page's address from any page: notes and progress store just "arrays", and every module lives in cse214/ */
+  const pageHref = (page) => D.ROOT + "cse214/" + page + ".html";
   const K_SESSION = "dsa.session.v1", K_PKCE = "dsa.pkce.v1", K_DEVICE = "dsa.device.v1";
   const NOTE_BYTES = 24000;            /* the recorded steps kept with a note (the database allows 30,000) */
   const STATUS = [["none", "Not started"], ["todo", "To do"], ["solved", "Solved"], ["revisit", "Revisit"]];
@@ -111,7 +113,7 @@
       where = pk.keep ? localStorage : sessionStorage;
       session = toSession(await r.json());
       saveSession();
-    } catch (e) { toast("Sign-in didn't finish. Please try again."); }
+    } catch (e) { toast("Sign-in didn't finish. Try again."); }
   }
 
   let refreshing = null;
@@ -368,10 +370,10 @@
     ui.panel.innerHTML = "";
     ui.panel.appendChild(D.el("div", { class: "learn-head" }, [D.el("h3", { text: "Note on step " + (p.index + 1) + " of " + p.frames.length })]));
     if (p.frames.length < 2) {
-      ui.panel.appendChild(D.el("p", { text: "Run something first, then pause on the step you want to remember." }));
+      ui.panel.appendChild(D.el("p", { text: "Run something, then pause on the step you want to note." }));
       return;
     }
-    const area = D.el("textarea", { class: "note-text", maxlength: "2000", rows: "3", "aria-label": "Your note", placeholder: "What do you want to remember about this step?" });
+    const area = D.el("textarea", { class: "note-text", maxlength: "2000", rows: "3", "aria-label": "Your note", placeholder: "What's worth remembering here?" });
     const save = D.el("button", { type: "button", class: "primary", text: "Save note" });
     const out = D.el("p", { class: "small muted", role: "status" });
     ui.panel.append(area, D.el("div", { class: "note-actions" }, [save]), out);
@@ -379,7 +381,7 @@
       const body = area.value.trim();
       if (!body) { area.focus(); return; }
       const cap = capture(p);
-      if (!cap) { out.textContent = "This step holds too much to save with a note."; return; }
+      if (!cap) { out.textContent = "This step is too big to save in a note."; return; }
       const id = uuid();
       cache.notes[id] = {
         page: PAGE, body: body, deleted: false, updated_at: now(), frames: cap.frames,
@@ -387,7 +389,7 @@
       };
       markDirty("notes", id);
       area.value = "";
-      out.textContent = "Saved. It's under Your notes, and on every computer you sign in to.";
+      out.textContent = "Saved to Your notes, on every computer you use.";
       paintNotesBox();
     });
   }
@@ -404,9 +406,9 @@
   async function openNote(id) {
     const n = cache && cache.notes[id];
     if (!n || n.deleted) { toast("That note isn't here any more."); return; }
-    if (n.page !== PAGE) { location.assign(n.page + ".html#note=" + id); return; }
+    if (n.page !== PAGE) { location.assign(pageHref(n.page) + "#note=" + id); return; }
     const frames = await framesOf(id);
-    if (!frames || !frames.length) { toast("This note's steps need a connection to load."); return; }
+    if (!frames || !frames.length) { toast("Connect to the internet to open this note."); return; }
     for (const label of n.meta.tabs || []) {
       const b = D.$$(".tabs button").find((x) => tabLabel(x) === label);
       if (b && !b.classList.contains("active")) { b.click(); await new Promise((r) => setTimeout(r, 30)); }
@@ -450,13 +452,13 @@
     const body = box.querySelector(".my-notes-body");
     body.innerHTML = "";
     const list = liveNotes(PAGE);
-    if (!list.length) { body.appendChild(D.el("p", { class: "small muted", text: "No notes yet. Pause on a step and press Note under the player." })); return; }
+    if (!list.length) { body.appendChild(D.el("p", { class: "small muted", text: "No notes yet. Pause on a step and press Note." })); return; }
     const ul = D.el("ul", { class: "note-list" });
     list.forEach((n) => {
       const open = D.el("button", { type: "button", text: "Open", "aria-label": "Open note: " + noteLine(n) });
       const del = D.el("button", { type: "button", class: "ghost", text: "Delete", "aria-label": "Delete note: " + noteLine(n) });
       open.addEventListener("click", () => openNote(n.id));
-      del.addEventListener("click", () => { if (confirm("Delete this note on every computer?")) deleteNote(n.id); });
+      del.addEventListener("click", () => { if (confirm("Delete this note?")) deleteNote(n.id); });
       ul.appendChild(D.el("li", {}, [
         D.el("div", { class: "note-where small muted", text: noteLine(n) }),
         D.el("p", { class: "note-body", text: n.body }),
@@ -481,32 +483,57 @@
     }
     const body = box.querySelector(".progress-body");
     body.innerHTML = "";
-    const table = D.el("table", { class: "tbl progress-tbl" });
-    table.appendChild(D.el("tr", {}, ["Module", "Tabs opened", "Operations run", "Quiz", "LeetCode", "Notes"].map((h) => D.el("th", { scope: "col", text: h }))));
+    /* one row per module: its name, then three green bars. Exact numbers are in each bar's tooltip and are read
+       out by screen readers. */
+    const bar = (label, x, n, words) => {
+      const pct = n ? Math.round((100 * x) / n) : 0;
+      const text = n ? x + " of " + n + " " + words : "nothing yet";
+      return D.el("div", { class: "pm-cell", title: label + ": " + text }, [
+        D.el("span", { class: "pm-label", text: label }),
+        D.el("div", { class: "pm-bar", role: "progressbar", "aria-label": label, "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(pct), "aria-valuetext": text }, [
+          D.el("div", { class: "pm-fill", style: "width:" + pct + "%" }),
+        ]),
+      ]);
+    };
+    const list = D.el("ul", { class: "pm-list", role: "list" });
+    list.appendChild(D.el("li", { class: "pm-row pm-head", "aria-hidden": "true" }, [
+      D.el("span", {}), D.el("span", { text: "Explored" }), D.el("span", { text: "LeetCode solved" }), D.el("span", { text: "Quiz correct" }),
+    ]));
     tiles.forEach((a) => {
       const page = a.getAttribute("href").replace(/\.html$/, "");
       const name = (a.querySelector("h2") || a).textContent.trim();
-      const row = cache.progress[page], d = (row && row.data) || {};
-      const [right, total] = quizSum(d.quiz);
-      const lcs = (d.lc || []).map((x) => cache.leetcode[String(x)]).filter((x) => x && x.status !== "none");
-      const solved = lcs.filter((x) => x.status === "solved").length, revisit = lcs.filter((x) => x.status === "revisit").length;
-      const frac = (x, n) => (n ? x + " of " + n : x ? String(x) : "—");
-      const cells = !row ? [D.el("td", { colspan: "5", class: "muted", text: "Not started" })] : [
-        D.el("td", { text: frac((d.tabs || []).length, d.tabsTotal) }),
-        D.el("td", { text: frac((d.ops || []).length, d.opsTotal) }),
-        D.el("td", { text: total ? right + " of " + total + " right" : "—" }),
-        D.el("td", { text: (d.lc || []).length ? solved + " solved of " + d.lc.length + (revisit ? ", " + revisit + " to revisit" : "") : "—" }),
-        D.el("td", { text: String(liveNotes(page).length || "—") }),
-      ];
-      table.appendChild(D.el("tr", {}, [D.el("th", { scope: "row" }, [D.el("a", { href: a.getAttribute("href"), text: name })])].concat(cells)));
+      /* a module tile counts that module; a course tile (the home page's "cse214/index") adds up every module */
+      const course = /(^|\/)index$/.test(page);
+      const pages = course ? Object.keys(cache.progress) : [page];
+      const row = pages.length && pages.every((p) => cache.progress[p]) ? true : null;
+      let right = 0, total = 0, solved = 0, lcAll = 0, seen = 0, all = 0, notes = 0;
+      pages.forEach((p) => {
+        const d = (cache.progress[p] && cache.progress[p].data) || {};
+        const [r, t] = quizSum(d.quiz);
+        right += r; total += t;
+        solved += (d.lc || []).filter((x) => { const s = cache.leetcode[String(x)]; return s && s.status === "solved"; }).length;
+        lcAll += (d.lc || []).length;
+        seen += Math.min((d.tabs || []).length + (d.ops || []).length, (d.tabsTotal || 0) + (d.opsTotal || 0));
+        all += (d.tabsTotal || 0) + (d.opsTotal || 0);
+        notes += liveNotes(p).length;
+      });
+      list.appendChild(D.el("li", { class: "pm-row" + (row ? "" : " pm-new") }, [
+        D.el("div", { class: "pm-name" }, [
+          D.el("a", { href: a.getAttribute("href"), text: name }),
+          D.el("span", { class: "pm-sub", text: !row ? "Not started" : notes ? notes + (notes === 1 ? " note" : " notes") : "" }),
+        ]),
+        bar("Explored", seen, all, "tabs and operations"),
+        bar("LeetCode solved", solved, lcAll, "problems"),
+        bar("Quiz correct", right, total, "answers"),
+      ]));
     });
-    body.appendChild(D.el("div", { style: "overflow-x:auto", tabindex: "0", role: "region", "aria-label": "Progress by module" }, [table]));
+    body.appendChild(list);
     const notes = liveNotes(null);
     if (notes.length) {
       body.appendChild(D.el("h3", { text: "Your notes" }));
       const ul = D.el("ul", { class: "note-list" });
       notes.slice(0, 50).forEach((n) => ul.appendChild(D.el("li", {}, [
-        D.el("a", { href: n.page + ".html#note=" + n.id, text: noteLine(n) }),
+        D.el("a", { href: pageHref(n.page) + "#note=" + n.id, text: noteLine(n) }),
         D.el("p", { class: "note-body", text: n.body }),
       ])));
       body.appendChild(ul);
@@ -528,7 +555,7 @@
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !menu.hidden) { close(); btn.focus(); } });
     ui = { btn: btn, menu: menu, close: close };
   }
-  const STATE_TEXT = { saved: "All changes saved.", saving: "Saving…", offline: "Offline: your changes will sync when you're back online.", error: "Couldn't reach the server. Your changes are kept here and will sync later." };
+  const STATE_TEXT = { saved: "All changes saved.", saving: "Saving…", offline: "Offline. Changes will sync when you're back.", error: "Can't reach the server. Changes are kept and will sync later." };
   function paintState() { const s = ui && ui.menu.querySelector(".acct-state"); if (s) s.textContent = STATE_TEXT[api.state] || ""; }
   function paintMenu() {
     const m = ui.menu;
@@ -538,11 +565,11 @@
       const go = D.el("button", { type: "button", class: "primary", text: "Continue with Google" });
       go.addEventListener("click", () => signIn(keep.checked));
       m.append(
-        D.el("p", { text: "Sign in to keep a progress map, a status on every LeetCode problem, and notes on any step, on every computer you use." }),
+        D.el("p", { text: "Track your progress, LeetCode problems and notes on every computer." }),
         D.el("label", { class: "acct-keep", for: "acct-keep" }, [keep, " Keep me signed in on this computer"]),
-        D.el("p", { class: "small muted", text: "On a shared computer, untick it: you're signed out when the browser closes." }),
+        D.el("p", { class: "small muted", text: "Shared computer? Untick it." }),
         go,
-        D.el("p", { class: "small muted" }, ["Stored: your email, progress, LeetCode status and notes. Nothing else. ", D.el("a", { href: D.ROOT + "privacy.html", text: "Privacy policy" })]),
+        D.el("p", { class: "small muted" }, ["We store only your email and study progress. ", D.el("a", { href: D.ROOT + "privacy.html", text: "Privacy policy" })]),
       );
       return;
     }
@@ -564,16 +591,16 @@
     forget();
     if (ui) ui.close();
     paint();
-    toast("Signed out. Your progress is safe in your account.");
+    toast("Signed out. Your progress is saved in your account.");
   }
   async function deleteAccount() {
-    if (!confirm("Delete your account, progress, LeetCode status and notes on every computer? This can't be undone.")) return;
+    if (!confirm("Delete your account and all your progress and notes? This can't be undone.")) return;
     try {
       await rest("rpc/delete_me", { method: "POST", body: "{}" });
       forget();
       if (ui) ui.close();
       paint();
-      toast("Your account and everything in it was deleted.");
+      toast("Account deleted.");
     } catch (e) { toast("Couldn't delete the account right now. Check your connection and try again."); }
   }
 

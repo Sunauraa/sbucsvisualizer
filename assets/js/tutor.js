@@ -203,7 +203,7 @@
       const head = D.el("div", { class: "learn-head" }, [D.el("h3", { text: "Why this step?" })]);
       panel.appendChild(head);
       if (!info.lines.length) {
-        panel.appendChild(D.el("p", { text: f.line === null || f.line === undefined ? "No line of code runs in this step. It is the start or the summary of the run, so the caption above says it all." : "No explanation for this step." }));
+        panel.appendChild(D.el("p", { text: f.line === null || f.line === undefined ? "No code runs in this step, so the caption says it all." : "No explanation for this step." }));
         paintAsk(f, info, []);
         return;
       }

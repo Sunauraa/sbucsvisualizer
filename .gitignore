@@ -1,4 +1,8 @@
-.DS_Store
 .claude
-node_modules
+.env
+.env.*
+.vercel
 abilities
+node_modules
+.DS_Store
+*.log

@@ -329,9 +329,9 @@
       setError("This browser blocked the code runner. Open the site over http instead of from a file.");
       return;
     }
-    worker.onerror = () => { finish(); setError("The code runner crashed. This is a bug in the playground, not in your code: please send feedback."); };
+    worker.onerror = () => { finish(); setError("The code runner crashed. That's a playground bug, not your code: please send feedback."); };
     /* the interpreter stops itself on long programs; this catches anything it cannot stop */
-    timer = setTimeout(() => { finish(); setError("Your program ran for over " + RUN_LIMIT_MS / 1000 + " seconds, so I stopped it. Is a loop missing its stopping condition?"); }, RUN_LIMIT_MS);
+    timer = setTimeout(() => { finish(); setError("Your program ran for over " + RUN_LIMIT_MS / 1000 + " seconds, so it was stopped. Does a loop never end?"); }, RUN_LIMIT_MS);
     worker.onmessage = (e) => {
       const done = finish;
       const r = e.data.result;
@@ -339,7 +339,7 @@
       if (r.error && r.error.kind === "compile") {
         done();
         setError("Line " + r.error.line + ": " + r.error.message);
-        player.load([{ errLine: r.error.line, note: "This code can't run yet. Fix line " + r.error.line + " and press Run code again." }], false);
+        player.load([{ errLine: r.error.line, note: "Fix line " + r.error.line + ", then press Run code again." }], false);
         return;
       }
       if (!r.frames.length) { done(); player.load([{ note: "The program finished without running a statement." }], false); return; }
@@ -347,7 +347,7 @@
       if (r.error) {
         setError(r.error.kind === "limit" ? r.error.message : "Line " + r.error.line + ": " + r.error.cls + (r.error.message ? ": " + r.error.message : ""));
       } else if (r.truncated) {
-        setError("This run took more steps than I can show, so you see the first " + r.frames.length.toLocaleString("en-US") + ". The output is complete.");
+        setError("Too many steps to show, so here are the first " + r.frames.length.toLocaleString("en-US") + ". The output is complete.");
       }
       const end = r.frames[r.frames.length - 1];
       r.frames.push(Object.assign({}, end, {
@@ -380,7 +380,7 @@
   function showIntro(text) {
     output = "";
     setError("");
-    player.load([{ note: text || "Press <b>Run code</b> to watch this program step by step. Each line in <span class='mono'>main</span> calls one function: delete a line to skip it, or change its values." }], false);
+    player.load([{ note: text || "Press <b>Run code</b> to step through it. Each line in <span class='mono'>main</span> calls one function: change its values, or delete it to skip it." }], false);
   }
   function fillSelect(current) {
     const select = q("pg-example");

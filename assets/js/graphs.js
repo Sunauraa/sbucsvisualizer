@@ -662,12 +662,12 @@
 
   const EXPL = {
     intro:
-      "<p><b>BFS</b> uses a queue and explores by distance. It finishes every vertex at distance k before touching distance k+1. That's why it finds shortest paths in unweighted graphs.</p><p><b>DFS</b> uses a stack (usually the call stack) and goes as deep as it can before backtracking. That's why it exposes cycles, components and topological order.</p><p>Both visit every vertex and every edge exactly once: <b>O(V + E)</b> with adjacency lists.</p>",
+      "<p><b>BFS is a ripple in a pond; DFS is a maze explored one corridor at a time.</b> BFS uses a queue and finishes everything at distance k before k + 1, so it finds shortest paths. DFS uses a stack and goes deep first, so it exposes cycles and components. Both are O(V + E).</p>",
     bfs:
-      "<p><b>BFS invariant:</b> the queue always holds vertices from at most two consecutive levels.</p><p>Each vertex enters the queue once. It's marked discovered the moment it enters, not when it leaves. Each edge gets examined once from each endpoint, so the running time is O(V + E).</p><p>The <span style='color:#15803d'>green tree edges</span> form a shortest-path tree. Follow parents from any vertex back to the source and you get a path of exactly <span class='mono'>dist</span> edges. No shorter one exists.</p>",
+      "<p><b>The ripple, ring by ring.</b> The queue only ever holds two neighbouring rings, and a vertex is marked the moment it joins. The green edges form a shortest-path tree: follow parents back to the source for a shortest path. O(V + E).</p>",
     dfs:
-      "<p><b>DFS timestamps:</b> each vertex gets a discovery time and a finish time, so it owns the interval [d, f]. The <b>parenthesis theorem</b> says two such intervals are either nested or disjoint.</p><p>A <b>back edge</b> (an edge to a vertex still on the stack) exists if and only if the graph has a cycle. That's the standard cycle test.</p><p>Sort the vertices by <em>decreasing finish time</em> and you get a topological order of a DAG.</p>",
+      "<p><b>Exploring a maze with a ball of string.</b> Each vertex gets a discovery and a finish time, and two vertices' intervals are either nested or separate. An edge back to a vertex still on the string means a cycle. Sort by finish time, latest first, to get a topological order.</p>",
     forest:
-      "<p><b>DFS forest:</b> restart the search from every still-white vertex and you cover the whole graph. Each restart begins a new tree.</p><p>For an undirected graph, the number of trees equals the number of <b>connected components</b>. It's the standard linear-time way to count them.</p><p>On a directed graph, run the same idea twice (once on the reverse graph, in decreasing finish order) and you get strongly connected components: Kosaraju's algorithm.</p>",
+      "<p><b>Exploring every island.</b> When DFS runs out of road, restart from any unvisited vertex: each restart grows a new tree. On an undirected graph, the trees are exactly the connected components.</p>",
   };
 })();

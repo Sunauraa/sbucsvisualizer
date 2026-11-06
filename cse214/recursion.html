@@ -6,8 +6,8 @@
 <title>Recursion</title>
 <meta name="description" content="Watch the call stack and recursion tree for factorial, Fibonacci, gcd, fast power, Towers of Hanoi, binary search and permutations.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=6f97670cf0ad">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=6f97670cf0ad">
+<link rel="stylesheet" href="../assets/css/style.css?v=01d6ba65c4b4">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=01d6ba65c4b4">
 </head>
 <body>
 
@@ -72,9 +72,7 @@
   <section class="about" id="about" aria-labelledby="about-h">
     <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">Watch the call stack grow and unwind next to a live recursion tree.</p>
-    <p class="intro">Every frame on the stack keeps its own copy of the variables. It waits for the call above it to return.</p>
-    <p class="intro">Then switch to <b>Iterative</b>, or run both <b>side by side</b>. You'll see the same answer computed with a loop, and what the loop saves.</p>
+    <p class="intro">Recursion is solving a problem by handing a smaller copy of it to yourself. Each call is a sticky note on a pile (the stack) that waits for the one above it. Try <b>Iterative</b> or <b>side by side</b> to see the same answer from a loop.</p>
     <div style="margin-top:1rem">
       <div class="panel-title" style="margin-bottom:.4rem"><h3 id="fn-name">factorial(n)</h3></div>
       <div class="complexity" id="fn-big" style="margin-bottom:.5rem"></div>
@@ -95,10 +93,8 @@
         <tr><td>permutations</td><td>O(n·n!) / O(n)</td><td>O(n·n!) / O(n²)</td><td>an explicit stack of states</td></tr>
       </table>
     </div>
-    <p class="small muted" style="margin:.6rem 0 .4rem">All bounds are worst case. A recursive call's space is its stack, since each waiting frame holds its own variables.</p>
-    <p class="small muted" style="margin:0 0 .4rem">You can rewrite any recursion as a loop plus a stack. The machine runs it that way.</p>
-    <p class="small muted" style="margin:0 0 .4rem">Sometimes the recursive call is the last thing a function does. That's <b>tail recursion</b>, as in gcd. It doesn't need the stack, so a plain loop does the job in O(1) space.</p>
-    <p class="small muted" style="margin-bottom:0">Recursion wins on clarity for branching problems like Hanoi, trees and permutations. Iteration wins on space, and it won't hit <span class="mono">StackOverflowError</span> on deep inputs.</p>
+    <p class="small muted" style="margin:.6rem 0 .4rem">Worst case throughout; recursion's space is its stack of waiting frames. When the call is the very last step (<b>tail recursion</b>, as in gcd), a loop does the same in O(1) space.</p>
+    <p class="small muted" style="margin-bottom:0">Recursion reads best for branching problems (Hanoi, trees, permutations). Loops save space and can't hit <span class="mono">StackOverflowError</span>.</p>
   </div>
 
   <div class="panel" style="margin-bottom:2rem">
@@ -106,15 +102,15 @@
     <div class="grid cols-3">
       <div>
         <h4 style="font-size:.95rem;margin:.2rem 0 .3rem">1 &middot; A base case</h4>
-        <p class="small muted">At least one input it answers without recursing. Skip it and you get infinite recursion. In Java, that means <span class="mono">StackOverflowError</span>.</p>
+        <p class="small muted">The smallest doll, answered directly. Without it the calls never stop (<span class="mono">StackOverflowError</span>).</p>
       </div>
       <div>
         <h4 style="font-size:.95rem;margin:.2rem 0 .3rem">2 &middot; Progress toward it</h4>
-        <p class="small muted">Every recursive call needs a strictly <em>smaller</em> input: n−1, n/2, one character shorter. Otherwise you never reach the base case.</p>
+        <p class="small muted">Each call gets a strictly <em>smaller</em> input (n−1, n/2, one character shorter), so you reach the base case.</p>
       </div>
       <div>
         <h4 style="font-size:.95rem;margin:.2rem 0 .3rem">3 &middot; Correct combination</h4>
-        <p class="small muted">Trust that the recursive call already works (the "recursive leap of faith"). Then combine its answer correctly. Induction proves that trust is safe.</p>
+        <p class="small muted">Trust the smaller call to work (the "leap of faith"), then build your answer from it. Induction proves the trust is safe.</p>
       </div>
     </div>
     <hr class="hr">
@@ -143,12 +139,12 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/account.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/motion.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/tutor.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/quiz.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/playground.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/recursion.js?v=6f97670cf0ad"></script>
+<script src="../assets/js/core.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/account.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/motion.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/tutor.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/quiz.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/playground.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/recursion.js?v=01d6ba65c4b4"></script>
 </body>
 </html>

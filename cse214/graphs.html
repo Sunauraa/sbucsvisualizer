@@ -6,8 +6,8 @@
 <title>Graphs</title>
 <meta name="description" content="Build a graph by clicking, then step through BFS and DFS with the live queue or stack and the adjacency matrix and list.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=6f97670cf0ad">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=6f97670cf0ad">
+<link rel="stylesheet" href="../assets/css/style.css?v=01d6ba65c4b4">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=01d6ba65c4b4">
 </head>
 <body>
 
@@ -84,8 +84,7 @@
   <section class="about" id="about" aria-labelledby="about-h">
     <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">Click to build a graph. Drag vertices wherever you like, even mid-traversal.</p>
-    <p class="intro">The adjacency matrix and adjacency list show the same graph two ways, and both highlight in step with the search.</p>
+    <p class="intro">A graph is a map of places and roads. Click to build one and drag places anywhere, even mid-search; the matrix and list beside it are two ways of writing the same map.</p>
     <div class="blurb" id="algo-explain"></div>
   <div class="row" style="margin-bottom:2rem">
     <div class="col">
@@ -117,8 +116,7 @@
             <tr><td>BFS / DFS overall</td><td>O(V²) / O(V)</td><td class="one">O(V + E) / O(V)</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.7rem 0 .4rem">Real graphs are <b>sparse</b>: E sits closer to V than to V². That's why adjacency lists almost always win.</p>
-        <p class="small muted" style="margin:0 0 .7rem">Load the <em>complete K₆</em> preset for the exception: every pair of vertices is joined. Dense graphs like that are the only case where the matrix keeps up.</p>
+        <p class="small muted" style="margin:.7rem 0 .7rem">Real graphs are <b>sparse</b> (E is near V, not V²), so lists win. Only dense graphs, like the <em>complete K₆</em> preset, favour the matrix.</p>
         <h4 style="font-size:.95rem;margin:.9rem 0 .3rem">Vocabulary the visualizer uses</h4>
         <dl class="kv">
           <dt>degree</dt><dd>edges touching a vertex (in + out if directed)</dd>
@@ -143,12 +141,12 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/account.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/motion.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/tutor.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/quiz.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/playground.js?v=6f97670cf0ad"></script>
-<script src="../assets/js/graphs.js?v=6f97670cf0ad"></script>
+<script src="../assets/js/core.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/account.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/motion.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/tutor.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/quiz.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/playground.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/graphs.js?v=01d6ba65c4b4"></script>
 </body>
 </html>

@@ -575,7 +575,7 @@
       const v = H.a[0];
       r.at("save").snap({ marks: { 0: "target" }, note: "min = H[0] = <b>" + v + "</b>: the root." });
       const last = H.a.length - 1;
-      r.at("last").snap({ marks: { 0: "swap", [last]: "swap" }, note: "Move the last leaf (H[" + last + "] = " + H.a[last] + ") to the root. Removing the last slot is the only removal that keeps the tree complete." });
+      r.at("last").snap({ marks: { 0: "swap", [last]: "swap" }, note: "Move the last leaf (H[" + last + "] = " + H.a[last] + ") to the root: removing the last slot keeps the tree complete." });
       H.a[0] = H.a[last];
       H.a.pop();
       if (!H.a.length) { r.at("ret").snap({ note: "The heap is now empty. Return " + v + "." }); return r; }
@@ -598,11 +598,11 @@
       r.at("init").snap({ note: "<b>Bottom-up heapify</b> of " + H.a.length + " arbitrary keys. Right now this is not a heap." });
       const start = Math.floor(H.a.length / 2) - 1;
       for (let j = start; j >= 0; j--) {
-        r.at("loop").snap({ marks: { [j]: "active" }, note: "j = " + j + ". Indices ≥ " + Math.floor(H.a.length / 2) + " are leaves, and a leaf is already a heap. Both subtrees of " + j + " are valid heaps." });
+        r.at("loop").snap({ marks: { [j]: "active" }, note: "j = " + j + ". Indices ≥ " + Math.floor(H.a.length / 2) + " are leaves (already heaps), so both subtrees of " + j + " are heaps." });
         r.at("call").snap({ marks: { [j]: "active" }, note: "downHeap(" + j + ")." });
         downHeap(H, r, j, H.a.length, false);
       }
-      r.at("loop").snap({ marks: { 0: "target" }, note: "Done: a valid heap in <b>O(n)</b>. Most nodes are near the bottom and can only sink a level or two. Σ h·n/2<sup>h+1</sup> &lt; n, so at most about 2n comparisons whatever the input." });
+      r.at("loop").snap({ marks: { 0: "target" }, note: "Done: a valid heap in <b>O(n)</b>. Most nodes sit near the bottom and sink a level or two at most: about 2n comparisons for any input." });
       return r;
     },
     build(vals) {
@@ -615,7 +615,7 @@
         r.at("call").snap({ marks: { [H.a.length - 1]: "active" }, note: "Append at index " + (H.a.length - 1) + ", then upHeap." });
         upHeap(H, r, H.a.length - 1, false);
       });
-      r.at("loop").snap({ marks: { 0: "target" }, note: "A valid heap too, but the worst case is <b>O(n log n)</b>: each insert may climb the whole height. Compare the number of steps with bottom-up heapify on the same keys." });
+      r.at("loop").snap({ marks: { 0: "target" }, note: "A valid heap too, but <b>O(n log n)</b> worst case: each insert may climb the whole height. Compare the step count with bottom-up heapify." });
       return r;
     },
   };
@@ -626,7 +626,7 @@
       const bits = pos.toString(2).slice(1);
       let i = 0;
       const path = [0];
-      r.snap({ marks: { 0: "active" }, path: path.slice(), bits: { pos: pos, done: 0 }, note: why + " Position " + pos + " in binary is <b>" + pos.toString(2) + "</b>. Drop the leading 1; each remaining bit is a turn: 0 = left, 1 = right." });
+      r.snap({ marks: { 0: "active" }, path: path.slice(), bits: { pos: pos, done: 0 }, note: why + " " + pos + " in binary is <b>" + pos.toString(2) + "</b>. Drop the leading 1; then each bit is a turn: 0 = left, 1 = right." });
       for (let b = 0; b < bits.length; b++) {
         i = 2 * i + 1 + (bits[b] === "1" ? 1 : 0);
         path.push(i);
@@ -637,7 +637,7 @@
     insert(k) {
       const r = heapRec(T, "theap").code("t_insert");
       if (T.a.length >= MAXN) { r.snap({ note: "Capped at " + MAXN + " keys." }); return r; }
-      r.snap({ note: "<b>insert(" + k + ")</b> into a linked heap of " + T.a.length + " nodes. There is no array, so we can't point to “slot n”: we have to <em>find</em> where the new leaf goes." });
+      r.snap({ note: "<b>insert(" + k + ")</b> into a linked heap of " + T.a.length + " nodes. With no array there's no “slot n”, so first <em>find</em> where the new leaf goes." });
       const n = T.a.length + 1;
       r.at("alloc").snap({ note: "Allocate a node; n becomes " + n + "." });
       if (n === 1) { T.a.push(k); r.at("empty").snap({ marks: { 0: "done" }, note: "The heap was empty: the node becomes the root." }); return r; }
@@ -665,7 +665,7 @@
       r.at(n % 2 === 0 ? "detachL" : "detachR").snap({ marks: { 0: "active" }, note: "Unlink the last node from its parent. The tree is still complete." });
       r.at("start").snap({ marks: { 0: "active" }, note: "cur ← root; sift down along child pointers." });
       downHeap(T, r, 0, T.a.length, true);
-      r.at("ret").snap({ note: "Return <b>" + v + "</b>. Two O(log n) walks, so O(log n) overall. Same bound as the array heap, but with three pointers per node and no index arithmetic." });
+      r.at("ret").snap({ note: "Return <b>" + v + "</b>. Two O(log n) walks: O(log n), like the array heap, but with three pointers per node." });
       return r;
     },
     min() {
@@ -687,7 +687,7 @@
     let c1 = 0, c2 = 0, phase = 1, hand = null;   /* hand: the key in transit between S and P */
     const r = D.Rec(() => ({ kind: "sort", algo: algo, seq: seq.slice(), pq: pq.slice(), hand: hand, marks: {}, pmarks: {}, phase: phase, c1: c1, c2: c2 }), 5000);
     r.code("sort_" + algo);
-    r.at("init").snap({ note: "<b>" + CODE["sort_" + algo].title + "</b>. Phase 1 moves every key from S into P. Phase 2 moves them back with removeMin, so they come out in order." });
+    r.at("init").snap({ note: "<b>" + CODE["sort_" + algo].title + "</b>. Phase 1 moves every key from S into P; phase 2 moves them back with removeMin, in order." });
     const tick = () => { if (phase === 1) c1++; else c2++; };
     /* phase 1 */
     while (seq.length) {
@@ -802,11 +802,11 @@
      TABS / INIT
      ============================================================ */
   const NOTES = {
-    unsorted: "<b>Unsorted list.</b> insert appends, so it costs O(1).</p><p class='blurb'>You pay at the other end. min and removeMin have to look at every key, so they cost O(n). Pick this when you insert far more often than you remove.",
-    sorted: "<b>Sorted list.</b> insert walks to the right position, which costs O(n). In return the minimum always sits at the front, so min and removeMin cost O(1).</p><p class='blurb'>It's the mirror image of the unsorted list.",
-    aheap: "<b>Array-based heap.</b> A complete binary tree stored level by level in an array. No pointers needed: parent(i) = ⌊(i−1)/2⌋, and the children are 2i+1 and 2i+2.</p><p class='blurb'>Every node is ≤ its children. insert and removeMin each fix one root-to-leaf path, so both cost O(log n).</p><p class='blurb'>Bottom-up heapify builds a heap from n keys in O(n).",
-    theap: "<b>Tree-based (linked) heap.</b> The same heap, built from nodes with left, right and parent pointers.</p><p class='blurb'>Without an array there's no “slot n”. To find the last position, write n in binary, drop the leading 1, and read the remaining bits as left (0) or right (1) turns from the root.</p><p class='blurb'>That walk costs O(log n), so the bounds match the array heap. The difference: every node carries three pointers.",
-    sort: "<b>PQ-sort</b> is one algorithm with a pluggable priority queue. Insert everything, then removeMin everything.</p><p class='blurb'>Plug in an <b>unsorted list</b> and you get <b>selection sort</b>, with all the work in phase 2. A <b>sorted list</b> gives <b>insertion sort</b>, with all the work in phase 1.</p><p class='blurb'>A <b>heap</b> gives <b>heap sort</b>, with O(n log n) split between the two phases.",
+    unsorted: "<b>Unsorted list: a messy to-do pile.</b> Tossing a task on is O(1), but finding the most urgent one means checking them all: O(n). Good when you add far more often than you remove.",
+    sorted: "<b>Sorted list: a to-do list kept in order.</b> Adding means finding the right spot, O(n), but the most urgent task is always first, so min and removeMin are O(1). The mirror image of the pile.",
+    aheap: "<b>Array heap: an org chart where every boss outranks their team.</b> The top is always the minimum, and insert and removeMin each fix one path from top to bottom: O(log n). Stored row by row in an array, the children of i sit at 2i+1 and 2i+2, so no pointers are needed. Bottom-up heapify builds one in O(n).",
+    theap: "<b>Linked heap: the same org chart, built from nodes.</b> With no array there's no “slot n”. To find the last spot, write n in binary, drop the leading 1, and read the bits as turns: 0 = left, 1 = right. Still O(log n), with three pointers per node.",
+    sort: "<b>PQ-sort: queue everything, then serve in order.</b> Insert every key, then removeMin them all. The queue you plug in decides the sort: unsorted list gives selection sort, sorted list gives insertion sort, and a heap gives heap sort, O(n log n).",
   };
 
   function load(r) { if (r.overflow) D.toast("Step limit reached.", true); player.load(r.frames, true); }

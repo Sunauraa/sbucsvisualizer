@@ -1398,10 +1398,14 @@ if (want("account")) {
   };
   const mine = (table, uid) => [...S.tables[table].values()].filter((r) => r.user_id === uid);
 
-  /* not configured: nothing changes */
+  /* not configured (an empty DSA.ACCOUNT): nothing changes */
   {
-    const { page, ctx } = await openPage("trees");
-    ok((await page.locator(".acct-btn").count()) === 0, "without a Supabase URL there is no Sign in button");
+    const ctx = await browser.newContext();
+    await ctx.addInitScript(() => { window.DSA_ACCOUNT = { url: "", anonKey: "" }; });
+    const page = await ctx.newPage();
+    await page.goto(BASE + "/cse214/trees.html");
+    await page.waitForLoadState("load");
+    ok((await page.locator(".acct-btn").count()) === 0 && !(await page.evaluate(() => DSA.account.enabled)), "without a Supabase URL there is no Sign in button");
     await ctx.close();
   }
 
@@ -1444,12 +1448,23 @@ if (want("account")) {
   ok(await B.page.evaluate(() => !localStorage.getItem("dsa.session.v1") && !!sessionStorage.getItem("dsa.session.v1")), "unticked: the session lasts only until the browser closes");
   await B.page.waitForFunction(() => document.querySelector("#my-progress"), null, { timeout: 8000 }).catch(() => {});
   await openBox(B.page, "#my-progress");
-  const treesRow = await B.page.locator("#my-progress tr", { hasText: "Trees" }).innerText();
-  ok(/1 solved/.test(treesRow) && !/Not started/.test(treesRow), "the progress map shows the laptop's work", treesRow);
-  ok(/Not started/.test(await B.page.locator("#my-progress tr", { hasText: "Sorting" }).innerText()), "and modules never opened as not started");
+  const treesRow = await B.page.locator("#my-progress .pm-row", { hasText: "Trees" }).evaluate((r) => ({ text: r.innerText, bars: [...r.querySelectorAll("[role=progressbar]")].map((b) => b.getAttribute("aria-label") + ": " + b.getAttribute("aria-valuetext") + " (" + b.getAttribute("aria-valuenow") + "%)") }));
+  ok(treesRow.bars.length === 3 && /LeetCode solved: 1 of \d+ problems/.test(treesRow.bars.join()) && /Explored: [1-9]/.test(treesRow.bars.join()) && !/Not started/.test(treesRow.text), "the progress map shows the laptop's work as bars", treesRow);
+  ok(/Not started/.test(await B.page.locator("#my-progress .pm-row", { hasText: "Sorting" }).innerText()), "and modules never opened as not started");
   await Promise.all([B.page.waitForURL(/trees\.html#note=/), B.page.locator("#my-progress .note-list a").first().click()]);
   await B.page.waitForFunction((cap) => DSA._players.some((p) => p.frames.some((f) => f.note === cap) && p.frames[p.index].note === cap), run.caption, { timeout: 8000 }).catch(() => {});
   ok(await B.page.evaluate((cap) => DSA._players.some((p) => p.frames[p.index] && p.frames[p.index].note === cap), run.caption), "a note opens the exact step on another computer");
+
+  /* the home page sits one folder up: its course row adds up the modules, and note links still reach cse214/ */
+  await go(B.page, "/index.html");
+  await B.page.waitForFunction(() => document.querySelector("#my-progress .note-list a"), null, { timeout: 8000 }).catch(() => {});
+  await openBox(B.page, "#my-progress");
+  const homeRow = await B.page.locator("#my-progress .pm-row:not(.pm-head)").first().evaluate((r) => ({ text: r.innerText, bars: [...r.querySelectorAll("[role=progressbar]")].map((b) => b.getAttribute("aria-label") + ": " + b.getAttribute("aria-valuetext")).join() }));
+  ok(!/Not started/.test(homeRow.text) && /LeetCode solved: 1 of \d+ problems/.test(homeRow.bars), "home: the course row adds up every module", homeRow);
+  const homeHref = await B.page.locator("#my-progress .note-list a").first().getAttribute("href").catch(() => "");
+  ok(/\/cse214\/trees\.html#note=/.test(homeHref), "home: a note links into cse214/", homeHref);
+  await Promise.all([B.page.waitForURL(/\/cse214\/trees\.html#note=/, { timeout: 8000 }).catch(() => {}), B.page.locator("#my-progress .note-list a").first().click()]);
+  ok(/\/cse214\/trees\.html#note=/.test(B.page.url()), "home: clicking a note opens its module", B.page.url());
 
   /* both ways, and the newest change wins */
   await openBox(B.page, "#practice");

@@ -259,7 +259,7 @@
     code: CODE.bubble,
     big: ["O(n²) time (worst)", "O(1) space", "best case O(n)", "stable"],
     blurb:
-      "<p>Walk the array again and again, swapping out-of-order neighbours. After pass <em>i</em>, the largest <em>i</em> values have bubbled to the back, so each pass gets shorter.</p><p>If a whole pass makes no swap, the array is sorted and we stop early. That's the best case: O(n) time.</p>",
+      "<p><b>Bubbles rising in a glass.</b> Swap out-of-order neighbours, pass after pass, and the largest values float to the end, so each pass gets shorter. A pass with no swaps means it's sorted: O(n) in the best case.</p>",
     run(a, s) {
       const n = a.length;
       for (let i = n - 1; i >= 1; i--) {
@@ -280,7 +280,7 @@
         s.done.add(i);
         if (!swapped) {
           for (let k = 0; k < i; k++) s.done.add(k);
-          s.snap({}, "exit", "The inner loop is done and swapped is still false: no pair was out of order, so the array is sorted. <b>break</b>.");
+          s.snap({}, "exit", "swapped is still false: no pair was out of order, so the array is sorted. <b>break</b>.");
           break;
         }
         s.snap({}, "exit^", "Inner loop done: A[" + i + "] = " + a[i] + " is in its final place. swapped is true, so keep going.");
@@ -295,7 +295,7 @@
     code: CODE.selection,
     big: ["O(n²) time (worst)", "O(1) space", "every case O(n²)", "not stable"],
     blurb:
-      "<p>Scan the unsorted tail for its minimum, then swap that minimum into the front of the tail.</p><p>It always does exactly n(n-1)/2 comparisons, but at most n-1 swaps. That's the fewest of any quadratic sort, which makes it a decent choice when moving records is expensive.</p>",
+      "<p><b>Picking teams: always take the best one left.</b> Find the minimum of the unsorted part and swap it to the front. Always n(n−1)/2 comparisons, but at most n − 1 swaps, the fewest of the simple sorts.</p>",
     run(a, s) {
       const n = a.length;
       for (let i = 0; i < n - 1; i++) {
@@ -331,7 +331,7 @@
     code: CODE.insertion,
     big: ["O(n²) time (worst)", "O(1) space", "best case O(n)", "stable"],
     blurb:
-      "<p>Grow a sorted prefix one element at a time. Lift out A[i] as the <em>key</em>, shift every larger value in the prefix one slot right, then drop the key into the gap.</p><p>Nearly-sorted input barely shifts anything. In practice it's the fastest of the simple sorts, and real libraries use it for small subarrays.</p>",
+      "<p><b>Sorting a hand of cards.</b> Take the next card and slide it left past the bigger ones into place. Nearly sorted input barely moves, so libraries use it for small pieces.</p>",
     run(a, s) {
       const n = a.length;
       s.done.add(0);
@@ -368,7 +368,7 @@
     code: CODE.heap,
     big: ["O(n log n) time (worst)", "O(1) space", "not stable"],
     blurb:
-      "<p>Two phases. First, turn the whole array into a max-heap from the bottom up in O(n).</p><p>Then repeat: swap the root (the maximum) with the last heap slot, shrink the heap by one, and sift the new root down.</p><p>The array splits into a heap at the front and a growing sorted suffix at the back. No extra memory at all.</p>",
+      "<p><b>A tournament.</b> Build a max-heap in O(n) so the champion is on top, swap it to the end, shrink the heap, and let the next champion rise. O(n log n), with no extra memory.</p>",
     run(a, s) {
       const n = a.length;
       const down = (i, size) => {
@@ -418,7 +418,7 @@
     code: CODE.merge,
     big: ["O(n log n) time (worst)", "O(n) space", "stable"],
     blurb:
-      "<p>Split in half, sort each half recursively, then merge the two sorted halves by repeatedly taking the smaller front element.</p><p>The merge needs a scratch buffer. That buffer is the O(n) extra space.</p><p>Ties take from the left buffer first, so merge sort is stable. Its O(n log n) bound holds on every input.</p>",
+      "<p><b>Merging two sorted stacks of exams</b> by always taking the smaller top sheet. Split in half, sort each half, merge. O(n log n) on every input and stable, but the merge needs an O(n) scratch buffer.</p>",
     run(a, s) {
       const rangeMarks = (lo, hi, cls) => { const m = {}; for (let t = lo; t <= hi; t++) m[t] = cls || "range"; return m; };
       const merge = (lo, mid, hi) => {
@@ -471,7 +471,7 @@
     code: CODE.quick,
     big: ["O(n²) time (worst)", "O(n) stack space (worst)", "average O(n log n)", "not stable"],
     blurb:
-      "<p>Pick a pivot and partition the range: everything smaller goes left of it, everything larger goes right. Then recurse on the two sides.</p><p>This version uses Lomuto partitioning with the last element as pivot. <span class='mono'>i</span> marks the boundary of the &lt;-pivot region and <span class='mono'>j</span> scans.</p><p>Already-sorted input makes every partition as lopsided as possible. That's the O(n²) worst case.</p>",
+      "<p><b>Lining up around one person's height:</b> shorter to the left, taller to the right, then repeat on each side. This uses Lomuto partitioning with the last element as pivot. Sorted input makes every split lopsided: O(n²).</p>",
     run(a, s) {
       const rangeMarks = (lo, hi) => { const m = {}; for (let t = lo; t <= hi; t++) m[t] = "range"; return m; };
       const part = (lo, hi) => {
@@ -493,7 +493,7 @@
         [a[i], a[hi]] = [a[hi], a[i]];
         s.mov += 2;
         s.done.add(i);
-        s.snap(Object.assign(rangeMarks(lo, hi), { [i]: "done" }), "pfinal", "Swap the pivot into A[" + i + "]. Everything left of it is smaller and everything right is ≥, so " + pivot + " is final. Return " + i + ".");
+        s.snap(Object.assign(rangeMarks(lo, hi), { [i]: "done" }), "pfinal", "Swap the pivot into A[" + i + "]: smaller keys left, ≥ keys right, so " + pivot + " is final. Return " + i + ".");
         return i;
       };
       const qs = (lo, hi) => {
@@ -522,7 +522,7 @@
     code: CODE.twothird,
     big: ["O(n^2.71) time", "O(log n) stack space", "not stable"],
     blurb:
-      "<p>A deliberately terrible sort that's great for practising recurrences.</p><p>Swap the two ends if needed. Then sort the first two-thirds, the last two-thirds, and the first two-thirds <em>again</em>.</p><p>That final repeat makes it correct. The second call may push large values into the last third, so the first two-thirds must be re-sorted.</p><p>Three calls on 2n/3 elements gives T(n) = 3T(2n/3) + O(1) = O(n<sup>log<sub>1.5</sub>3</sup>) ≈ O(n<sup>2.71</sup>).</p>",
+      "<p><b>A deliberately bad sort, good for practising recurrences.</b> Fix the ends, then sort the first two-thirds, the last two-thirds, and the first two-thirds again; the repeat is what makes it correct. T(n) = 3T(2n/3) + O(1) ≈ O(n<sup>2.71</sup>).</p>",
     maxN: 14,
     run(a, s) {
       const rangeMarks = (lo, hi) => { const m = {}; for (let t = lo; t <= hi; t++) m[t] = "range"; return m; };
@@ -561,7 +561,7 @@
     code: CODE.counting,
     big: ["O(n + k) time", "O(n + k) space", "stable", "not comparison-based", "k = max − min"],
     blurb:
-      "<p>No comparisons at all. Count how many times each key 0..k occurs, then turn those counts into running totals (so C[v] is where the block of v's ends).</p><p>Then walk the input from the right, placing each element at C[key]-1. Walking right-to-left is what keeps it stable.</p><p>It runs in time linear in n + k. It works well for small key ranges and falls apart when k is huge.</p>",
+      "<p><b>Sorting mail into pigeonholes.</b> Count each key, turn the counts into running totals (where each key's block ends), then place items from the right to keep them stable. No comparisons: O(n + k), best when the key range is small.</p>",
     kRange: true,
     run(a, s) {
       const n = a.length;
@@ -572,7 +572,7 @@
       }
       const lo = Math.min.apply(null, a), k = Math.max.apply(null, a) - lo;
       s.snap({}, "check^", "Every key is an integer, so each one can be used as an index.");
-      s.snap({}, "range", "lo = min = " + lo + ", max = " + (k + lo) + ", so k = " + k + ". Key x is counted in C[x − lo]" + (lo ? " (subtracting lo = " + lo + " shifts " + (lo < 0 ? "negative keys up to index 0" : "the keys down to start at index 0") + ")" : "") + ".");
+      s.snap({}, "range", "lo = min = " + lo + ", max = " + (k + lo) + ", so k = " + k + ". Key x is counted in C[x − lo]" + (lo ? ", so the smallest key lands at index 0" : "") + ".");
       const C = new Array(k + 1).fill(0);
       const B = new Array(n).fill(null);
       const rows = (cm, bm) => [
@@ -599,7 +599,7 @@
       }
       for (let i = 0; i < n; i++) { a[i] = B[i]; s.done.add(i); }
       s.snap({}, "back", "Copy B back into A.", { rows: rows({}, allMarks(n, "done")) });
-      s.snap({}, null, "Sorted with zero comparisons, in O(n + k) = O(" + n + " + " + k + ") time and O(n + k) extra space.", { rows: rows() });
+      s.snap({}, null, "Sorted with zero comparisons: O(n + k) = O(" + n + " + " + k + ") time and extra space.", { rows: rows() });
       function allMarks(m, cls) { const o = {}; for (let t = 0; t < m; t++) o[t] = cls; return o; }
     },
   };

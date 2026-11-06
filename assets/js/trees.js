@@ -427,9 +427,9 @@
   /* ---------------- specs, shown above each listing ---------------- */
   const M = (t) => "<span class='mono'>" + t + "</span>";
   const travSpec = (when, use) => ({ does: "Visits every node of the subtree rooted at " + M("n") + ", reporting a node " + when + ". Typical use: " + use, params: M("n") + ": the subtree's root (null for an empty tree)", returns: "nothing (visits each node)", errors: "none: a null node returns at once", time: "O(n): every node is entered once", space: "O(h): one stack frame per level of the path being explored; O(n) for a degenerate tree", callVals: { n: "root" } });
-  const H = "h is the tree's height: about log₂n for a bushy tree, up to n − 1 for a degenerate one";
+  const H = "h = height: about log₂n if bushy, n − 1 if not";
   const delSpec = (pred) => ({ does: "Removes key " + M("k") + ". A node with two children first takes the key of its in-order <b>" + (pred ? "predecessor" : "successor") + "</b> (the " + (pred ? "largest key in its left" : "smallest key in its right") + " subtree), so only a node with ≤ 1 child is ever cut out.", params: M("k") + ": the key (negative and decimal keys are fine)", returns: "nothing (a missing key is ignored)", errors: "none", time: "O(h): " + H, space: "O(1)" });
-  const delRecSpec = (pred) => ({ does: "Recursive delete: each call handles one subtree and returns its new root, which the caller links back in. A two-child node takes its in-order <b>" + (pred ? "predecessor" : "successor") + "</b>'s key, then that key is deleted from the " + (pred ? "left" : "right") + " subtree.", params: M("n") + ": a subtree's root (start with root) · " + M("k") + ": the key", returns: "the subtree's root after the delete", errors: "none", time: "O(h): " + H, space: "O(h): one stack frame per level", callVals: { n: "root" } });
+  const delRecSpec = (pred) => ({ does: "Recursive delete: each call returns its subtree's new root for the caller to relink. A two-child node takes its <b>" + (pred ? "predecessor" : "successor") + "</b>'s key, which is then deleted from the " + (pred ? "left" : "right") + " subtree.", params: M("n") + ": a subtree's root (start with root) · " + M("k") + ": the key", returns: "the subtree's root after the delete", errors: "none", time: "O(h): " + H, space: "O(h): one stack frame per level", callVals: { n: "root" } });
   const nbSpec = (pred) => ({ does: "Finds the key just " + (pred ? "before" : "after") + " " + M("k") + " in sorted order. If k's node has a " + (pred ? "left" : "right") + " subtree, the answer is that subtree's " + (pred ? "rightmost" : "leftmost") + " node; otherwise climb up until we arrive from a " + (pred ? "right" : "left") + " child.", params: M("k") + ": a key in the tree", returns: "the " + (pred ? "predecessor" : "successor") + " node, or null if k is the " + (pred ? "smallest" : "largest") + " key or is not in the tree", errors: "none", time: "O(h): down to k, then down or up one path", space: "O(1)" });
   D.specs(CODE, {
     trav_pre: travSpec("<b>before</b> its subtrees", "copying a tree or printing its structure."),
@@ -806,7 +806,7 @@
       const hasChild = !!n[goLeft ? "left" : "right"];
       const side = goLeft ? "L" : "R";
       /* k ≠ key, then the direction test; when the child exists the "is it null?" test fails and we step down */
-      c.at(hasChild ? ["found^", "go" + side, "attach" + side + "^"] : ["found^", "go" + side + "^"]).bin(st, marks, "Compare " + v + " with " + n.v + ": " + v + " " + (goLeft ? "&lt;" : "&gt;") + " " + n.v + ", so it can only be in the <b>" + (goLeft ? "left" : "right") + "</b> subtree. Everything on the other side is discarded; that is the whole BST property.");
+      c.at(hasChild ? ["found^", "go" + side, "attach" + side + "^"] : ["found^", "go" + side + "^"]).bin(st, marks, "Compare " + v + " with " + n.v + ": " + v + " " + (goLeft ? "&lt;" : "&gt;") + " " + n.v + ", so only the <b>" + (goLeft ? "left" : "right") + "</b> subtree can hold it. Skip the other side.");
       if (!n[goLeft ? "left" : "right"]) return { node: null, parent: n, goLeft: goLeft, path: path };
       n = n[goLeft ? "left" : "right"];
     }
@@ -830,7 +830,7 @@
       }
       marks[n.id] = "active";
       const goLeft = v < n.v, next = n[goLeft ? "left" : "right"];
-      c.at(["loop", "found^", goLeft ? "goL" : "goR"]).bin(st, marks, "n = " + n.v + " is not null. " + v + " ≠ " + n.v + ", and " + v + " " + (goLeft ? "&lt;" : "&gt;") + " " + n.v + ", so it can only be in the <b>" + (goLeft ? "left" : "right") + "</b> subtree: n ← n." + (goLeft ? "left" : "right") + (next ? " (" + next.v + ")." : ", which is null."));
+      c.at(["loop", "found^", goLeft ? "goL" : "goR"]).bin(st, marks, "n = " + n.v + ": not null, " + v + " ≠ " + n.v + ", " + v + " " + (goLeft ? "&lt;" : "&gt;") + " " + n.v + ", so go <b>" + (goLeft ? "left" : "right") + "</b>: n ← n." + (goLeft ? "left" : "right") + (next ? " (" + next.v + ")." : ", which is null."));
       n = next;
     }
     const marks = {};
@@ -854,11 +854,11 @@
     const n = bnode(v);
     n.p = r.parent;
     r.parent[r.goLeft ? "left" : "right"] = n;
-    c.at(r.goLeft ? "attachL" : "attachR").bin(st, { [n.id]: "done", [r.parent.id]: "visit" }, "We fell off the tree at " + r.parent.v + "'s empty <b>" + (r.goLeft ? "left" : "right") + "</b> slot, so that is where " + v + " goes. A new key is always inserted as a <b>leaf</b>.");
+    c.at(r.goLeft ? "attachL" : "attachR").bin(st, { [n.id]: "done", [r.parent.id]: "visit" }, "The search fell off at " + r.parent.v + "'s empty <b>" + (r.goLeft ? "left" : "right") + "</b> slot, so " + v + " goes there, as a new <b>leaf</b>.");
     if (rebalance) avlRetrace(st, n.p, c, "insert");
     else {
       for (let a = n.p; a; a = a.p) fixH(a);
-      c.at(null).bin(st, {}, "Plain BSTs never rebalance, so if you insert sorted data the tree degenerates into a linked list and search becomes O(n). Try inserting 1, 2, 3, 4, 5 in order.");
+      c.at(null).bin(st, {}, "Plain BSTs never rebalance: insert 1, 2, 3, 4, 5 in order and the tree becomes a list, with O(n) search.");
     }
   }
 
@@ -923,7 +923,7 @@
 
   function avlRetrace(st, from, c, why) {
     c.alias = null;
-    c.at("call").bin(st, from ? { [from.id]: "active" } : {}, "Now walk back up to the root, recomputing heights and checking the <b>balance factor</b> (height of left − height of right) at each ancestor.");
+    c.at("call").bin(st, from ? { [from.id]: "active" } : {}, "Walk back up to the root, updating each ancestor's height and <b>balance factor</b> (left height − right height).");
     let n = from;
     while (n) {
       const before = n.h;
@@ -932,28 +932,28 @@
       const marks = { [n.id]: Math.abs(b) > 1 ? "swap" : "cmp" };
       const head = "At " + n.v + ": height " + (before !== n.h ? "changes to " : "stays ") + n.h + ", balance factor = " + hh(n.left) + " − " + hh(n.right) + " = <b>" + b + "</b>. ";
       if (Math.abs(b) <= 1) {
-        c.at(["loop", "bf", "heavyL^", "heavyR^"]).bin(st, marks, head + "Within {−1, 0, 1}, so neither rotation test fires. Move up to the parent" + (n.p ? " (" + n.p.v + ")." : ", which is null."));
+        c.at(["loop", "bf", "heavyL^", "heavyR^"]).bin(st, marks, head + "Within {−1, 0, 1}: no rotation. Up to the parent" + (n.p ? " (" + n.p.v + ")." : ", which is null."));
         n = n.p;
         continue;
       }
-      c.at(["loop", "bf"]).bin(st, marks, head + "That is outside {−1, 0, 1}, so this node is <b>unbalanced</b> and must be rotated.");
+      c.at(["loop", "bf"]).bin(st, marks, head + "Outside {−1, 0, 1}: <b>unbalanced</b>, so rotate.");
       if (b > 1) {
         if (bf(n.left) < 0) {
-          c.at(["heavyL", "doubleL"]).bin(st, { [n.id]: "swap", [n.left.id]: "active", [n.left.right.id]: "target" }, "b &gt; 1: <b>Left-Right case</b>. Heavy on the left, but the left child leans right, so a single rotation would not fix it. First rotate the <b>left child left</b>, turning this into a Left-Left case.");
+          c.at(["heavyL", "doubleL"]).bin(st, { [n.id]: "swap", [n.left.id]: "active", [n.left.right.id]: "target" }, "b &gt; 1: <b>Left-Right case</b>. The left child leans right, so first rotate the <b>left child left</b> to make it Left-Left.");
           rotL(st, n.left, c);
           c.at("doubleL").bin(st, { [n.id]: "swap" }, "Now it is Left-Left.");
         } else {
-          c.at(["heavyL", "doubleL^"]).bin(st, { [n.id]: "swap", [n.left.id]: "active" }, "b &gt; 1: <b>Left-Left case</b>. The left child leans left (or is balanced), so the double-rotation test fails. One <b>right rotation</b> at " + n.v + " fixes it.");
+          c.at(["heavyL", "doubleL^"]).bin(st, { [n.id]: "swap", [n.left.id]: "active" }, "b &gt; 1: <b>Left-Left case</b>. The left child doesn't lean right, so one <b>right rotation</b> at " + n.v + " fixes it.");
         }
         n = rotR(st, n, c);
-        c.at("rotR").bin(st, { [n.id]: "done" }, "Rotated: <b>" + n.v + "</b> is now the subtree root, its old parent became its right child. The subtree's height drops by one and the in-order sequence is unchanged; rotations never break the BST property.");
+        c.at("rotR").bin(st, { [n.id]: "done" }, "Rotated: <b>" + n.v + "</b> is the subtree root, with its old parent as its right child. Height drops by one; in-order order is unchanged.");
       } else {
         if (bf(n.right) > 0) {
-          c.at(["heavyL^", "heavyR", "doubleR"]).bin(st, { [n.id]: "swap", [n.right.id]: "active", [n.right.left.id]: "target" }, "b &lt; −1: <b>Right-Left case</b>. Heavy on the right, but the right child leans left. First rotate the <b>right child right</b> to turn this into Right-Right.");
+          c.at(["heavyL^", "heavyR", "doubleR"]).bin(st, { [n.id]: "swap", [n.right.id]: "active", [n.right.left.id]: "target" }, "b &lt; −1: <b>Right-Left case</b>. The right child leans left, so first rotate the <b>right child right</b> to make it Right-Right.");
           rotR(st, n.right, c);
           c.at("doubleR").bin(st, { [n.id]: "swap" }, "Now it is Right-Right.");
         } else {
-          c.at(["heavyL^", "heavyR", "doubleR^"]).bin(st, { [n.id]: "swap", [n.right.id]: "active" }, "b &lt; −1: <b>Right-Right case</b>. The right child leans right (or is balanced). One <b>left rotation</b> at " + n.v + " fixes it.");
+          c.at(["heavyL^", "heavyR", "doubleR^"]).bin(st, { [n.id]: "swap", [n.right.id]: "active" }, "b &lt; −1: <b>Right-Right case</b>. The right child doesn't lean left, so one <b>left rotation</b> at " + n.v + " fixes it.");
         }
         n = rotL(st, n, c);
         c.at("rotL").bin(st, { [n.id]: "done" }, "Rotated: <b>" + n.v + "</b> takes over the subtree. Height restored.");
@@ -962,9 +962,9 @@
     }
     c.at("loop").bin(st, {}, "n is null: we have passed the root, so the loop ends.");
     c.at(null).bin(st, {}, "Every node is balanced again. " + (why === "insert"
-      ? "An AVL insert needs <b>at most one</b> rotation (single or double), so it is O(log n) overall."
-      : "An AVL delete may need a rotation at <b>every</b> level on the way up, which is still O(log n).") +
-      " The height of an AVL tree with n nodes is at most 1.44·log₂n.");
+      ? "An insert needs <b>at most one</b> rotation: O(log n)."
+      : "A delete may rotate at <b>every</b> level: still O(log n).") +
+      " AVL height ≤ 1.44·log₂n.");
   }
 
   /* ============================================================
@@ -991,19 +991,19 @@
         out.push(n.v);
         const kids = [n.left, n.right].filter(Boolean);
         kids.forEach((k) => Q.push(k));
-        c.at("visit").bin(st, Object.assign(marks(), { [n.id]: "active" }), "Dequeue <b>" + n.v + "</b> and visit it, then " + (kids.length ? "enqueue its child" + (kids.length === 1 ? " " : "ren ") + kids.map((k) => k.v).join(" and ") : "check both children: " + n.v + " has none, so nothing is enqueued") + ". Nodes come out strictly level by level.",
+        c.at("visit").bin(st, Object.assign(marks(), { [n.id]: "active" }), "Dequeue <b>" + n.v + "</b>, visit it, " + (kids.length ? "and enqueue its child" + (kids.length === 1 ? " " : "ren ") + kids.map((k) => k.v).join(" and ") : n.v + " has no children") + ".",
           { output: out.slice(), queue: Q.map((x) => x.v) });
         if (inLevel === 0) { level++; inLevel = Q.length; }
       }
       c.at("loop").bin(st, marks(), "The queue is empty, so the loop ends.", { output: out.slice(), queue: [] });
-      c.at(null).bin(st, marks(), "Done: <b>" + out.join(" ") + "</b>. Level-order needs O(width) space: up to n/2 nodes for the bottom level of a complete tree.", { output: out.slice(), queue: [] });
+      c.at(null).bin(st, marks(), "Done: <b>" + out.join(" ") + "</b>. Level-order uses O(width) space: up to n/2 nodes on a complete tree's last level.", { output: out.slice(), queue: [] });
       return c;
     }
 
     const WHY = {
-      pre: "pre-order outputs a node <em>before</em> its subtrees, which is why it can rebuild the exact shape of a tree.",
+      pre: "pre-order outputs a node <em>before</em> its subtrees, so it records the tree's shape.",
       in: "the whole left subtree is done. On a BST, in-order output is <b>sorted</b>.",
-      post: "post-order waits for both subtrees, which is what you want for freeing memory or evaluating an expression tree.",
+      post: "post-order waits for both subtrees, as freeing a tree or evaluating an expression needs.",
     };
     const fn = { pre: "preorder", in: "inorder", post: "postorder" }[kind];
     c.calls = [];   /* recursive traversals show their call stack */
@@ -1021,13 +1021,13 @@
         fr.wait = fn + "(null)";
         c.at(side).bin(st, Object.assign(marks(), { [n.id]: "active" }), lead + "Call " + fn + "(" + n.v + "." + side + "), but " + n.v + " has no " + side + " child, so the argument is null.", { output: out.slice() });
         const nf = c.enter(fn + "(null)", { n: "null" });
-        c.returning(nf, "nothing (void)").at("null").bin(st, Object.assign(marks(), { [n.id]: "active" }), "Inside that call: n is null, so it <b>returns immediately</b> to " + n.v + ". This check is the base case that stops the recursion.", { output: out.slice() });
+        c.returning(nf, "nothing (void)").at("null").bin(st, Object.assign(marks(), { [n.id]: "active" }), "n is null: <b>return</b> to " + n.v + " at once. This is the base case.", { output: out.slice() });
         c.leave();
         fr.wait = null;
         return;
       }
       fr.wait = fn + "(" + ch.v + ")";
-      c.at(side).bin(st, Object.assign(marks(), { [n.id]: "active", [ch.id]: "cmp" }), lead + "Call " + fn + "(" + n.v + "." + side + "): go down to <b>" + ch.v + "</b>. " + n.v + " waits on the call stack until that whole subtree is finished.", { output: out.slice() });
+      c.at(side).bin(st, Object.assign(marks(), { [n.id]: "active", [ch.id]: "cmp" }), lead + "Call " + fn + "(" + n.v + "." + side + "): go down to <b>" + ch.v + "</b>. " + n.v + " waits on the stack until that subtree is done.", { output: out.slice() });
       go(ch, depth + 1);
       fr.wait = null;
     };
@@ -1044,7 +1044,7 @@
       c.leave();
     };
     go(st.root, 0);
-    c.at(null).bin(st, marks(), "Done: <b>" + out.join(" ") + "</b>. Every node is entered and left exactly once, so all four traversals are <b>O(n)</b> time; the recursive ones use O(h) stack space.", { output: out.slice() });
+    c.at(null).bin(st, marks(), "Done: <b>" + out.join(" ") + "</b>. Each node is entered and left once: <b>O(n)</b> time, and O(h) stack for the recursive ones.", { output: out.slice() });
     return c;
   }
 
@@ -1060,7 +1060,7 @@
     const nm = kind === "height" ? "height" : "size";
     const base = kind === "height" ? -1 : 0;
     c.calls = [];
-    c.bin(st, {}, "<b>" + nm + "(root)</b>. Each call asks the same question of a smaller subtree, so the answer is built on the way back up.", { sub: {} });
+    c.bin(st, {}, "<b>" + nm + "(root)</b>: each call asks the same of a smaller subtree, and answers build on the way back up.", { sub: {} });
     (function f(n, parentId) {
       if (!n) {
         const fr = c.enter(nm + "(null)", { n: "null" });
@@ -1088,7 +1088,7 @@
       c.leave();
       return r;
     })(st.root, null);
-    c.at(null).bin(st, marks(), "Done: the tree's " + nm + " is <b>" + (st.root ? sub[st.root.id].split("=")[1] : base) + "</b>. Every node made exactly one call (plus one call for each empty child), so this is O(n) time and O(h) stack space.", { sub: Object.assign({}, sub) });
+    c.at(null).bin(st, marks(), "Done: the tree's " + nm + " is <b>" + (st.root ? sub[st.root.id].split("=")[1] : base) + "</b>. One call per node (plus one per empty child): O(n) time, O(h) stack.", { sub: Object.assign({}, sub) });
     return c;
   }
 
@@ -1282,8 +1282,8 @@
 
   function mDescribe(st) {
     return st.m === 4
-      ? "a <b>(2,4)-tree</b>: every internal node has 2, 3 or 4 children and 1, 2 or 3 keys"
-      : "a <b>B-tree of order " + st.m + "</b>: up to " + st.m + " children and " + (st.m - 1) + " keys per node, at least " + minKeys(st) + " keys in every non-root node";
+      ? "a <b>(2,4)-tree</b> (2–4 children and 1–3 keys per node)"
+      : "a <b>B-tree of order " + st.m + "</b> (≤ " + st.m + " children, " + minKeys(st) + "–" + (st.m - 1) + " keys per non-root node)";
   }
 
   function mFind(st, k, c) {
@@ -1301,7 +1301,7 @@
         return { node: n, i: i };
       }
       if (!n.kids.length) {
-        c.at(["found^", "leaf"]).multi(st, { [n.id]: "swap" }, "This is a <b>leaf</b> and " + k + " is not in it, so " + k + " is not in the tree. Every search path ends at a leaf, and all leaves are at the <b>same depth</b>.");
+        c.at(["found^", "leaf"]).multi(st, { [n.id]: "swap" }, "A <b>leaf</b> without " + k + ", so " + k + " isn't in the tree. Every search ends at a leaf, all at the <b>same depth</b>.");
         return { node: null, leaf: n, i: i };
       }
       c.at(["found^", "leaf^", "down"]).multi(st, { [n.id]: "visit" }, i < n.keys.length
@@ -1325,14 +1325,14 @@
       const nr = mnode([up], [n, right]);
       n.p = nr; right.p = nr;
       st.root = nr;
-      c.at(["split", "root"]).multi(st, { [nr.id]: "done", [n.id]: "cmp", [right.id]: "cmp" }, "<b>Split the root.</b> The middle key <b>" + up + "</b> becomes a brand-new root with the two halves as its children. This is the <em>only</em> way a B-tree grows taller, and it grows at the top, which is why all leaves stay at the same depth.");
+      c.at(["split", "root"]).multi(st, { [nr.id]: "done", [n.id]: "cmp", [right.id]: "cmp" }, "<b>Split the root.</b> Middle key <b>" + up + "</b> becomes a new root over the two halves. This is the <em>only</em> way a B-tree grows taller, so all leaves stay level.");
     } else {
       const p = n.p;
       const idx = p.kids.indexOf(n);
       p.keys.splice(idx, 0, up);
       p.kids.splice(idx + 1, 0, right);
       right.p = p;
-      c.at(["split", "root^"]).multi(st, { [p.id]: "active", [n.id]: "cmp", [right.id]: "cmp" }, "<b>Split.</b> The node overflowed, so keep the left half here, put the right half in a new sibling, and push the middle key <b>" + up + "</b> up into the parent. The parent may now overflow too: splits cascade upward.", { keyMark: { node: p.id, i: idx, cls: "done" } });
+      c.at(["split", "root^"]).multi(st, { [p.id]: "active", [n.id]: "cmp", [right.id]: "cmp" }, "<b>Split.</b> Keep the left half, move the right half to a new sibling, and push middle key <b>" + up + "</b> into the parent, which may overflow in turn.", { keyMark: { node: p.id, i: idx, cls: "done" } });
       if (p.keys.length > maxKeys(st)) { c.at("over").multi(st, { [p.id]: "swap" }, "The parent now has " + p.keys.length + " keys: it overflows too, so split it as well."); mSplit(st, p, c); }
     }
   }
@@ -1344,7 +1344,7 @@
       c.at("put").multi(st, { [st.root.id]: "done" }, "Empty tree: " + k + " becomes the root, which is also the only leaf.");
       return;
     }
-    c.at("find").multi(st, {}, "<b>insert(" + k + ")</b> into " + mDescribe(st) + ". Insertion always happens in a <b>leaf</b>; find it first.");
+    c.at("find").multi(st, {}, "<b>insert(" + k + ")</b> into " + mDescribe(st) + ". Inserts go in a <b>leaf</b>; find it first.");
     const f = mFind(st, k, c);
     if (f.node) { c.at("find").multi(st, { [f.node.id]: "swap" }, k + " is already present: duplicates are not stored."); return; }
     const leaf = f.leaf;
@@ -1357,7 +1357,7 @@
       mSplit(st, leaf, c);
     }
     c.at("over").multi(st, {}, "No node is over the limit, so the overflow loop ends.");
-    c.at(null).multi(st, {}, "Insert complete. Height is " + mHeight(st.root) + ", and every leaf is still at exactly that depth: a B-tree is <b>perfectly height-balanced by construction</b>. Cost O(log n).");
+    c.at(null).multi(st, {}, "Insert complete. Height is " + mHeight(st.root) + ", with every leaf at that depth: B-trees are <b>always height-balanced</b>. O(log n).");
   }
 
   function mDelete(st, k, c) {
@@ -1575,15 +1575,15 @@
      ============================================================ */
   const BLURB = {
     trav:
-      "<p>Trees are recursive: a tree is a node plus two smaller trees. So most tree code is recursive too, and the call stack on the left of the tree shows every call that's waiting.</p><p>All four traversals do the same O(n) walk. They differ only in <em>when</em> they report a node.</p><p>Pre-order reports on the way in, in-order between the two subtrees, post-order on the way out. Level-order swaps recursion for a queue.</p><p><b>height</b> and <b>size</b> are recursion that returns a value. Each call combines its children's answers.</p>",
+      "<p><b>A family tree is made of smaller family trees.</b> So tree code is recursive, and the call stack beside the tree shows who's waiting. Every traversal visits each node once, O(n); they differ in <em>when</em> they report it: pre-order on the way in, in-order in between, post-order on the way out. Level-order reads row by row with a queue.</p>",
     bst:
-      "<p>A binary search tree keeps every key in the left subtree smaller and every key in the right subtree larger.</p><p>That makes search, insert and delete <b>O(h)</b> time. For a bushy tree, that's O(log n). For a degenerate one, it's <b>O(n)</b>.</p><p>Switch the code style to <b>recursive</b> to see each operation as calls on smaller subtrees (O(h) stack space).</p><p>The <b>predecessor</b> of a key is the next smaller key; the <b>successor</b> is the next larger one. Deleting a node with two children copies one of them into it.</p><p>Nothing in the BST rules prevents degeneracy. That gap is the whole reason AVL trees exist.</p>",
+      "<p><b>“Higher or lower?”</b> Smaller keys go left and larger go right, so each comparison rules out a whole side: O(h). A bushy tree gives O(log n), but insert sorted keys and it becomes a line, O(n). Nothing in the rules prevents that, which is why AVL trees exist.</p>",
     avl:
-      "<p>An AVL tree is a BST that also keeps every node's balance factor in {−1, 0, +1}.</p><p>When an insert or delete breaks that rule, one or two <b>rotations</b> repair it. Rotations keep the in-order sequence and reduce height.</p><p>Height stays ≤ 1.44·log₂n, so every operation is guaranteed O(log n) time.</p>",
+      "<p><b>A BST that keeps its posture.</b> At every node the two subtrees differ in height by at most 1. When an insert or delete tips that, one or two rotations straighten it without changing the order. Height stays ≤ 1.44·log₂n, so every operation is O(log n).</p>",
     t24:
-      "<p>A (2,4)-tree stores 1–3 keys per node and keeps <b>every leaf at the same depth</b>.</p><p>An overflow on insert gets fixed by a <b>split</b> that pushes the middle key up. An underflow on delete gets fixed by a <b>transfer</b> from a sibling or a <b>fusion</b> with one.</p><p>Height sits between log₄n and log₂n, so operations cost O(log n) with no rotations at all.</p>",
+      "<p><b>Shelves that hold 1 to 3 books.</b> A full shelf splits and sends its middle book up a level; an emptied shelf borrows from a neighbour or merges with it. All leaves stay at the same depth, so operations are O(log n) with no rotations.</p>",
     btree:
-      "<p>A B-tree is the same idea with a bigger fan-out. The fan-out is chosen so one node fills one disk block or memory page.</p><p>With order 100, a tree of a million keys is only 3 levels deep. A lookup costs 3 block reads.</p><p>That's why every database index and filesystem in the world is a B-tree or B⁺-tree.</p>",
+      "<p><b>The same shelves, built as wide as a disk block.</b> With order 100, a million keys fit in 3 levels, so a lookup reads 3 blocks. That's why database indexes and file systems are B-trees.</p>",
   };
 
   /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
