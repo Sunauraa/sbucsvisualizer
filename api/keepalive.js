@@ -13,7 +13,7 @@
 
    Settings (Vercel → Settings → Environment Variables):
      SUPABASE_URL           https://<ref>.supabase.co
-     SUPABASE_ANON_KEY      the project's public anon key
+     SUPABASE_ANON_KEY      the project's public key (anon, or the newer sb_publishable_…)
      SUPABASE_ACCESS_TOKEN  a Supabase access token that can restore the project
      CRON_SECRET            any long random string; Vercel Cron sends it, so
                             nobody else can make this run
@@ -52,7 +52,9 @@ module.exports = async function handler(req, res) {
     try {
       const r = await call(base + "/rest/v1/rpc/ping", {
         method: "POST",
-        headers: { apikey: env.SUPABASE_ANON_KEY, authorization: "Bearer " + env.SUPABASE_ANON_KEY, "content-type": "application/json" },
+        /* the key goes in apikey only: Supabase's newer keys (sb_publishable_…) aren't JWTs, so they're refused in an
+           Authorization header; apikey alone works for both the old anon key and the new one */
+        headers: { apikey: env.SUPABASE_ANON_KEY, "content-type": "application/json" },
         body: "{}",
       });
       if (r.ok) ok++; else last = "ping answered " + r.status;

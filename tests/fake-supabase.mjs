@@ -90,7 +90,11 @@ export function fakeSupabase() {
     if (path === "/auth/v1/logout") { st.logouts++; st.access.delete((req.headers.authorization || "").replace(/^Bearer /, "")); return json(res, 204); }
     /* ---------- database ---------- */
     if (st.down) return json(res, 503, { message: "project paused" });
-    if (path === "/rest/v1/rpc/ping") { st.pings++; return json(res, 200, new Date().toISOString()); }
+    if (path === "/rest/v1/rpc/ping") {
+      /* like Supabase with its newer keys: a key that isn't a JWT is refused in the Authorization header */
+      if (/^Bearer sb_|^Bearer anon-/.test(req.headers.authorization || "")) return json(res, 401, { message: "Invalid JWT" });
+      st.pings++; return json(res, 200, new Date().toISOString());
+    }
     const user = who(req);
     if (!user) return json(res, 401, { message: "JWT expired" });
     if (path === "/rest/v1/rpc/delete_me") {
