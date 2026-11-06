@@ -51,7 +51,7 @@
      Paste your Supabase project's URL and its public "anon" key (Project Settings → API). Both are meant to be
      public: each student's rows are protected by the database's row-level security (supabase/schema.sql).
      While these are empty there is no Sign in button and the site works exactly as before. */
-  DSA.ACCOUNT = { url: "", anonKey: "" };
+  DSA.ACCOUNT = { url: "https://dreipmmojqlhphopzocc.supabase.co", anonKey: "sb_publishable_0vYgxR2W4nxqupM8ksWoTw_Q0jQykSA" };
 
   /* ---------------- events ----------------
      Modules and tools announce what a student does; account.js listens to build the progress map.
