@@ -295,7 +295,7 @@
     code: CODE.selection,
     big: ["O(n²) time (worst)", "O(1) space", "every case O(n²)", "not stable"],
     blurb:
-      "<p><b>Picking teams: always take the best one left.</b> Find the minimum of the unsorted part and swap it to the front. Always n(n−1)/2 comparisons, but at most n − 1 swaps, the fewest of the simple sorts.</p>",
+      "<p><b>Picking teams: always take the best one left.</b> Find the minimum of the unsorted part and swap it to the front. Always n(n−1)/2 comparisons, but at most n − 1 swaps.</p>",
     run(a, s) {
       const n = a.length;
       for (let i = 0; i < n - 1; i++) {
@@ -715,6 +715,7 @@
     q("algo-big").innerHTML = A.big.map((b) => "<span>" + b + "</span>").join("");
     dock.show(id);
     D.practiceShow(id);
+    D.notesFor(id);
     D.$$("#algo-tabs button").forEach((b) => b.classList.toggle("active", b.dataset.id === id));
     if (A.maxN && arr.length > A.maxN) {
       newArray(A.maxN, "random");

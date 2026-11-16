@@ -694,7 +694,7 @@
     },
     quad: {
       label: "Quadratic probing",
-      blurb: "<p><b>Parking, but jumping 1, 4, 9 … spots ahead</b> instead of next door, which breaks up the runs. Keys that start at the same spot still follow the same path, and a free spot is only guaranteed when m is prime and α &lt; ½.</p>",
+      blurb: "<p><b>Parking by jumping 1, 4, 9 … spots ahead</b> when your spot is taken, so taken spots don't bunch into long runs. Keys that start at the same spot still follow the same path, and a free spot is only guaranteed when m is prime and α &lt; ½.</p>",
       formula: "index = (h(k) + i²) mod m   for i = 0, 1, 2, …",
     },
   };
@@ -870,6 +870,7 @@
       shareClass();
       dock.show(listing("put"));
       D.practiceShow(id);
+      D.notesFor(id);
       still("Switched to <b>" + MODES[id].label + "</b> and reinserted the " + keys.length + " existing key(s).");
     });
 

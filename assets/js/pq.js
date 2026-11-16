@@ -803,9 +803,9 @@
      ============================================================ */
   const NOTES = {
     unsorted: "<b>Unsorted list: a messy to-do pile.</b> Tossing a task on is O(1), but finding the most urgent one means checking them all: O(n). Good when you add far more often than you remove.",
-    sorted: "<b>Sorted list: a to-do list kept in order.</b> Adding means finding the right spot, O(n), but the most urgent task is always first, so min and removeMin are O(1). The mirror image of the pile.",
+    sorted: "<b>Sorted list: a to-do list kept in order.</b> Adding means finding the right spot, O(n), but the most urgent task is always first, so min and removeMin are O(1).",
     aheap: "<b>Array heap: an org chart where every boss outranks their team.</b> The top is always the minimum, and insert and removeMin each fix one path from top to bottom: O(log n). Stored row by row in an array, the children of i sit at 2i+1 and 2i+2, so no pointers are needed. Bottom-up heapify builds one in O(n).",
-    theap: "<b>Linked heap: the same org chart, built from nodes.</b> With no array there's no “slot n”. To find the last spot, write n in binary, drop the leading 1, and read the bits as turns: 0 = left, 1 = right. Still O(log n), with three pointers per node.",
+    theap: "<b>Linked heap: an org chart where every boss outranks their team, built from nodes.</b> With no array there's no “slot n”. To find the last spot, write n in binary, drop the leading 1, and read the bits as turns: 0 = left, 1 = right. Insert and removeMin are O(log n), with three pointers per node.",
     sort: "<b>PQ-sort: queue everything, then serve in order.</b> Insert every key, then removeMin them all. The queue you plug in decides the sort: unsorted list gives selection sort, sorted list gives insertion sort, and a heap gives heap sort, O(n log n).",
   };
 
@@ -841,6 +841,7 @@
     tab = id;
     D.showFor(id);
     D.practiceShow(id);
+    D.notesFor(id);
     q("notes").innerHTML = "<p class='blurb'>" + NOTES[id] + "</p>";
     dock.show({ unsorted: "u_removeMin", sorted: "s_insert", aheap: "a_insert", theap: "t_insert", sort: "sort_" + SORT.algo }[id]);
     still({

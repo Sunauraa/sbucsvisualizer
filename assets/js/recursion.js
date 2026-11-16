@@ -260,7 +260,7 @@
     ],
     big: ["T(n) = T(n/2) + O(1)", "O(log n) time", "O(log n) stack space"],
     blurb:
-      "<p><b>Doubling up instead of counting up.</b> x<sup>13</sup> = x · (x<sup>6</sup>)², and x<sup>6</sup> = (x<sup>3</sup>)²: halve the exponent each call instead of multiplying n times. That's log₂n levels, like binary search. A negative n computes 1 / x<sup>−n</sup>.</p>",
+      "<p><b>Doubling up instead of counting up.</b> x<sup>13</sup> = x · (x<sup>6</sup>)², and x<sup>6</sup> = (x<sup>3</sup>)²: halve the exponent each call instead of multiplying n times. That's log₂n levels. A negative n computes 1 / x<sup>−n</sup>.</p>",
     code: {
       pseudo: [
         "power(x, n): @@fn",
@@ -925,6 +925,7 @@
     buildInputs(id);
     setMode(mode);
     D.practiceShow(id);
+    D.notesFor(id);
     rebuild(false);
   }
 

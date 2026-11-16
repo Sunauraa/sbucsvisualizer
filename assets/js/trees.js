@@ -1577,13 +1577,13 @@
     trav:
       "<p><b>A family tree is made of smaller family trees.</b> So tree code is recursive, and the call stack beside the tree shows who's waiting. Every traversal visits each node once, O(n); they differ in <em>when</em> they report it: pre-order on the way in, in-order in between, post-order on the way out. Level-order reads row by row with a queue.</p>",
     bst:
-      "<p><b>“Higher or lower?”</b> Smaller keys go left and larger go right, so each comparison rules out a whole side: O(h). A bushy tree gives O(log n), but insert sorted keys and it becomes a line, O(n). Nothing in the rules prevents that, which is why AVL trees exist.</p>",
+      "<p><b>“Higher or lower?”</b> Smaller keys go left and larger go right, so each comparison rules out a whole side: O(h). A bushy tree gives O(log n), but insert sorted keys and it becomes a line, O(n). Nothing in the rules prevents that.</p>",
     avl:
       "<p><b>A BST that keeps its posture.</b> At every node the two subtrees differ in height by at most 1. When an insert or delete tips that, one or two rotations straighten it without changing the order. Height stays ≤ 1.44·log₂n, so every operation is O(log n).</p>",
     t24:
       "<p><b>Shelves that hold 1 to 3 books.</b> A full shelf splits and sends its middle book up a level; an emptied shelf borrows from a neighbour or merges with it. All leaves stay at the same depth, so operations are O(log n) with no rotations.</p>",
     btree:
-      "<p><b>The same shelves, built as wide as a disk block.</b> With order 100, a million keys fit in 3 levels, so a lookup reads 3 blocks. That's why database indexes and file systems are B-trees.</p>",
+      "<p><b>Shelves as wide as a disk block.</b> Each node holds up to m − 1 keys; a full one splits and sends its middle key up, so all leaves stay level. With order 100, a million keys fit in 3 levels, so a lookup reads 3 blocks. That's why database indexes and file systems are B-trees.</p>",
   };
 
   /* LeetCode practice for each part (numbers, titles and difficulties checked against LeetCode) */
@@ -1853,6 +1853,7 @@
       q("del-with-wrap").style.display = id === "bst" || id === "avl" ? "flex" : "none";
       dock.show({ trav: "trav_in", bst: bstRec ? "bst_insert_rec" : "bst_insert", avl: "avl_insert", t24: "m_insert", btree: "m_insert" }[id]);
       D.practiceShow(id);
+      D.notesFor(id);
       still("Showing the <b>" + (id === "trav" ? "traversal" : id === "bst" ? "BST" : id === "avl" ? "AVL" : id === "t24" ? "(2,4)" : "B-tree") + "</b> demo.");
     });
 

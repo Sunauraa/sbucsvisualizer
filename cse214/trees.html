@@ -6,8 +6,8 @@
 <title>Trees</title>
 <meta name="description" content="Step through traversals, binary search trees, AVL rotations, (2,4)-trees and B-trees, with a live call stack.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=01d6ba65c4b4">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=01d6ba65c4b4">
+<link rel="stylesheet" href="../assets/css/style.css?v=28a05b703d32">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=28a05b703d32">
 </head>
 <body>
 
@@ -121,10 +121,9 @@
   <section class="about" id="about" aria-labelledby="about-h">
     <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">A tree is a family tree of smaller family trees, and a search tree is a game of “higher or lower?”. Everything here is about keeping that game short: balanced trees keep every answer O(log n) questions away.</p>
     <div class="blurb" id="blurb"></div>
-  <div class="row" style="margin-bottom:1.1rem">
-    <div class="col">
+  <div class="row" style="margin-bottom:1.1rem" data-part="avl t24 btree">
+    <div class="col" data-part="avl">
       <div class="panel" style="height:100%">
         <h3>The four rotation cases</h3>
         <p class="small muted">Find the lowest unbalanced node; the two steps from it toward the new key pick the rotation:</p>
@@ -140,10 +139,10 @@
         <p class="small muted" style="margin:.6rem 0 0">A rotation is an O(1) pointer swap that keeps the order. Insert needs at most one; delete may need one per level.</p>
       </div>
     </div>
-    <div class="col">
+    <div class="col" data-part="t24 btree">
       <div class="panel" style="height:100%">
         <h3>Overflow, underflow, and why heights match</h3>
-        <p class="small muted">Multiway trees never rotate: shelves change how many keys they hold, so every leaf stays at the same depth.</p>
+        <p class="small muted">Nodes change how many keys they hold instead of rotating, so every leaf stays at the same depth.</p>
         <dl class="kv">
           <dt>overflow</dt><dd>too many keys after an insert → <b>split</b>, middle key goes up</dd>
           <dt>underflow</dt><dd>too few keys after a delete → <b>transfer</b> from a sibling that has spare keys</dd>
@@ -151,26 +150,28 @@
           <dt>grows taller</dt><dd>only when the <em>root</em> splits, so all leaves rise together</dd>
           <dt>grows shorter</dt><dd>only when a fusion empties the root</dd>
         </dl>
-        <p class="small muted" style="margin:.6rem 0 0">Height: between log₄n and log₂n for a (2,4)-tree; ≤ log<sub>⌈m/2⌉</sub>n for a B-tree, so 3 levels hold a million keys at m = 100.</p>
+        <p class="small muted" style="margin:.6rem 0 0" data-part="t24">Height: between log₄n and log₂n.</p>
+        <p class="small muted" style="margin:.6rem 0 0" data-part="btree">Height: ≤ log<sub>⌈m/2⌉</sub>n, so 3 levels hold a million keys at m = 100.</p>
       </div>
     </div>
   </div>
 
   <div class="panel" style="margin-bottom:2rem">
-    <h3>All five, side by side: time / space</h3>
-    <p class="small muted" style="margin-top:-.3rem">Each operation cell is <b>time / extra space</b>, worst case, for n keys and height h. The recursive BST versions need O(h) space instead of O(1) because of their call stack.</p>
+    <h3>Time / space of every operation</h3>
+    <p class="small muted" style="margin-top:-.3rem">Each operation cell is <b>time / extra space</b>, worst case, for n keys and height h.<span data-part="bst"> The recursive versions need O(h) space instead of O(1) because of their call stack.</span></p>
     <div style="overflow-x:auto" tabindex="0">
-      <table class="tbl" style="min-width:820px">
+      <table class="tbl" style="min-width:640px">
         <tr><th>Structure</th><th>Search</th><th>Insert</th><th>Delete</th><th>Predecessor / successor</th><th>Height</th><th>Rebalancing by</th></tr>
-        <tr><td>Binary tree (any shape)</td><td>O(n) / O(h)</td><td>O(1) / O(1) if position known</td><td>O(n) / O(h)</td><td>O(n) / O(h)</td><td>n−1 … ⌊log₂n⌋</td><td>nothing</td></tr>
-        <tr><td>Binary search tree</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>up to n−1</td><td>nothing</td></tr>
-        <tr><td>AVL tree</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td>≤ 1.44 log₂n</td><td>rotations</td></tr>
-        <tr><td>(2,4)-tree</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td>log₄n … log₂n</td><td>split / transfer / fusion</td></tr>
-        <tr><td>B-tree, order m</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td>≤ log<sub>⌈m/2⌉</sub>n</td><td>split / transfer / fusion</td></tr>
-        <tr><td>Traversal, height, size</td><td colspan="4">O(n) / O(h) for the recursive ones (the call stack); level-order O(n) / O(n) for its queue</td><td></td><td></td></tr>
+        <tr data-part="trav"><td>Binary tree (any shape)</td><td>O(n) / O(h)</td><td>O(1) / O(1) if position known</td><td>O(n) / O(h)</td><td>O(n) / O(h)</td><td>n−1 … ⌊log₂n⌋</td><td>nothing</td></tr>
+        <tr data-part="bst"><td>Binary search tree</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>O(h) / O(1)</td><td>up to n−1</td><td>nothing</td></tr>
+        <tr data-part="avl"><td>AVL tree</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td>≤ 1.44 log₂n</td><td>rotations</td></tr>
+        <tr data-part="t24"><td>(2,4)-tree</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td><td>log₄n … log₂n</td><td>split / transfer / fusion</td></tr>
+        <tr data-part="btree"><td>B-tree, order m</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td class="one">O(m log n) / O(1)</td><td>≤ log<sub>⌈m/2⌉</sub>n</td><td>split / transfer / fusion</td></tr>
+        <tr data-part="trav"><td>Traversal, height, size</td><td colspan="4">O(n) / O(h) for the recursive ones (the call stack); level-order O(n) / O(n) for its queue</td><td></td><td></td></tr>
       </table>
     </div>
-    <p class="small muted" style="margin:.6rem 0 0">AVL trees are more tightly balanced, so lookups are faster; (2,4) and red-black trees (the same thing, recoloured) do less work per update.</p>
+    <p class="small muted" style="margin:.6rem 0 0" data-part="avl">Tight balance keeps lookups short; the price is rotations on updates.</p>
+    <p class="small muted" style="margin:.6rem 0 0" data-part="t24">A red-black tree is a (2,4)-tree drawn with binary nodes and colours, so it costs the same.</p>
   </div>
     </div>
   </section>
@@ -184,12 +185,12 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/account.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/motion.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/tutor.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/quiz.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/playground.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/trees.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/core.js?v=28a05b703d32"></script>
+<script src="../assets/js/account.js?v=28a05b703d32"></script>
+<script src="../assets/js/motion.js?v=28a05b703d32"></script>
+<script src="../assets/js/tutor.js?v=28a05b703d32"></script>
+<script src="../assets/js/quiz.js?v=28a05b703d32"></script>
+<script src="../assets/js/playground.js?v=28a05b703d32"></script>
+<script src="../assets/js/trees.js?v=28a05b703d32"></script>
 </body>
 </html>

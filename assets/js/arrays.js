@@ -1735,6 +1735,7 @@
     tab = id;
     D.showFor(id);
     D.practiceShow(id);
+    D.notesFor(id);
     q("notes").innerHTML = NOTES[id];
     shareClass(id);
     const first = {

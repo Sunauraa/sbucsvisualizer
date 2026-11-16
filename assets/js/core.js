@@ -760,6 +760,31 @@
     });
   };
 
+  /** Study notes show only the selected part. In #about, [data-part="a b"] shows for those parts;
+      a table's data-cols lists each column's parts ("_" = always, "a,b" = either), and other parts'
+      columns are hidden. A row left with nothing but "–" disappears too. */
+  DSA.notesFor = function (id) {
+    const box = DSA.$("#about");
+    if (!box) return;
+    const has = (list, sep) => list === "_" || list.split(sep).indexOf(id) >= 0;
+    const show = (n, on) => (n.style.display = on ? "" : "none");
+    DSA.$$("[data-part]", box).forEach((n) => { if (n.tagName !== "TR") show(n, has(n.dataset.part, /\s+/)); });
+    DSA.$$("table", box).forEach((t) => {
+      const cols = t.dataset.cols ? t.dataset.cols.split(/\s+/).map((c) => has(c, ",")) : null;
+      DSA.$$("tr", t).forEach((tr) => {
+        let at = 0, dashes = true, cells = 0;
+        Array.from(tr.cells).forEach((td, k) => {
+          const span = +(td.dataset.span || (td.dataset.span = td.colSpan));
+          const vis = cols ? cols.slice(at, at + span).filter(Boolean).length : span;
+          at += span;
+          show(td, vis > 0);
+          if (vis > 0) { td.colSpan = vis; if (k > 0) { cells++; if (td.textContent.trim() !== "–") dashes = false; } }
+        });
+        show(tr, (!tr.dataset.part || has(tr.dataset.part, /\s+/)) && !(cells && dashes));
+      });
+    });
+  };
+
   /* ---------------- LeetCode practice ----------------
      Practice({ key: { label, note?, items: [[number, "Title", "slug", "Easy|Medium|Hard", "why"], ...] } })
      registers a page's lists; practiceShow(key) shows the list for the part the reader is on.

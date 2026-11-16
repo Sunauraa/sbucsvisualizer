@@ -6,8 +6,8 @@
 <title>Priority Queues</title>
 <meta name="description" content="Compare priority queues built on lists and heaps, watch up-heap and down-heap, and see PQ-sort become selection, insertion or heap sort.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=01d6ba65c4b4">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=01d6ba65c4b4">
+<link rel="stylesheet" href="../assets/css/style.css?v=28a05b703d32">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=28a05b703d32">
 </head>
 <body>
 
@@ -76,15 +76,15 @@
   <section class="about" id="about" aria-labelledby="about-h">
     <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">A priority queue is an ER triage desk: patients arrive in any order, and the most urgent is always seen next. Four builds put the work in different places, and each one doubles as a sorting algorithm.</p>
+    <p class="intro">A priority queue is an ER triage desk: patients arrive in any order, and the most urgent is always seen next.</p>
     <div id="notes"></div>
   <div class="row" style="margin-bottom:2rem">
-    <div class="col">
+    <div class="col" data-part="unsorted sorted aheap theap">
       <div class="panel" style="height:100%">
-        <h3>Four implementations compared</h3>
+        <h3>Time / space of every operation</h3>
         <p class="small muted" style="margin-top:-.3rem">Each cell is <b>time / extra space</b>, worst case, for n keys.</p>
         <div style="overflow-x:auto" tabindex="0">
-          <table class="tbl" style="min-width:560px">
+          <table class="tbl" data-cols="_ unsorted sorted aheap theap">
             <tr><th>Operation</th><th>Unsorted list</th><th>Sorted list</th><th>Array heap</th><th>Tree heap</th></tr>
             <tr><td>insert</td><td class="one">O(1) / O(1)</td><td>O(n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td></tr>
             <tr><td>min</td><td>O(n) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
@@ -93,7 +93,7 @@
             <tr><td>memory for n keys</td><td>O(n): key + list link(s)</td><td>O(n): key + list link(s)</td><td class="one">O(n): keys only</td><td>O(n): key + 3 pointers</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.6rem 0 0">A heap never costs O(n) for anything, which is why Java's <span class="mono">PriorityQueue</span> is one.</p>
+        <p class="small muted" style="margin:.6rem 0 0" data-part="aheap theap">No single insert or removeMin costs more than O(log n), which is why Java's <span class="mono">PriorityQueue</span> is a heap.</p>
       </div>
     </div>
     <div class="col">
@@ -102,13 +102,13 @@
         <div style="overflow-x:auto" tabindex="0">
           <table class="tbl" style="min-width:470px">
             <tr><th>PQ used</th><th>Sort you get</th><th>Phase 1<br>(n inserts)</th><th>Phase 2<br>(n removeMins)</th><th>Total time / space</th></tr>
-            <tr><td>unsorted list</td><td>selection sort</td><td class="one">O(n)</td><td>O(n²)</td><td>O(n²) / O(n)</td></tr>
-            <tr><td>sorted list</td><td>insertion sort</td><td>O(n²)</td><td class="one">O(n)</td><td>O(n²) / O(n)</td></tr>
-            <tr><td>heap</td><td>heap sort</td><td class="one">O(n log n)</td><td class="one">O(n log n)</td><td class="one">O(n log n) / O(n)</td></tr>
+            <tr data-part="unsorted sort"><td>unsorted list</td><td>selection sort</td><td class="one">O(n)</td><td>O(n²)</td><td>O(n²) / O(n)</td></tr>
+            <tr data-part="sorted sort"><td>sorted list</td><td>insertion sort</td><td>O(n²)</td><td class="one">O(n)</td><td>O(n²) / O(n)</td></tr>
+            <tr data-part="aheap theap sort"><td>heap</td><td>heap sort</td><td class="one">O(n log n)</td><td class="one">O(n log n)</td><td class="one">O(n log n) / O(n)</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.6rem 0 0">Heap sort can also run <em>in place</em> in O(1) extra space; the Sorting module shows how.</p>
-        <dl class="kv" style="margin-top:.7rem">
+        <p class="small muted" style="margin:.6rem 0 0" data-part="aheap theap sort">Heap sort can also run <em>in place</em> in O(1) extra space; the Sorting module shows how.</p>
+        <dl class="kv" style="margin-top:.7rem" data-part="aheap theap">
           <dt>heap order</dt><dd>every node's key ≤ its children's keys</dd>
           <dt>complete</dt><dd>all levels full except the last, which fills left to right</dd>
           <dt>height</dt><dd>⌊log₂ n⌋, guaranteed by completeness</dd>
@@ -128,12 +128,12 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/account.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/motion.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/tutor.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/quiz.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/playground.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/pq.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/core.js?v=28a05b703d32"></script>
+<script src="../assets/js/account.js?v=28a05b703d32"></script>
+<script src="../assets/js/motion.js?v=28a05b703d32"></script>
+<script src="../assets/js/tutor.js?v=28a05b703d32"></script>
+<script src="../assets/js/quiz.js?v=28a05b703d32"></script>
+<script src="../assets/js/playground.js?v=28a05b703d32"></script>
+<script src="../assets/js/pq.js?v=28a05b703d32"></script>
 </body>
 </html>

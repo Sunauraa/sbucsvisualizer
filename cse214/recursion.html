@@ -6,8 +6,8 @@
 <title>Recursion</title>
 <meta name="description" content="Watch the call stack and recursion tree for factorial, Fibonacci, gcd, fast power, Towers of Hanoi, binary search and permutations.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=01d6ba65c4b4">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=01d6ba65c4b4">
+<link rel="stylesheet" href="../assets/css/style.css?v=28a05b703d32">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=28a05b703d32">
 </head>
 <body>
 
@@ -79,22 +79,22 @@
       <div class="blurb" id="fn-blurb" style="margin:0"></div>
     </div>
   <div class="panel">
-    <h3>Recursion vs iteration</h3>
+    <h3>Recursive or iterative</h3>
     <div style="overflow-x:auto" tabindex="0">
       <table class="tbl" style="min-width:640px">
         <tr><th>Function</th><th>Recursive: time / stack space</th><th>Iterative: time / extra space</th><th>How the loop version works</th></tr>
-        <tr><td>factorial</td><td>O(n) / O(n)</td><td>O(n) / <span style="color:var(--t-done)">O(1)</span></td><td>accumulate the product upwards</td></tr>
-        <tr><td>fib (naive)</td><td>O(2ⁿ) / O(n)</td><td><span style="color:var(--t-done)">O(n) / O(1)</span></td><td>keep only the last two values</td></tr>
-        <tr><td>fib (memoised)</td><td>O(n) / O(n)</td><td>O(n) / O(n)</td><td>fill the same table bottom-up</td></tr>
-        <tr><td>gcd</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--t-done)">O(1)</span></td><td>tail recursion → a while loop</td></tr>
-        <tr><td>fast power</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--t-done)">O(1)</span></td><td>read the bits of n</td></tr>
-        <tr><td>binary search</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--t-done)">O(1)</span></td><td>move lo / hi instead of recursing</td></tr>
-        <tr><td>Towers of Hanoi</td><td>O(2ⁿ) / O(n)</td><td>O(2ⁿ) / O(n)</td><td>an explicit stack of tasks</td></tr>
-        <tr><td>permutations</td><td>O(n·n!) / O(n)</td><td>O(n·n!) / O(n²)</td><td>an explicit stack of states</td></tr>
+        <tr data-part="factorial"><td>factorial</td><td>O(n) / O(n)</td><td>O(n) / <span style="color:var(--t-done)">O(1)</span></td><td>accumulate the product upwards</td></tr>
+        <tr data-part="fib"><td>fib (naive)</td><td>O(2ⁿ) / O(n)</td><td><span style="color:var(--t-done)">O(n) / O(1)</span></td><td>keep only the last two values</td></tr>
+        <tr data-part="fibmemo"><td>fib (memoised)</td><td>O(n) / O(n)</td><td>O(n) / O(n)</td><td>fill the same table bottom-up</td></tr>
+        <tr data-part="gcd"><td>gcd</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--t-done)">O(1)</span></td><td>tail recursion → a while loop</td></tr>
+        <tr data-part="power"><td>fast power</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--t-done)">O(1)</span></td><td>read the bits of n</td></tr>
+        <tr data-part="bsearch"><td>binary search</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--t-done)">O(1)</span></td><td>move lo / hi instead of recursing</td></tr>
+        <tr data-part="hanoi"><td>Towers of Hanoi</td><td>O(2ⁿ) / O(n)</td><td>O(2ⁿ) / O(n)</td><td>an explicit stack of tasks</td></tr>
+        <tr data-part="perms"><td>permutations</td><td>O(n·n!) / O(n)</td><td>O(n·n!) / O(n²)</td><td>an explicit stack of states</td></tr>
       </table>
     </div>
-    <p class="small muted" style="margin:.6rem 0 .4rem">Worst case throughout; recursion's space is its stack of waiting frames. When the call is the very last step (<b>tail recursion</b>, as in gcd), a loop does the same in O(1) space.</p>
-    <p class="small muted" style="margin-bottom:0">Recursion reads best for branching problems (Hanoi, trees, permutations). Loops save space and can't hit <span class="mono">StackOverflowError</span>.</p>
+    <p class="small muted" style="margin:.6rem 0 .4rem">Worst case throughout; recursion's space is its stack of waiting frames. When the call is the very last step (<b>tail recursion</b>), a loop does the same in O(1) space.</p>
+    <p class="small muted" style="margin-bottom:0">Recursion reads best when a problem branches. Loops save space and can't hit <span class="mono">StackOverflowError</span>.</p>
   </div>
 
   <div class="panel" style="margin-bottom:2rem">
@@ -113,18 +113,18 @@
         <p class="small muted">Trust the smaller call to work (the "leap of faith"), then build your answer from it. Induction proves the trust is safe.</p>
       </div>
     </div>
+    <div data-part="factorial fib power bsearch hanoi perms">
     <hr class="hr">
-    <h4 style="font-size:1rem;margin:0 0 .5rem">Reading the shape of the tree</h4>
+    <h4 style="font-size:1rem;margin:0 0 .5rem">Reading the shape of the call tree</h4>
     <div style="overflow-x:auto" tabindex="0">
-      <table class="tbl" style="min-width:600px">
-        <tr><th>Recurrence</th><th>Tree shape</th><th>Total time</th><th>Example</th></tr>
-        <tr><td>T(n) = T(n−1) + O(1)</td><td>a chain of depth n</td><td>O(n)</td><td>factorial, list length</td></tr>
-        <tr><td>T(n) = T(n/2) + O(1)</td><td>a chain of depth log n</td><td>O(log n)</td><td>binary search, fast power</td></tr>
-        <tr><td>T(n) = 2T(n/2) + O(n)</td><td>log n full levels of n work</td><td>O(n log n)</td><td>merge sort</td></tr>
-        <tr><td>T(n) = 2T(n−1) + O(1)</td><td>complete binary tree of depth n</td><td>O(2ⁿ)</td><td>Hanoi, naive Fibonacci</td></tr>
-        <tr><td>T(n) = 3T(2n/3) + O(1)</td><td>branching 3, shrinking slowly</td><td>O(n<sup>2.71</sup>)</td><td>two-third sort</td></tr>
-        <tr><td>T(n) = n·T(n−1) + O(1)</td><td>n! leaves</td><td>O(n·n!)</td><td>permutations</td></tr>
+      <table class="tbl">
+        <tr><th>Recurrence</th><th>Tree shape</th><th>Total time</th></tr>
+        <tr data-part="factorial"><td>T(n) = T(n−1) + O(1)</td><td>a chain of depth n</td><td>O(n)</td></tr>
+        <tr data-part="power bsearch"><td>T(n) = T(n/2) + O(1)</td><td>a chain of depth log n</td><td>O(log n)</td></tr>
+        <tr data-part="fib hanoi"><td>T(n) = 2T(n−1) + O(1)</td><td>complete binary tree of depth n</td><td>O(2ⁿ)</td></tr>
+        <tr data-part="perms"><td>T(n) = n·T(n−1) + O(1)</td><td>n! leaves</td><td>O(n·n!)</td></tr>
       </table>
+    </div>
     </div>
   </div>
     </div>
@@ -139,12 +139,12 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/account.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/motion.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/tutor.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/quiz.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/playground.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/recursion.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/core.js?v=28a05b703d32"></script>
+<script src="../assets/js/account.js?v=28a05b703d32"></script>
+<script src="../assets/js/motion.js?v=28a05b703d32"></script>
+<script src="../assets/js/tutor.js?v=28a05b703d32"></script>
+<script src="../assets/js/quiz.js?v=28a05b703d32"></script>
+<script src="../assets/js/playground.js?v=28a05b703d32"></script>
+<script src="../assets/js/recursion.js?v=28a05b703d32"></script>
 </body>
 </html>

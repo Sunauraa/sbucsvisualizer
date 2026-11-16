@@ -893,8 +893,8 @@
   const NOTES = {
     stack: "<b>A pile of plates.</b> You only ever touch the top: push adds a plate, pop takes it, top looks at it. The array keeps one index, t, at the top (−1 when empty), so every operation is O(1) and nothing shifts.",
     aqueue: "<b>A line at the checkout.</b> People join at the rear and leave from the front, in order (FIFO). Keeping the front at index 0 means everyone steps forward on every dequeue: O(n). The captions count the shifts.",
-    cqueue: "<b>A carousel.</b> Instead of everyone stepping forward, the front moves, and indexes wrap from the end back to 0: rear = (front + size) mod N. Enqueue and dequeue are both O(1).",
-    deque: "<b>A line you can join or leave at either end.</b> A deque (said “deck”) works as a stack or a queue. Same circular array; addFirst moves front back with (front − 1 + N) mod N, because in Java −1 % N is −1. Java's ArrayDeque works this way.",
+    cqueue: "<b>A carousel.</b> Nobody steps forward: the front index moves, and indexes wrap from the end back to 0: rear = (front + size) mod N. Enqueue and dequeue are both O(1).",
+    deque: "<b>A line you can join or leave at either end.</b> A deque (said “deck”) sits in a circular array; addFirst moves front back with (front − 1 + N) mod N, because in Java −1 % N is −1. Java's ArrayDeque works this way.",
     compare: "<b>The same line, run two ways.</b> Left: a plain array that either shifts on every dequeue or lets the front drift and waste slots. Right: the circular one. Alternate dequeue and enqueue and compare, then try “front moves, no wrap”: it reports full with slots still empty.",
     app: "<b>Closing brackets, like closing nested boxes:</b> the last one you opened is the first you must close. A stack tracks exactly that, which is why it checks brackets and evaluates postfix.",
   };
@@ -916,6 +916,7 @@
     tab = id;
     D.showFor(id);
     D.practiceShow(id);
+    D.notesFor(id);
     q("notes").innerHTML = "<p class='blurb'>" + NOTES[id] + "</p>";
     dock.show({ stack: "st_push", aqueue: "aq_dequeue", cqueue: "cq_enqueue", deque: "dq_addFirst", app: "brackets", compare: "st_push" }[id]);
     stillTab({

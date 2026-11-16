@@ -1284,13 +1284,55 @@ if (want("prod")) {
   }
 }
 
+/* ---------- notes: Study notes show only the selected part, never another part's material ---------- */
+if (want("notes")) {
+  console.log("study notes stay on the selected part");
+  /* [page, how to pick the part, part, words that belong to other parts] */
+  const tab = (i) => `document.querySelectorAll("#tabs button")[${i}].click()`;
+  const CASES = [
+    ["arrays", tab(0), "fixed", /linked|pointer|node/i],
+    ["arrays", tab(2), "grid", /linked|dynamic array|fixed array/i],
+    ["arrays", tab(3), "single", /fixed array|dynamic array|doubly|circular/i],
+    ["stacks-queues", tab(0), "stack", /queue|deque|FIFO/i],
+    ["stacks-queues", tab(3), "deque", /stack \(array\)|LIFO|FIFO/i],
+    ["trees", tab(1), "bst", /AVL|\(2,4\)|B-tree|rotation/i],
+    ["trees", tab(2), "avl", /\(2,4\)|B-tree|overflow|binary search tree/i],
+    ["priority-queues", tab(0), "unsorted", /heap|\bsorted list|insertion sort/i],
+    ["hashtables", tab(0), "chain", /probing|tombstone/i],
+    ["hashtables", tab(1), "linear", /chaining|ideal uniform/i],
+    ["sorting", `document.querySelector('#algo-tabs button[data-id="bubble"]').click()`, "bubble", /merge|quick|heap|counting|selection|insertion/i],
+    ["recursion", `document.querySelector('#fn-tabs button[data-id="factorial"]').click()`, "factorial", /hanoi|gcd|fib|permutation|binary search|merge sort/i],
+  ];
+  /* what a student sees in Study notes once it is opened: skip anything hidden, and the LeetCode list */
+  const seen = `(() => {
+    const out = [];
+    const walk = (n) => {
+      if (n.nodeType === 3) { out.push(n.textContent); return; }
+      if (n.nodeType !== 1 || n.id === "practice" || n.classList.contains("box-hide") || n.style.display === "none") return;
+      n.childNodes.forEach(walk);
+    };
+    walk(document.querySelector("#about .about-body"));
+    return out.join(" ").replace(/\\s+/g, " ");
+  })()`;
+  for (const [name, pick, part, other] of CASES) {
+    const { page, ctx, errors } = await openPage(name);
+    await page.evaluate(pick);
+    const text = await page.evaluate(seen);
+    const hit = text.match(other);
+    ok(!hit, name + " · " + part + ": Study notes stay on this part", hit && text.slice(Math.max(0, hit.index - 60), hit.index + 60));
+    ok(text.length > 80, name + " · " + part + ": Study notes still say something", text);
+    ok(!errors.length, name + " · " + part + ": no page errors", errors);
+    await ctx.close();
+  }
+}
+
 /* ---------- boxes: every box but the visualizer starts hidden, opens on request, and is remembered ---------- */
 if (want("boxes")) {
   console.log("hide / show boxes");
   const BOXES = "main > .panel, main > .about, .about-body .panel";
   for (const name of PAGES) {
     const { page, ctx, errors } = await openPage(name);
-    const info = () => page.evaluate((sel) => DSA.$$(sel).filter((b) => getComputedStyle(b).display !== "none").map((b) => ({
+    const info = () => page.evaluate((sel) => DSA.$$(sel).filter((b) => getComputedStyle(b).display !== "none" && !b.closest("[data-part][style*='display: none']")).map((b) => ({
       key: b.dataset.box, main: b.classList.contains("main") || b.classList.contains("playground"),
       btn: !!b.querySelector(":scope > .box-head > .box-hide"), hidden: b.classList.contains("box-hidden"),
     })), BOXES);
@@ -1305,8 +1347,8 @@ if (want("boxes")) {
     ok(heads.every((h) => h.head && /^Show \S/.test(h.label) && h.exp === "false"), name + ": a hidden box shows its heading and a button saying what it opens", heads);
     /* open them all, outer boxes first (a box inside a hidden one can't be clicked) */
     const n = await page.locator(".box-hide").count();
-    for (let i = 0; i < n; i++) { const b = page.locator(".box-hide").nth(i); if ((await b.textContent()) === "show") await b.click(); }
-    const opened = await page.evaluate((sel) => DSA.$$(sel).filter((b) => b.dataset.box && getComputedStyle(b).display !== "none").map((b) => ({
+    for (let i = 0; i < n; i++) { const b = page.locator(".box-hide").nth(i); if ((await b.isVisible()) && (await b.textContent()) === "show") await b.click(); }
+    const opened = await page.evaluate((sel) => DSA.$$(sel).filter((b) => b.dataset.box && getComputedStyle(b).display !== "none" && !b.closest("[data-part][style*='display: none']")).map((b) => ({
       key: b.dataset.box, hidden: b.classList.contains("box-hidden"),
       body: Array.from(b.children).filter((c) => !c.classList.contains("box-head")).some((c) => c.offsetParent),
     })), BOXES);

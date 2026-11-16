@@ -6,8 +6,8 @@
 <title>Stacks, Queues &amp; Deques</title>
 <meta name="description" content="Step through array stacks, plain and circular queues and deques, plus a bracket checker and a postfix evaluator.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=01d6ba65c4b4">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=01d6ba65c4b4">
+<link rel="stylesheet" href="../assets/css/style.css?v=28a05b703d32">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=28a05b703d32">
 </head>
 <body>
 
@@ -114,25 +114,25 @@
   <section class="about" id="about" aria-labelledby="about-h">
     <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">Lists you may only touch at the ends: a <b>stack</b> is a pile of plates (LIFO), a <b>queue</b> is a checkout line (FIFO), and a <b>deque</b> is a line you can join or leave at either end. Working only at the ends keeps everything O(1).</p>
     <div id="notes"></div>
   <div class="row" style="margin-bottom:2rem">
     <div class="col">
       <div class="panel" style="height:100%">
         <h3>Words to know</h3>
         <dl class="kv defs">
-          <dt>LIFO</dt><dd><b>Last In, First Out</b>, like a pile of plates. Stacks are LIFO.</dd>
-          <dt>FIFO</dt><dd><b>First In, First Out</b>, like a checkout line. Queues are FIFO.</dd>
-          <dt>stack</dt><dd>a LIFO list. <span class="mono">push(x)</span> adds on top, <span class="mono">pop()</span>
+          <dt data-part="stack app">LIFO</dt><dd data-part="stack app"><b>Last In, First Out</b>, like a pile of plates. Stacks are LIFO.</dd>
+          <dt data-part="aqueue cqueue compare">FIFO</dt><dd data-part="aqueue cqueue compare"><b>First In, First Out</b>, like a checkout line. Queues are FIFO.</dd>
+          <dt data-part="stack app">stack</dt><dd data-part="stack app">a LIFO list. <span class="mono">push(x)</span> adds on top, <span class="mono">pop()</span>
             removes the top, <span class="mono">top()</span> (or peek) looks at it without removing it.</dd>
-          <dt>queue</dt><dd>a FIFO list. <span class="mono">enqueue(x)</span> joins at the <b>rear</b>,
+          <dt data-part="aqueue cqueue compare">queue</dt><dd data-part="aqueue cqueue compare">a FIFO list. <span class="mono">enqueue(x)</span> joins at the <b>rear</b>,
             <span class="mono">dequeue()</span> leaves from the <b>front</b>, <span class="mono">first()</span> looks at the front.</dd>
-          <dt>deque</dt><dd>“double-ended queue”, said “deck”. You can add and remove at both ends, so it works as a stack or as a queue.</dd>
-          <dt>overflow</dt><dd>adding to a structure that is already full (here, all 8 array slots are in use).</dd>
+          <dt data-part="deque">deque</dt><dd data-part="deque">“double-ended queue”, said “deck”. You can add and remove at both ends.</dd>
+          <dt data-part="stack aqueue cqueue deque compare">overflow</dt><dd data-part="stack aqueue cqueue deque compare">adding to a structure that is already full (here, all 8 array slots are in use).</dd>
           <dt>underflow</dt><dd>removing from (or looking into) an empty structure.</dd>
         </dl>
-        <h4 style="margin-top:1.2rem">Queues only: why a circular array?</h4>
-        <p class="small muted">A stack's bottom never moves, but a queue's front does. Three ways to handle that:</p>
+        <div data-part="aqueue cqueue compare">
+        <h4 style="margin-top:1.2rem">Why a circular array?</h4>
+        <p class="small muted">A queue's front keeps moving. Three ways to handle that:</p>
         <div style="overflow-x:auto" tabindex="0">
           <table class="tbl" style="min-width:470px">
             <tr><th>Array queue strategy</th><th>enqueue</th><th>dequeue</th><th>problem</th></tr>
@@ -143,14 +143,15 @@
         </div>
         <p class="small muted" style="margin:.6rem 0 .4rem">Times are worst case, and all three use O(1) extra space.</p>
         <p class="small muted" style="margin-bottom:0">In the circular one, the front wraps from N − 1 to 0, and <span class="mono">size</span> tells full from empty. The <b>plain vs circular</b> tab runs both.</p>
+        </div>
       </div>
     </div>
     <div class="col">
       <div class="panel" style="height:100%">
-        <h3>Time and space of every operation</h3>
-        <p class="small muted" style="margin-top:-.3rem">Each cell is <b>time / extra space</b>, worst case. Every array here holds exactly 8 slots, so you can hit the “full” error.</p>
-        <div style="overflow-x:auto" tabindex="0">
-          <table class="tbl">
+        <h3>Cost and uses</h3>
+        <p class="small muted" style="margin-top:-.3rem" data-part="stack cqueue deque">Each cell is <b>time / extra space</b>, worst case. The array holds exactly 8 slots, so you can hit the “full” error.</p>
+        <div style="overflow-x:auto" tabindex="0" data-part="stack cqueue deque">
+          <table class="tbl" data-cols="_ stack cqueue deque">
             <tr><td></td><th>Stack (array)</th><th>Queue (circular)</th><th>Deque (circular)</th></tr>
             <tr><td>add at front</td><td>–</td><td>–</td><td class="one">O(1) / O(1)</td></tr>
             <tr><td>add at rear / push</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
@@ -160,11 +161,11 @@
             <tr><td>whole structure</td><td>– / O(N)</td><td>– / O(N)</td><td>– / O(N)</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.5rem 0 .7rem">The bracket checker and postfix evaluator are O(n) time and space for n characters.</p>
+        <p class="small muted" style="margin:.5rem 0 .7rem" data-part="app">The bracket checker and postfix evaluator are O(n) time and space for n characters.</p>
         <dl class="kv">
-          <dt>Stack</dt><dd>call frames, undo/redo, DFS, bracket matching, postfix evaluation</dd>
-          <dt>Queue</dt><dd>BFS, print/task scheduling, buffers, level-order traversal</dd>
-          <dt>Deque</dt><dd>sliding-window maximum, work stealing, palindrome checks</dd>
+          <dt data-part="stack app">Used for</dt><dd data-part="stack app">call frames, undo/redo, DFS, bracket matching, postfix evaluation</dd>
+          <dt data-part="cqueue aqueue compare">Used for</dt><dd data-part="cqueue aqueue compare">BFS, print/task scheduling, buffers, level-order traversal</dd>
+          <dt data-part="deque">Used for</dt><dd data-part="deque">sliding-window maximum, work stealing, palindrome checks</dd>
         </dl>
       </div>
     </div>
@@ -181,12 +182,12 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/account.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/motion.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/tutor.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/quiz.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/playground.js?v=01d6ba65c4b4"></script>
-<script src="../assets/js/stacks.js?v=01d6ba65c4b4"></script>
+<script src="../assets/js/core.js?v=28a05b703d32"></script>
+<script src="../assets/js/account.js?v=28a05b703d32"></script>
+<script src="../assets/js/motion.js?v=28a05b703d32"></script>
+<script src="../assets/js/tutor.js?v=28a05b703d32"></script>
+<script src="../assets/js/quiz.js?v=28a05b703d32"></script>
+<script src="../assets/js/playground.js?v=28a05b703d32"></script>
+<script src="../assets/js/stacks.js?v=28a05b703d32"></script>
 </body>
 </html>
