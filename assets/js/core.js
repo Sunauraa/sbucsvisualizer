@@ -449,8 +449,13 @@
     if (sp.does) box.appendChild(DSA.el("div", { class: "spec-does", html: sp.does }));
     const callRow = DSA.el("div", { class: "spec-row" }, [DSA.el("span", { class: "spec-k", text: "call" }), callEl]);
     box.appendChild(callRow);
-    const rows = [["params", sp.params], ["returns", sp.returns], ["errors", sp.errors], ["time", sp.time], ["space", sp.space]];
-    rows.forEach(([k, v]) => { if (v) box.appendChild(DSA.el("div", { class: "spec-row" }, [DSA.el("span", { class: "spec-k", text: k }), DSA.el("span", { class: "spec-v", html: v })])); });
+    /* the rest waits behind "Details": a page with the code open was a wall of text before the picture */
+    const rows = [["params", sp.params], ["returns", sp.returns], ["errors", sp.errors], ["time", sp.time], ["space", sp.space]].filter(([, v]) => v);
+    if (rows.length) {
+      const more = DSA.el("details", { class: "spec-more" }, [DSA.el("summary", { text: "Details: " + rows.map(([k]) => k).join(", ") })]);
+      rows.forEach(([k, v]) => more.appendChild(DSA.el("div", { class: "spec-row" }, [DSA.el("span", { class: "spec-k", text: k }), DSA.el("span", { class: "spec-v", html: v })])));
+      box.appendChild(more);
+    }
     paintCall();
     return { node: box, setArgs(a) { if (a !== vals || argsHook) { vals = a || null; paintCall(); } }, repaint: paintCall };
   }
@@ -470,8 +475,9 @@
   /* The code is HIDDEN on every page load so a newcomer first sees only the picture and the caption.
      "show code" opens every dock on the page, but it is not remembered: the next load starts hidden again. */
   const LS_CLS = "dsa.classHidden.v2";
-  let codeHidden = true, classHidden = false;
-  try { localStorage.removeItem("dsa.codeHidden.v3"); classHidden = localStorage.getItem(LS_CLS) === "1"; } catch (e) {}
+  /* "all the code" starts hidden (it's long); a reader who opened it once gets it open again */
+  let codeHidden = true, classHidden = true;
+  try { localStorage.removeItem("dsa.codeHidden.v3"); classHidden = localStorage.getItem(LS_CLS) !== "0"; } catch (e) {}
 
   /* ------------------------------------------------------------
      Classes. A method listing such as push(x) uses fields (data, t)
@@ -710,7 +716,8 @@
         const L = listings[k];
         if (!L) return api;
         key = k;
-        title.innerHTML = '<span class="lang-label">running</span> <span class="mono">' + (L.title || k) + "</span>" + costBadge(L);
+        /* just the method: "insert(i, x) · fixed capacity" → "insert(i, x)"; the tab already says which version */
+        title.innerHTML = '<span class="mono">' + String(L.title || k).split(" · ")[0] + "</span>" + costBadge(L);
         specMount.innerHTML = "";
         spec = specBox(L, k, o.recv || null, o.args || null);
         specMount.appendChild(spec.node);
@@ -885,6 +892,29 @@
   document.addEventListener("DOMContentLoaded", () => {
     DSA.$$("main > .panel, main > .about, .about-body .panel").forEach(DSA.collapsible);
   });
+
+  /* ---------------- module sidebar (from the "Documentation Website" template) ----------------
+     Every module page gets a list of all eight on the left. CSS shows it only on screens wide enough to keep
+     the visualizer at full width; narrower screens use the breadcrumb and the course page instead. */
+  DSA.MODULES = [
+    ["arrays", "Arrays & Lists"], ["recursion", "Recursion"], ["stacks-queues", "Stacks, Queues & Deques"],
+    ["trees", "Trees"], ["priority-queues", "Priority Queues"], ["hashtables", "Hash Tables"],
+    ["graphs", "Graphs"], ["sorting", "Sorting"],
+  ].map(([page, title], i) => ({ page, title, n: i + 1 }));
+  document.addEventListener("DOMContentLoaded", () => {
+    const here = location.pathname.split("/").pop().replace(/\.html$/, "");
+    if (!/\/cse214\//.test(location.pathname) || !DSA.MODULES.some((m) => m.page === here)) return;
+    const link = (href, text, cur) => DSA.el("a", Object.assign({ href, text }, cur ? { "aria-current": "page" } : {}));
+    const nav = DSA.el("nav", { class: "side-nav", "aria-label": "Modules" }, [
+      DSA.el("p", { class: "side-head", text: "CSE 214" }),
+      link(DSA.ROOT + "cse214/index.html", "Course overview"),
+      DSA.el("p", { class: "side-head", text: "Modules" }),
+      DSA.el("ol", {}, DSA.MODULES.map((m) => DSA.el("li", {}, [link(DSA.ROOT + "cse214/" + m.page + ".html", m.title, m.page === here)]))),
+    ]);
+    document.body.classList.add("has-side");
+    const bar = DSA.$("header.topbar");
+    if (bar) bar.after(nav);
+  });
   DSA.practiceShow = function (key) { pKey = key; practiceRender(); };
   /** every problem number this page lists, in any part (account.js counts them for the progress map) */
   DSA.practiceNumbers = () => (pData ? Array.from(new Set(Object.values(pData).flatMap((d) => (d.items || []).map((it) => it[0])))) : []);
@@ -961,7 +991,10 @@
     const fmt = o.fmt || ((v) => String(v));
     const col = DSA.el("div", { class: "frame-stack" });
     const max = o.max || 6;
-    if (!frames || !frames.length) { col.appendChild(DSA.el("p", { class: "small muted", text: o.emptyText || "The call stack is empty." })); return col; }
+    if (!frames || !frames.length) {
+      if (o.emptyText !== "") col.appendChild(DSA.el("p", { class: "small muted", text: o.emptyText || "The call stack is empty." }));
+      return col;
+    }
     frames.forEach((fr, k) => {
       const top = k === frames.length - 1;
       if (frames.length > max + 1 && k < frames.length - max) {

@@ -733,19 +733,24 @@
     host.appendChild(f.kind === "iter" ? iterView(f) : recView(f, false));
   }
 
+  /* a panel's title with a few short points under it, instead of a long grey sentence */
+  const cap = (title, points) => D.el("div", { class: "cells-cap rec-cap" }, [
+    D.el("b", { text: title }),
+    points && points.length ? D.el("ul", {}, points.map((t) => D.el("li", { text: t }))) : null,
+  ].filter(Boolean));
+
   function recView(f, compact) {
     const box = D.el("div");
     const row = D.el("div", { class: "row" });
     const left = D.el("div", { class: "col", style: "flex:0 1 " + (compact ? "230px" : "320px") });
-    left.appendChild(D.el("div", { class: "cells-cap", html: "call stack <span class='mono'>(top = running; each frame has its own variables)</span>" }));
+    left.appendChild(cap("Call stack", ["Top frame is running", "Each frame has its own variables"]));
     const sc = D.el("div", { style: "min-height:120px" });
-    if (!f.frames) sc.appendChild(D.el("p", { class: "small muted", text: "Press Play." }));
-    else sc.appendChild(D.callStack(f.frames, { returning: f.returning, retVal: f.retVal, err: f.err, fmt: fmt, compact: compact }));
+    if (f.frames) sc.appendChild(D.callStack(f.frames, { returning: f.returning, retVal: f.retVal, err: f.err, fmt: fmt, compact: compact, emptyText: "" }));
     left.appendChild(sc);
     row.appendChild(left);
 
     const right = D.el("div", { class: "col", style: "flex:2 1 " + (compact ? "240px" : "460px") });
-    right.appendChild(D.el("div", { class: "cells-cap", html: "recursion tree <span class='mono'>(each box is one call; ↩ = what it returned)</span>" }));
+    right.appendChild(cap("Recursion tree", ["One box per call", "↩ shows what it returned"]));
     const svg = D.svg("svg", { class: "canvas", viewBox: "0 0 " + geom.w + " " + geom.h, width: geom.w, height: geom.h, style: "max-width:none;margin:0" });
     const NW = geom.nw, NH = 30, drawn = f.created || 0;
     for (let i = 0; i < drawn && i < nodes.length; i++) {
@@ -763,7 +768,6 @@
       svg.appendChild(D.sText(n._x, n._y, n.label, { "font-size": Math.min(12, 1100 / Math.max(12, n.label.length * 8)) + "" }));
       if (n.ret !== undefined && (st === "done" || st === "err")) svg.appendChild(D.sText(n._x, n._y + NH / 2 + 11, st === "err" ? "✗ throws" : "↩ " + fmt(n.ret), { class: "lbl-s", fill: st === "err" ? "#dc2626" : "#16a34a", "font-size": 10 }));
     }
-    if (!drawn) svg.appendChild(D.sText(geom.w / 2, 30, "no calls yet", { class: "lbl-s" }));
     const sw = D.el("div", { style: "overflow:auto;max-height:" + (compact ? 340 : 480) + "px" });
     sw.appendChild(svg);
     right.appendChild(sw);
@@ -784,7 +788,7 @@
     const row = D.el("div", { class: "row", style: "align-items:flex-start" });
     /* current variables */
     const vcol = D.el("div", { class: "col", style: "flex:0 1 260px" });
-    vcol.appendChild(D.el("div", { class: "cells-cap", html: "variables <span class='mono'>(one set, overwritten)</span>" }));
+    vcol.appendChild(cap("Variables", ["One set, overwritten each loop"]));
     const vt = D.el("table", { class: "tbl" });
     let html = "";
     Object.keys(f.vars || {}).forEach((k) => {
@@ -796,7 +800,7 @@
     row.appendChild(vcol);
     /* iteration history */
     const hcol = D.el("div", { class: "col", style: "flex:2 1 320px" });
-    hcol.appendChild(D.el("div", { class: "cells-cap", html: "loop trace <span class='mono'>(" + (f.rowCount || 0) + " iteration" + (f.rowCount === 1 ? "" : "s") + ")</span>" }));
+    hcol.appendChild(cap("Loop trace", [(f.rowCount || 0) + " iteration" + (f.rowCount === 1 ? "" : "s")]));
     if (f.rows && f.rows.length) {
       const cols = Object.keys(f.rows[f.rows.length - 1]);
       const ht = D.el("table", { class: "tbl" });
@@ -861,7 +865,7 @@
     const wrap = D.el("div", { style: "display:flex;gap:1.4rem;flex-wrap:wrap;align-items:flex-end" });
     wrap.appendChild(el);
     const stk = D.el("div");
-    stk.appendChild(D.el("div", { class: "cells-cap", text: "explicit stack (top on top)" }));
+    stk.appendChild(cap("Explicit stack", ["Top is on top"]));
     const col = D.el("div", { style: "display:flex;flex-direction:column-reverse;gap:3px" });
     v.tasks.slice(-8).forEach((t, i, arr) => col.appendChild(D.el("div", { class: "cell filled " + (i === arr.length - 1 ? "active" : "visit"), style: "min-width:150px;height:26px;font-size:.72rem", text: t })));
     if (v.tasks.length > 8) col.appendChild(D.el("div", { class: "small muted", text: "… " + (v.tasks.length - 8) + " more below" }));

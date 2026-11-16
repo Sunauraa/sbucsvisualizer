@@ -7,3 +7,5 @@ node_modules
 .DS_Store
 *.log
 notes
+# Figma exports of third-party templates, used as design references only; not ours to publish
+design-refs

@@ -790,6 +790,8 @@ if (want("fullcode")) {
   ok((await box()) === null, "the box stays out of the way until the code is opened");
   await page.locator(".code-hide:visible").first().click();
   await page.locator('.tabs button:has-text("AVL")').click();
+  ok((await box()) === null, "opening the code doesn't open all the code too: it starts hidden");
+  await page.locator(".cls-toggle:visible").first().click();
   let b1 = await box();
   ok(b1 && /rotateLeft\(x\)/.test(b1.text) && /bstDelete\(k\)/.test(b1.text) && /delete\(k\)/.test(b1.text), "the AVL tab shows every AVL function, helpers too");
   ok(/rebalance\(n\)/.test(b1.shaded) && /bstInsert/.test(b1.shaded) && !/bstDelete\(k\):/.test(b1.shaded), "the running function is the one shaded");
@@ -1046,7 +1048,7 @@ if (want("a11y")) {
   const bare = await startServer(0, { headers: false });
   const b = "http://127.0.0.1:" + bare.address().port;
   const open = async (p) => { const c = await browser.newContext({ viewport: { width: 1280, height: 900 } }); const g = await c.newPage(); await g.goto(b + p); await g.waitForLoadState("load"); return { g, c }; };
-  for (const p of ["/index.html", "/cse214/index.html", "/404.html", "/privacy.html", "/terms.html"]) {
+  for (const p of ["/index.html", "/cse214/index.html", "/404.html", "/privacy.html", "/terms.html", "/credits.html"]) {
     if (!fs.existsSync(path.join(ROOT, p))) continue;
     const { g, c } = await open(p);
     await scan(g, p);
@@ -1134,7 +1136,7 @@ if (want("prod")) {
     }
   }
   /* the privacy policy and terms: real pages, linked from every page's footer (Google's sign-in checks this) */
-  for (const f of ["/privacy.html", "/terms.html"]) {
+  for (const f of ["/privacy.html", "/terms.html", "/credits.html"]) {
     const res = await fetch(BASE + f);
     const html = await res.text();
     ok(res.status === 200 && /<title>[^<]{3,}<\/title>/.test(html) && /<meta name="description" content="[^"]{20,}"/.test(html) && /<html lang="en"/.test(html), f + " is a complete page");
@@ -1147,6 +1149,7 @@ if (want("prod")) {
   for (const f of files) {
     const html = fs.readFileSync(path.join(ROOT, f), "utf8");
     ok(/href="(\.\.\/)?privacy\.html"/.test(html) && /href="(\.\.\/)?terms\.html"/.test(html), f + " links to the privacy policy and terms");
+    ok(/href="(\.\.\/|\/)?credits\.html">Credits</.test(html), f + " links to the credits");
   }
   /* CSE 373 is a notice on the home page, not somewhere to go */
   {
@@ -1642,7 +1645,7 @@ if (want("offline")) {
   ok(/Trees/.test(await page.title()), "offline: a page never opened before still loads", await page.title());
   ok(await page.evaluate(() => !!(window.DSA && DSA._players && DSA._players.length)), "offline: its visualizer starts");
   await page.goto(OB + "/");
-  ok(/Choose a course/.test(await page.textContent("h1")), "offline: the site root loads");
+  ok(/Courses/.test(await page.textContent("h1")), "offline: the site root loads");
   await page.goto(OB + "/cse214/sorting.html");
   await page.click("#pg-open");
   await page.waitForSelector(".cm-content", { timeout: 8000 }).catch(() => {});

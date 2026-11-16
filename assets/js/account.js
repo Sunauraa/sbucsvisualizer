@@ -493,8 +493,10 @@
         D.el("div", { class: "pm-bar", role: "progressbar", "aria-label": label, "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(pct), "aria-valuetext": text }, [
           D.el("div", { class: "pm-fill", style: "width:" + pct + "%" }),
         ]),
+        D.el("span", { class: "pm-pct", "aria-hidden": "true", text: n ? pct + "%" : "–" }),
       ]);
     };
+    const sum = { seen: 0, all: 0, solved: 0, lcAll: 0, right: 0, total: 0, started: 0 };
     const list = D.el("ul", { class: "pm-list", role: "list" });
     list.appendChild(D.el("li", { class: "pm-row pm-head", "aria-hidden": "true" }, [
       D.el("span", {}), D.el("span", { text: "Explored" }), D.el("span", { text: "LeetCode solved" }), D.el("span", { text: "Quiz correct" }),
@@ -517,6 +519,7 @@
         all += (d.tabsTotal || 0) + (d.opsTotal || 0);
         notes += liveNotes(p).length;
       });
+      Object.assign(sum, { seen: sum.seen + seen, all: sum.all + all, solved: sum.solved + solved, lcAll: sum.lcAll + lcAll, right: sum.right + right, total: sum.total + total, started: sum.started + (row ? 1 : 0) });
       list.appendChild(D.el("li", { class: "pm-row" + (row ? "" : " pm-new") }, [
         D.el("div", { class: "pm-name" }, [
           D.el("a", { href: a.getAttribute("href"), text: name }),
@@ -527,6 +530,22 @@
         bar("Quiz correct", right, total, "answers"),
       ]));
     });
+    /* a summary on top, like the "Learning-skills-platform" template: one ring for how much is explored, then
+       three numbers. It repeats the rows below in short, so the ring is decorative and the numbers are text. */
+    const pctOf = (x, n) => (n ? Math.round((100 * x) / n) : 0);
+    const overall = pctOf(sum.seen, sum.all);
+    const C = 2 * Math.PI * 34;
+    const ring = D.el("div", { class: "pm-ring" });
+    ring.innerHTML = '<svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" class="pm-ring-bg"/>' +
+      '<circle cx="40" cy="40" r="34" class="pm-ring-fg" stroke-dasharray="' + ((C * overall) / 100).toFixed(1) + " " + C.toFixed(1) + '"/></svg>';
+    ring.appendChild(D.el("span", { class: "pm-ring-n", text: overall + "%" }));
+    const stat = (k, v, sub) => D.el("div", { class: "pm-stat" }, [D.el("span", { class: "pm-stat-k", text: k }), D.el("b", { text: v }), D.el("span", { class: "pm-stat-sub", text: sub })]);
+    body.appendChild(D.el("div", { class: "pm-summary" }, [
+      D.el("div", { class: "pm-overall" }, [ring, D.el("p", {}, [D.el("b", { text: "Explored overall" }), D.el("span", { text: sum.started + " of " + tiles.length + (tiles.length === 1 ? " course" : " modules") + " started" })])]),
+      stat("Explored", overall + "%", sum.seen + " of " + sum.all + " tabs and operations"),
+      stat("LeetCode solved", String(sum.solved), "of " + sum.lcAll + " problems"),
+      stat("Quiz correct", sum.total ? pctOf(sum.right, sum.total) + "%" : "–", sum.right + " of " + sum.total + " answers"),
+    ]));
     body.appendChild(list);
     const notes = liveNotes(null);
     if (notes.length) {
@@ -562,7 +581,8 @@
     m.innerHTML = "";
     if (!session) {
       const keep = D.el("input", { type: "checkbox", id: "acct-keep", checked: "" });
-      const go = D.el("button", { type: "button", class: "primary", text: "Continue with Google" });
+      const go = D.el("button", { type: "button", class: "primary gsi-btn" });
+      go.innerHTML = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>Continue with Google</span>';
       go.addEventListener("click", () => signIn(keep.checked));
       m.append(
         D.el("p", { text: "Track your progress, LeetCode problems and notes on every computer." }),

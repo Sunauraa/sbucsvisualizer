@@ -7,19 +7,99 @@
 <meta name="description" content="This page does not exist. Go back to the DSA Visualizer course list.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="/assets/css/style.css?v=28a05b703d32">
-<link rel="icon" type="image/svg+xml" href="/assets/logo.svg?v=28a05b703d32">
+<link rel="stylesheet" href="/assets/css/style.css?v=42857f81850a">
+<link rel="icon" type="image/svg+xml" href="/assets/logo.svg?v=42857f81850a">
 </head>
 <body>
+
+<a class="skip" href="#content">Skip to content</a>
 <header class="topbar">
   <div class="wrap topbar-in">
-    <a class="brand" aria-label="DSA Visualizer home" href="/"><span class="brand-name">DSA Visualizer</span></a>
+    <a class="brand" aria-label="DSA Visualizer home" href="/"><span class="brand-mark"><svg viewBox="0 0 20 20" aria-hidden="true"><g stroke="#fff" stroke-width="1.6"><line x1="10" y1="5" x2="5" y2="14.5"/><line x1="10" y1="5" x2="15" y2="14.5"/></g><g fill="#fff"><circle cx="10" cy="5" r="2.8"/><circle cx="5" cy="14.5" r="2.8"/><circle cx="15" cy="14.5" r="2.8"/></g></svg></span><span class="brand-name">DSA Visualizer</span></a>
+    <div class="spacer"></div>
   </div>
 </header>
-<main id="content" class="wrap" style="padding:3rem 0">
-  <h1>Page not found</h1>
-  <p>The address may have a typo, or the page may have moved.</p>
-  <p><a class="btn primary" href="/">Go to the course list</a></p>
+
+<main id="content" class="wrap nf">
+  <svg class="nf-dogs" viewBox="0 0 430 230" role="img" aria-label="Two dogs searching for the missing page: one sniffs a trail of linked nodes that ends in a question mark, the other sits and tilts its head.">
+    <line class="nf-ground" x1="8" y1="196" x2="422" y2="196"/>
+
+    <!-- the trail: a linked list that runs out -->
+    <g class="nf-trail">
+      <line x1="196" y1="186" x2="224" y2="186"/>
+      <line x1="236" y1="186" x2="264" y2="186"/>
+      <line class="nf-gap" x1="276" y1="186" x2="300" y2="186"/>
+      <circle cx="190" cy="186" r="6"/>
+      <circle cx="230" cy="186" r="6"/>
+      <circle cx="270" cy="186" r="6"/>
+      <text x="309" y="192">?</text>
+    </g>
+
+    <!-- dog 1: nose to the ground, tail up -->
+    <g class="nf-dog">
+      <g class="nf-tail"><path class="tail-line" d="M52 128 C 40 118, 34 102, 40 88"/><path class="tail-fur" d="M52 128 C 40 118, 34 102, 40 88"/></g>
+      <rect class="fur" x="62" y="150" width="11" height="44" rx="5"/>
+      <rect class="fur" x="80" y="152" width="11" height="42" rx="5"/>
+      <rect class="fur" x="118" y="152" width="11" height="42" rx="5"/>
+      <rect class="fur" x="136" y="150" width="11" height="44" rx="5"/>
+      <ellipse class="fur" cx="100" cy="138" rx="50" ry="24"/>
+      <path class="patch" d="M78 120 C 92 112, 108 114, 114 126 C 104 132, 88 132, 78 120 Z"/>
+      <g class="nf-sniff">
+        <path class="fur" d="M138 128 C 150 120, 168 126, 172 140 L 186 160 C 190 168, 184 176, 176 174 L 160 170 C 146 166, 136 150, 138 128 Z"/>
+        <ellipse class="ear" cx="146" cy="142" rx="9" ry="19" transform="rotate(-18 146 142)"/>
+        <circle class="eye" cx="164" cy="142" r="2.6"/>
+        <ellipse class="nose" cx="184" cy="168" rx="5" ry="4"/>
+      </g>
+      <g class="nf-puffs">
+        <circle cx="196" cy="166" r="2.5"/>
+        <circle cx="203" cy="160" r="1.8"/>
+      </g>
+    </g>
+
+    <!-- dog 2: sitting, head tilted, puzzled -->
+    <g class="nf-dog" transform="translate(48 0)">
+      <path class="tail-line" d="M330 192 C 352 194, 362 186, 360 174"/><path class="tail-fur" d="M330 192 C 352 194, 362 186, 360 174"/>
+      <path class="fur" d="M300 120 C 322 116, 340 140, 342 168 C 344 188, 332 196, 316 196 L 296 196 C 284 196, 280 184, 282 166 C 284 142, 288 124, 300 120 Z"/>
+      <path class="patch" d="M298 140 C 304 134, 314 136, 316 146 C 316 160, 304 164, 298 158 Z"/>
+      <rect class="fur" x="290" y="166" width="11" height="30" rx="5"/>
+      <rect class="fur" x="306" y="166" width="11" height="30" rx="5"/>
+      <g class="nf-tilt">
+        <circle class="fur" cx="304" cy="102" r="25"/>
+        <ellipse class="ear" cx="282" cy="98" rx="8" ry="18" transform="rotate(16 282 98)"/>
+        <ellipse class="ear" cx="326" cy="98" rx="8" ry="18" transform="rotate(-16 326 98)"/>
+        <ellipse class="muzzle" cx="304" cy="114" rx="12" ry="9"/>
+        <circle class="eye" cx="295" cy="99" r="2.6"/>
+        <circle class="eye" cx="313" cy="99" r="2.6"/>
+        <ellipse class="nose" cx="304" cy="110" rx="4.5" ry="3.5"/>
+        <path class="mouth" d="M299 118 Q 304 122, 309 118"/>
+      </g>
+      <text class="nf-q" x="336" y="66">?</text>
+    </g>
+  </svg>
+  <div class="nf-text">
+    <p class="nf-code" aria-hidden="true">404</p>
+    <h1>Page not found</h1>
+    <p class="nf-lead">The dogs followed the trail node by node, but this page isn't here. It may have moved, or the address may have a typo.</p>
+    <p class="nf-cta"><a class="btn primary" href="/">Go to the home page</a> <a class="btn" href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Report a broken link</a></p>
+    <h2>Or jump straight to a module</h2>
+    <ul class="nf-links">
+      <li><a href="/cse214/arrays.html">Arrays &amp; Lists</a></li>
+      <li><a href="/cse214/recursion.html">Recursion</a></li>
+      <li><a href="/cse214/stacks-queues.html">Stacks &amp; Queues</a></li>
+      <li><a href="/cse214/trees.html">Trees</a></li>
+      <li><a href="/cse214/priority-queues.html">Priority Queues</a></li>
+      <li><a href="/cse214/hashtables.html">Hash Tables</a></li>
+      <li><a href="/cse214/graphs.html">Graphs</a></li>
+      <li><a href="/cse214/sorting.html">Sorting</a></li>
+    </ul>
+  </div>
 </main>
+
+<footer class="site">
+  <div class="wrap foot-in">
+    <p><span class="foot-name">DSA Visualizer</span></p>
+    <p class="foot-legal"><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/credits.html">Credits</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
+  </div>
+</footer>
 </body>
 </html>

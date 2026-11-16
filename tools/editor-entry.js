@@ -7,12 +7,12 @@ import { java } from "@codemirror/lang-java";
 import { HighlightStyle, syntaxHighlighting, indentOnInput, bracketMatching } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
 
-/* the same colours as the listings in the code dock */
+/* IntelliJ Light colours (Int UI Kit, JetBrains), the same as the listings in the code dock */
 const colours = HighlightStyle.define([
-  { tag: [t.keyword, t.modifier, t.typeName, t.bool, t.null, t.self], color: "#1d4ed8" },
-  { tag: [t.string, t.character], color: "#047857" },
-  { tag: t.number, color: "#b45309" },
-  { tag: [t.lineComment, t.blockComment], color: "#6b7280", fontStyle: "italic" },
+  { tag: [t.keyword, t.modifier, t.typeName, t.bool, t.null, t.self], color: "#0033b3" },
+  { tag: [t.string, t.character], color: "#067d17" },
+  { tag: t.number, color: "#1750eb" },
+  { tag: [t.lineComment, t.blockComment], color: "#6e7079", fontStyle: "italic" },
 ]);
 
 const setMark = StateEffect.define();

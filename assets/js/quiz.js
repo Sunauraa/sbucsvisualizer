@@ -157,9 +157,14 @@
       });
       const res = panel.querySelector(".quiz-result");
       res.innerHTML = "";
-      res.appendChild(D.el("b", { text: ok ? "Correct." : "Not quite." }));
-      if (q.explain) res.appendChild(document.createTextNode(" " + q.explain));
-      res.appendChild(D.el("span", { class: "quiz-score", text: score.right + " of " + score.total + " right" }));
+      res.classList.add(ok ? "is-right" : "is-wrong");
+      const said = D.el("p", {}, [D.el("b", { text: ok ? "Correct." : "Not quite." })]);
+      if (q.explain) said.appendChild(document.createTextNode(" " + q.explain));
+      res.appendChild(said);
+      const chip = panel.querySelector(".quiz-score");
+      if (chip) chip.textContent = scoreText();
+      const skip = panel.querySelector(".quiz-skip");
+      if (skip) skip.remove();
       const go = D.el("button", { type: "button", class: "primary", text: "Next step" });
       go.addEventListener("click", () => advance(q));
       res.appendChild(go);
@@ -176,6 +181,10 @@
       if (wasPlaying) player.play();
     }
 
+    const scoreText = () => score.total ? score.right + " of " + score.total + " right" : "No answers yet";
+
+    /* laid out like the "Quizzy" template: a label and the score, the question, lettered answer cards, then
+       Skip on the left and, once answered, the verdict and Next on the right */
     function show(q, i) {
       q.at = i;
       q.wasPlaying = player.playing;
@@ -183,13 +192,14 @@
       player.pause();
       panel.hidden = false;
       panel.innerHTML = "";
-      const title = D.el("h3", { text: q.ask, tabindex: "-1" });
-      const head = D.el("div", { class: "learn-head" }, [title]);
-      const skip = D.el("button", { type: "button", class: "ghost", text: "Skip" });
-      skip.addEventListener("click", () => advance(q));
-      head.appendChild(skip);
-      panel.appendChild(head);
-      const list = D.el("div", { class: "quiz-opts", role: "group", "aria-label": q.ask });
+      const title = D.el("h3", { class: "quiz-q", text: q.ask, tabindex: "-1" });
+      panel.appendChild(D.el("div", { class: "quiz-top" }, [
+        D.el("span", { class: "quiz-label", text: "Predict the next step" }),
+        D.el("span", { class: "quiz-score", text: scoreText() }),
+      ]));
+      panel.appendChild(title);
+      const short = q.kind !== "line" && q.opts.every((o) => o.text.length <= 48);
+      const list = D.el("div", { class: "quiz-opts" + (short ? " two" : ""), role: "group", "aria-label": q.ask });
       const choices = q.opts.map((o, j) => {
         const b = D.el("button", { type: "button", class: "quiz-opt" + (q.kind === "line" ? " is-code" : "") });
         b.appendChild(D.el("kbd", { text: j + 1 }));
@@ -199,7 +209,9 @@
         return b;
       });
       panel.appendChild(list);
-      panel.appendChild(D.el("div", { class: "quiz-result", role: "status", "aria-live": "polite" }));
+      const skip = D.el("button", { type: "button", class: "ghost quiz-skip", text: "Skip" });
+      skip.addEventListener("click", () => advance(q));
+      panel.appendChild(D.el("div", { class: "quiz-foot" }, [skip, D.el("div", { class: "quiz-result", role: "status", "aria-live": "polite" })]));
       open.choices = choices;
       title.focus({ preventScroll: true });
     }
