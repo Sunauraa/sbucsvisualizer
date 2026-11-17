@@ -10,7 +10,7 @@
 
   let nextId = 1;
   let player, mode = "trav";
-  let delPred = false;      /* a two-child delete copies the predecessor instead of the successor */
+  const delPred = true;     /* a two-child delete copies the in-order predecessor (the course's convention) */
   let bstRec = false;       /* the BST tab runs the recursive versions */
 
   /* ---------------- binary nodes ---------------- */
@@ -92,8 +92,8 @@
   };
   const tail = (o, t) => { ["pseudo", "java"].forEach((l) => (o[l] = o[l].concat(t[l]))); return o; };
 
-  /* delete(k), replacing a two-child node by its successor (smallest key on the right)
-     or by its predecessor (largest key on the left) */
+  /* delete(k), replacing a two-child node by its predecessor (largest key on the left); pred = false gives the
+     successor version, which the page no longer uses */
   function delCode(pred) {
     const side = pred ? "left" : "right", other = pred ? "right" : "left";
     return {
@@ -123,7 +123,7 @@
       ],
     };
   }
-  /* predecessor(k) / successor(k): the next smaller / larger key, using parent links */
+  /* predecessor(k): the next smaller key, using parent links (pred = false would give successor(k), unused) */
   function neighbourCode(pred) {
     const side = pred ? "left" : "right", other = pred ? "right" : "left", nm = pred ? "predecessor" : "successor";
     return {
@@ -253,10 +253,8 @@
         "}",
       ],
     },
-    bst_delete: delCode(false),
-    bst_delete_p: delCode(true),
+    bst_delete: delCode(true),
     bst_pred: neighbourCode(true),
-    bst_succ: neighbourCode(false),
 
     /* recursive versions: each call works on one subtree and returns its (new) root */
     bst_search_rec: {
@@ -295,8 +293,7 @@
         "}",
       ],
     },
-    bst_delete_rec: delRecCode(false),
-    bst_delete_rec_p: delRecCode(true),
+    bst_delete_rec: delRecCode(true),
     trav_height: {
       title: "height(n) · recursive",
       pseudo: [
@@ -426,33 +423,30 @@
 
   /* ---------------- specs, shown above each listing ---------------- */
   const M = (t) => "<span class='mono'>" + t + "</span>";
-  const travSpec = (when, use) => ({ does: "Visits every node of the subtree rooted at " + M("n") + ", reporting a node " + when + ". Typical use: " + use, params: M("n") + ": the subtree's root (null for an empty tree)", returns: "nothing (visits each node)", errors: "none: a null node returns at once", time: "O(n): every node is entered once", space: "O(h): one stack frame per level of the path being explored; O(n) for a degenerate tree", callVals: { n: "root" } });
+  const travSpec = (when, use) => ({ does: "Visits every node of the subtree rooted at " + M("n") + ", reporting a node " + when + ". Typical use: " + use, params: M("n") + ": the subtree's root (null for an empty tree)", returns: "nothing (visits each node)", errors: "none: a null node returns at once", time: "Θ(n): every node is entered once", space: "Θ(h): one stack frame per level of the path being explored; Θ(n) for a degenerate tree", callVals: { n: "root" } });
   const H = "h = height: about log₂n if bushy, n − 1 if not";
-  const delSpec = (pred) => ({ does: "Removes key " + M("k") + ". A node with two children first takes the key of its in-order <b>" + (pred ? "predecessor" : "successor") + "</b> (the " + (pred ? "largest key in its left" : "smallest key in its right") + " subtree), so only a node with ≤ 1 child is ever cut out.", params: M("k") + ": the key (negative and decimal keys are fine)", returns: "nothing (a missing key is ignored)", errors: "none", time: "O(h): " + H, space: "O(1)" });
-  const delRecSpec = (pred) => ({ does: "Recursive delete: each call returns its subtree's new root for the caller to relink. A two-child node takes its <b>" + (pred ? "predecessor" : "successor") + "</b>'s key, which is then deleted from the " + (pred ? "left" : "right") + " subtree.", params: M("n") + ": a subtree's root (start with root) · " + M("k") + ": the key", returns: "the subtree's root after the delete", errors: "none", time: "O(h): " + H, space: "O(h): one stack frame per level", callVals: { n: "root" } });
-  const nbSpec = (pred) => ({ does: "Finds the key just " + (pred ? "before" : "after") + " " + M("k") + " in sorted order. If k's node has a " + (pred ? "left" : "right") + " subtree, the answer is that subtree's " + (pred ? "rightmost" : "leftmost") + " node; otherwise climb up until we arrive from a " + (pred ? "right" : "left") + " child.", params: M("k") + ": a key in the tree", returns: "the " + (pred ? "predecessor" : "successor") + " node, or null if k is the " + (pred ? "smallest" : "largest") + " key or is not in the tree", errors: "none", time: "O(h): down to k, then down or up one path", space: "O(1)" });
+  const delSpec = (pred) => ({ does: "Removes key " + M("k") + ". A node with two children first takes the key of its in-order <b>" + (pred ? "predecessor" : "successor") + "</b> (the " + (pred ? "largest key in its left" : "smallest key in its right") + " subtree), so only a node with ≤ 1 child is ever cut out.", params: M("k") + ": the key (negative and decimal keys are fine)", returns: "nothing (a missing key is ignored)", errors: "none", time: "Θ(h): " + H, space: "Θ(1)" });
+  const delRecSpec = (pred) => ({ does: "Recursive delete: each call returns its subtree's new root for the caller to relink. A two-child node takes its <b>" + (pred ? "predecessor" : "successor") + "</b>'s key, which is then deleted from the " + (pred ? "left" : "right") + " subtree.", params: M("n") + ": a subtree's root (start with root) · " + M("k") + ": the key", returns: "the subtree's root after the delete", errors: "none", time: "Θ(h): " + H, space: "Θ(h): one stack frame per level", callVals: { n: "root" } });
+  const nbSpec = (pred) => ({ does: "Finds the key just " + (pred ? "before" : "after") + " " + M("k") + " in sorted order. If k's node has a " + (pred ? "left" : "right") + " subtree, the answer is that subtree's " + (pred ? "rightmost" : "leftmost") + " node; otherwise climb up until we arrive from a " + (pred ? "right" : "left") + " child.", params: M("k") + ": a key in the tree", returns: "the " + (pred ? "predecessor" : "successor") + " node, or null if k is the " + (pred ? "smallest" : "largest") + " key or is not in the tree", errors: "none", time: "Θ(h): down to k, then down or up one path", space: "Θ(1)" });
   D.specs(CODE, {
     trav_pre: travSpec("<b>before</b> its subtrees", "copying a tree or printing its structure."),
     trav_in: travSpec("<b>between</b> its left and right subtrees", "listing a BST's keys in sorted order."),
     trav_post: travSpec("<b>after</b> both subtrees", "freeing a tree or evaluating an expression tree."),
-    trav_level: { does: "Visits the nodes level by level, left to right, using a queue.", params: M("root") + ": the tree's root", returns: "nothing (visits each node)", errors: "none", time: "O(n)", space: "O(n): the queue can hold a whole level, up to about n/2 nodes" },
-    trav_height: { does: "Computes the height of the subtree rooted at " + M("n") + " recursively: one more than the taller of its two subtrees.", params: M("n") + ": the subtree's root", returns: "the height (−1 for an empty tree, 0 for a single node)", errors: "none", time: "O(n): every node is visited once", space: "O(h): the recursion goes as deep as the tree", callVals: { n: "root" } },
-    trav_size: { does: "Counts the nodes of the subtree rooted at " + M("n") + ": itself plus the sizes of its two subtrees.", params: M("n") + ": the subtree's root", returns: "the number of nodes (0 for an empty tree)", errors: "none", time: "O(n)", space: "O(h): the recursion goes as deep as the tree", callVals: { n: "root" } },
-    bst_search: { does: "Looks for key " + M("k") + " by going left or right at each node; the BST property discards the other side.", params: M("k") + ": the key", returns: "the node holding k, or null", errors: "none", time: "O(h): " + H, space: "O(1)" },
-    bst_insert: { does: "Walks down as if searching for " + M("k") + " and hangs it as a new leaf where the search falls off.", params: M("k") + ": the key (keys are distinct; negative and decimal keys are fine)", returns: "nothing (a duplicate is ignored)", errors: "none", time: "O(h): " + H, space: "O(1): one new node" },
-    bst_delete: delSpec(false),
-    bst_delete_p: delSpec(true),
+    trav_level: { does: "Visits the nodes level by level, left to right, using a queue.", params: M("root") + ": the tree's root", returns: "nothing (visits each node)", errors: "none", time: "Θ(n)", space: "Θ(n): the queue can hold a whole level, up to about n/2 nodes" },
+    trav_height: { does: "Computes the height of the subtree rooted at " + M("n") + " recursively: one more than the taller of its two subtrees.", params: M("n") + ": the subtree's root", returns: "the height (−1 for an empty tree, 0 for a single node)", errors: "none", time: "Θ(n): every node is visited once", space: "Θ(h): the recursion goes as deep as the tree", callVals: { n: "root" } },
+    trav_size: { does: "Counts the nodes of the subtree rooted at " + M("n") + ": itself plus the sizes of its two subtrees.", params: M("n") + ": the subtree's root", returns: "the number of nodes (0 for an empty tree)", errors: "none", time: "Θ(n)", space: "Θ(h): the recursion goes as deep as the tree", callVals: { n: "root" } },
+    bst_search: { does: "Looks for key " + M("k") + " by going left or right at each node; the BST property discards the other side.", params: M("k") + ": the key", returns: "the node holding k, or null", errors: "none", time: "Θ(h): " + H, space: "Θ(1)" },
+    bst_insert: { does: "Walks down as if searching for " + M("k") + " and hangs it as a new leaf where the search falls off.", params: M("k") + ": the key (keys are distinct; negative and decimal keys are fine)", returns: "nothing (a duplicate is ignored)", errors: "none", time: "Θ(h): " + H, space: "Θ(1): one new node" },
+    bst_delete: delSpec(true),
     bst_pred: nbSpec(true),
-    bst_succ: nbSpec(false),
-    bst_search_rec: { does: "Recursive search: compare with this subtree's root, then search only the side that can hold " + M("k") + ".", params: M("n") + ": a subtree's root (start with root) · " + M("k") + ": the key", returns: "the node holding k, or null", errors: "none", time: "O(h): " + H, space: "O(h): one stack frame per level", callVals: { n: "root" } },
-    bst_insert_rec: { does: "Recursive insert: walk down to the empty spot, create the leaf there, and let every caller re-link its child on the way back up.", params: M("n") + ": a subtree's root (start with root) · " + M("k") + ": the key", returns: "the subtree's root (only an empty subtree's root changes: it becomes the new node)", errors: "none", time: "O(h): " + H, space: "O(h): one stack frame per level", callVals: { n: "root" } },
-    bst_delete_rec: delRecSpec(false),
-    bst_delete_rec_p: delRecSpec(true),
-    avl_insert: { does: "Does a BST insert, then walks back up fixing heights and rotating the first unbalanced node.", params: M("k") + ": the key", returns: "nothing", errors: "none", time: "O(log n): the height is at most 1.44·log₂n; at most one (single or double) rotation", space: "O(1): one new node" },
-    avl_delete: { does: "Does a BST delete, then walks back up fixing heights and rotating wherever a node is unbalanced.", params: M("k") + ": the key", returns: "nothing", errors: "none", time: "O(log n): may rotate at every level on the way up", space: "O(1)" },
-    m_search: { does: "Scans each node's sorted keys and follows the child whose range contains " + M("k") + ".", params: M("k") + ": the key", returns: "the node and index holding k, or null", errors: "none", time: "O(m · log n): O(log n) nodes on the path, up to m − 1 keys scanned in each", space: "O(1)" },
-    m_insert: { does: "Inserts " + M("k") + " into the right leaf; a node with too many keys splits and pushes its middle key up.", params: M("k") + ": the key", returns: "nothing (a duplicate is ignored)", errors: "none", time: "O(m · log n): splits can cascade up to the root", space: "O(1): a split creates one new node per level" },
-    m_delete: { does: "Removes " + M("k") + " (from a leaf, swapping with its predecessor if needed) and fixes underflow by a transfer from a sibling or a fusion.", params: M("k") + ": the key", returns: "nothing (a missing key is ignored)", errors: "none", time: "O(m · log n): fusions can cascade up to the root", space: "O(1)" },
+    bst_search_rec: { does: "Recursive search: compare with this subtree's root, then search only the side that can hold " + M("k") + ".", params: M("n") + ": a subtree's root (start with root) · " + M("k") + ": the key", returns: "the node holding k, or null", errors: "none", time: "Θ(h): " + H, space: "Θ(h): one stack frame per level", callVals: { n: "root" } },
+    bst_insert_rec: { does: "Recursive insert: walk down to the empty spot, create the leaf there, and let every caller re-link its child on the way back up.", params: M("n") + ": a subtree's root (start with root) · " + M("k") + ": the key", returns: "the subtree's root (only an empty subtree's root changes: it becomes the new node)", errors: "none", time: "Θ(h): " + H, space: "Θ(h): one stack frame per level", callVals: { n: "root" } },
+    bst_delete_rec: delRecSpec(true),
+    avl_insert: { does: "Does a BST insert, then walks back up fixing heights and rotating the first unbalanced node.", params: M("k") + ": the key", returns: "nothing", errors: "none", time: "Θ(log n): the height is at most 1.44·log₂n; at most one (single or double) rotation", space: "Θ(1): one new node" },
+    avl_delete: { does: "Does a BST delete, then walks back up fixing heights and rotating wherever a node is unbalanced.", params: M("k") + ": the key", returns: "nothing", errors: "none", time: "Θ(log n): may rotate at every level on the way up", space: "Θ(1)" },
+    m_search: { does: "Scans each node's sorted keys and follows the child whose range contains " + M("k") + ".", params: M("k") + ": the key", returns: "the node and index holding k, or null", errors: "none", time: "Θ(m · log n): Θ(log n) nodes on the path, up to m − 1 keys scanned in each", space: "Θ(1)" },
+    m_insert: { does: "Inserts " + M("k") + " into the right leaf; a node with too many keys splits and pushes its middle key up.", params: M("k") + ": the key", returns: "nothing (a duplicate is ignored)", errors: "none", time: "Θ(m · log n): splits can cascade up to the root", space: "Θ(1): a split creates one new node per level" },
+    m_delete: { does: "Removes " + M("k") + " (from a leaf, swapping with its predecessor if needed) and fixes underflow by a transfer from a sibling or a fusion.", params: M("k") + ": the key", returns: "nothing (a missing key is ignored)", errors: "none", time: "Θ(m · log n): fusions can cascade up to the root", space: "Θ(1)" },
   });
 
   /* ---------------- classes: the fields every method above uses ---------------- */
@@ -520,7 +514,7 @@
       "",
       "bstDelete(k):                 // a plain BST delete; returns the removed node's parent",
       "  n ← search(k);  if n == null: return null",
-      "  if n has two children: n.key ← successor's key;  n ← that successor",
+      "  if n has two children: n.key ← predecessor's key;  n ← that predecessor",
       "  child ← the only child of n, or null",
       "  if child ≠ null: child.parent ← n.parent",
       "  replaceChild(n.parent, n, child)",
@@ -557,7 +551,7 @@
       "Node bstDelete(double k) {      // a plain BST delete; returns the removed node's parent",
       "  Node n = search(k);  if (n == null) return null;",
       "  if (n.left != null && n.right != null) {",
-      "    Node s = n.right;  while (s.left != null) s = s.left;",
+      "    Node s = n.left;  while (s.right != null) s = s.right;",
       "    n.key = s.key;  n = s;",
       "  }",
       "  Node child = n.left != null ? n.left : n.right;",
@@ -570,7 +564,7 @@
   const FULL = D.classes(CODE, [
     Object.assign({ keys: /^trav_/, helpers: [VISIT] }, treeClass("BinaryTree", BNODE(false, false), "The traversals are <span class='mono'>static</span> helpers: they get the node to start from as a parameter instead of using a field.")),
     Object.assign({ keys: /^bst_/, helpers: [REPLACE, EDGE] }, treeClass("BinarySearchTree", BNODE(true, false), "Every key in a node's left subtree is smaller than its key, and every key in its right subtree is larger. The recursive versions neither read nor set <span class='mono'>parent</span>, so use one family or the other on a given tree.")),
-    Object.assign({ keys: /^avl_/, methods: /^(avl_|bst_search$|bst_pred$|bst_succ$)/, helpers: [AVL_HELP, REPLACE, EDGE] }, treeClass("AVLTree", BNODE(true, true), "A BST whose nodes also store their height, so the balance factor h(left) − h(right) is cheap to check.")),
+    Object.assign({ keys: /^avl_/, methods: /^(avl_|bst_search$|bst_pred$)/, helpers: [AVL_HELP, REPLACE, EDGE] }, treeClass("AVLTree", BNODE(true, true), "A BST whose nodes also store their height, so the balance factor h(left) − h(right) is cheap to check.")),
     { keys: /^m_/, name: "BTree", note: "A (2,4)-tree is the same class with M = 4.",
       helpers: [{
         pseudo: [
@@ -858,14 +852,14 @@
     if (rebalance) avlRetrace(st, n.p, c, "insert");
     else {
       for (let a = n.p; a; a = a.p) fixH(a);
-      c.at(null).bin(st, {}, "Plain BSTs never rebalance: insert 1, 2, 3, 4, 5 in order and the tree becomes a list, with O(n) search.");
+      c.at(null).bin(st, {}, "Plain BSTs never rebalance: insert 1, 2, 3, 4, 5 in order and the tree becomes a list, with Θ(n) search.");
     }
   }
 
   function bstDelete(st, v, c, rebalance) {
     const findAlias = { found: "find", goL: "find", goR: "find", attachL: null, attachR: null };
     if (rebalance) c.code("avl_delete", { found: "bst", goL: "bst", goR: "bst", attachL: null, attachR: null, find: "bst", two: "bst", succ: "bst", copy: "bst", splice: "bst" });
-    else c.code(delPred ? "bst_delete_p" : "bst_delete", findAlias);
+    else c.code("bst_delete", findAlias);
     c.at("find").bin(st, {}, "<b>delete(" + v + ")</b>: first find it.");
     const r = bstFind(st, v, c);
     if (!r.node) { c.at("find").bin(st, {}, v + " is not in the tree, so there is nothing to delete."); return; }
@@ -962,8 +956,8 @@
     }
     c.at("loop").bin(st, {}, "n is null: we have passed the root, so the loop ends.");
     c.at(null).bin(st, {}, "Every node is balanced again. " + (why === "insert"
-      ? "An insert needs <b>at most one</b> rotation: O(log n)."
-      : "A delete may rotate at <b>every</b> level: still O(log n).") +
+      ? "An insert needs <b>at most one</b> rotation: Θ(log n)."
+      : "A delete may rotate at <b>every</b> level: still Θ(log n).") +
       " AVL height ≤ 1.44·log₂n.");
   }
 
@@ -996,7 +990,7 @@
         if (inLevel === 0) { level++; inLevel = Q.length; }
       }
       c.at("loop").bin(st, marks(), "The queue is empty, so the loop ends.", { output: out.slice(), queue: [] });
-      c.at(null).bin(st, marks(), "Done: <b>" + out.join(" ") + "</b>. Level-order uses O(width) space: up to n/2 nodes on a complete tree's last level.", { output: out.slice(), queue: [] });
+      c.at(null).bin(st, marks(), "Done: <b>" + out.join(" ") + "</b>. Level-order uses Θ(width) space: up to n/2 nodes on a complete tree's last level.", { output: out.slice(), queue: [] });
       return c;
     }
 
@@ -1044,7 +1038,7 @@
       c.leave();
     };
     go(st.root, 0);
-    c.at(null).bin(st, marks(), "Done: <b>" + out.join(" ") + "</b>. Each node is entered and left once: <b>O(n)</b> time, and O(h) stack for the recursive ones.", { output: out.slice() });
+    c.at(null).bin(st, marks(), "Done: <b>" + out.join(" ") + "</b>. Each node is entered and left once: <b>Θ(n)</b> time, and Θ(h) stack for the recursive ones.", { output: out.slice() });
     return c;
   }
 
@@ -1088,7 +1082,7 @@
       c.leave();
       return r;
     })(st.root, null);
-    c.at(null).bin(st, marks(), "Done: the tree's " + nm + " is <b>" + (st.root ? sub[st.root.id].split("=")[1] : base) + "</b>. One call per node (plus one per empty child): O(n) time, O(h) stack.", { sub: Object.assign({}, sub) });
+    c.at(null).bin(st, marks(), "Done: the tree's " + nm + " is <b>" + (st.root ? sub[st.root.id].split("=")[1] : base) + "</b>. One call per node (plus one per empty child): Θ(n) time, Θ(h) stack.", { sub: Object.assign({}, sub) });
     return c;
   }
 
@@ -1098,7 +1092,7 @@
   function neighbour(st, v, pred) {
     const nm = pred ? "predecessor" : "successor";
     const side = pred ? "left" : "right", other = pred ? "right" : "left";
-    const c = Ctx(1200).code(pred ? "bst_pred" : "bst_succ", { found: "find", goL: "find", goR: "find", attachL: null, attachR: null });
+    const c = Ctx(1200).code("bst_pred", { found: "find", goL: "find", goR: "find", attachL: null, attachR: null });
     c.at("find").bin(st, {}, "<b>" + nm + "(" + v + ")</b>: the key that comes just " + (pred ? "before" : "after") + " " + v + " in sorted order. First find " + v + ".");
     const r = bstFind(st, v, c);
     if (!r.node) { c.at("find").bin(st, {}, v + " is not in the tree, so return <b>null</b>."); return c; }
@@ -1162,7 +1156,7 @@
       c.leave();
       return r;
     })(st.root);
-    c.at(null).bin(st, pathMarks(path, res ? { [res.id]: "done" } : {}), res ? "Found " + v + " after " + c.cmp + " comparison(s), one per call. O(h) time and O(h) stack frames." : v + " is not in the tree. The recursion went " + (path.length + 1) + " call(s) deep: O(h) time and stack space.");
+    c.at(null).bin(st, pathMarks(path, res ? { [res.id]: "done" } : {}), res ? "Found " + v + " after " + c.cmp + " comparison(s), one per call. Θ(h) time and Θ(h) stack frames." : v + " is not in the tree. The recursion went " + (path.length + 1) + " call(s) deep: Θ(h) time and stack space.");
     return c;
   }
 
@@ -1202,12 +1196,12 @@
     st.root = res; res.p = null;
     c.at(null).bin(st, { [res.id]: wasEmpty ? "done" : "visit" }, wasEmpty
       ? "Back at the top: <span class='mono'>root ← insert(root, " + v + ")</span>. The tree was empty, so the returned new node becomes the root."
-      : "Back at the top: <span class='mono'>root ← insert(root, " + v + ")</span> gets the same root back. O(h) time and O(h) stack frames.");
+      : "Back at the top: <span class='mono'>root ← insert(root, " + v + ")</span> gets the same root back. Θ(h) time and Θ(h) stack frames.");
     return c;
   }
 
   function bstDeleteRec(st, v, pred) {
-    const c = Ctx(2000).code(pred ? "bst_delete_rec_p" : "bst_delete_rec");
+    const c = Ctx(2000).code("bst_delete_rec");
     c.calls = [];
     c.bin(st, {}, "<b>root ← delete(root, " + v + ")</b>, written recursively. Each call returns its subtree's new root, and the caller stores it back, which is how a removed node gets unlinked.");
     const path = [];
@@ -1270,7 +1264,7 @@
     })(st.root, v);
     const old = st.root;
     st.root = res; if (res) res.p = null;
-    c.at(null).bin(st, {}, "Back at the top: <span class='mono'>root ← delete(root, " + v + ")</span>" + (old !== res ? " = " + lab(res) + ", a new root." : ".") + " O(h) time and O(h) stack frames.");
+    c.at(null).bin(st, {}, "Back at the top: <span class='mono'>root ← delete(root, " + v + ")</span>" + (old !== res ? " = " + lab(res) + ", a new root." : ".") + " Θ(h) time and Θ(h) stack frames.");
     return c;
   }
 
@@ -1357,7 +1351,7 @@
       mSplit(st, leaf, c);
     }
     c.at("over").multi(st, {}, "No node is over the limit, so the overflow loop ends.");
-    c.at(null).multi(st, {}, "Insert complete. Height is " + mHeight(st.root) + ", with every leaf at that depth: B-trees are <b>always height-balanced</b>. O(log n).");
+    c.at(null).multi(st, {}, "Insert complete. Height is " + mHeight(st.root) + ", with every leaf at that depth: B-trees are <b>always height-balanced</b>. Θ(log n).");
   }
 
   function mDelete(st, k, c) {
@@ -1382,7 +1376,7 @@
     }
     const shrunk = mFix(st, n, c);
     if (!shrunk) c.at("shrink^").multi(st, {}, st.root ? "The root still holds " + st.root.keys.length + " key(s), so the tree keeps its height." : "The tree is empty.");
-    c.at(null).multi(st, {}, "Delete complete. Height " + mHeight(st.root) + ". O(log n), with at most one transfer-or-fusion per level.");
+    c.at(null).multi(st, {}, "Delete complete. Height " + mHeight(st.root) + ". Θ(log n), with at most one transfer-or-fusion per level.");
   }
 
   function mFix(st, n, c) {
@@ -1575,13 +1569,13 @@
      ============================================================ */
   const BLURB = {
     trav:
-      "<p><b>A family tree is made of smaller family trees.</b> So tree code is recursive, and the call stack beside the tree shows who's waiting. Every traversal visits each node once, O(n); they differ in <em>when</em> they report it: pre-order on the way in, in-order in between, post-order on the way out. Level-order reads row by row with a queue.</p>",
+      "<p><b>A family tree is made of smaller family trees.</b> So tree code is recursive, and the call stack beside the tree shows who's waiting. Every traversal visits each node once, Θ(n); they differ in <em>when</em> they report it: pre-order on the way in, in-order in between, post-order on the way out. Level-order reads row by row with a queue.</p>",
     bst:
-      "<p><b>“Higher or lower?”</b> Smaller keys go left and larger go right, so each comparison rules out a whole side: O(h). A bushy tree gives O(log n), but insert sorted keys and it becomes a line, O(n). Nothing in the rules prevents that.</p>",
+      "<p><b>“Higher or lower?”</b> Smaller keys go left and larger go right, so each comparison rules out a whole side: Θ(h). A bushy tree gives Θ(log n), but insert sorted keys and it becomes a line, Θ(n). Nothing in the rules prevents that.</p>",
     avl:
-      "<p><b>A BST that keeps its posture.</b> At every node the two subtrees differ in height by at most 1. When an insert or delete tips that, one or two rotations straighten it without changing the order. Height stays ≤ 1.44·log₂n, so every operation is O(log n).</p>",
+      "<p><b>A BST that keeps its posture.</b> At every node the two subtrees differ in height by at most 1. When an insert or delete tips that, one or two rotations straighten it without changing the order. Height stays ≤ 1.44·log₂n, so every operation is Θ(log n).</p>",
     t24:
-      "<p><b>Shelves that hold 1 to 3 books.</b> A full shelf splits and sends its middle book up a level; an emptied shelf borrows from a neighbour or merges with it. All leaves stay at the same depth, so operations are O(log n) with no rotations.</p>",
+      "<p><b>Shelves that hold 1 to 3 books.</b> A full shelf splits and sends its middle book up a level; an emptied shelf borrows from a neighbour or merges with it. All leaves stay at the same depth, so operations are Θ(log n) with no rotations.</p>",
     btree:
       "<p><b>Shelves as wide as a disk block.</b> Each node holds up to m − 1 keys; a full one splits and sends its middle key up, so all leaves stay level. With order 100, a million keys fit in 3 levels, so a lookup reads 3 blocks. That's why database indexes and file systems are B-trees.</p>",
   };
@@ -1850,7 +1844,6 @@
       q("tools-" + id).style.display = "flex";
       q("blurb").innerHTML = BLURB[id];
       q("bt-order-wrap").style.display = id === "btree" ? "flex" : "none";
-      q("del-with-wrap").style.display = id === "bst" || id === "avl" ? "flex" : "none";
       dock.show({ trav: "trav_in", bst: bstRec ? "bst_insert_rec" : "bst_insert", avl: "avl_insert", t24: "m_insert", btree: "m_insert" }[id]);
       D.practiceShow(id);
       D.notesFor(id);
@@ -1896,7 +1889,6 @@
       q(pre + "-search").addEventListener("click", () => show(rec() ? bstSearchRec(ST[pre], val()) : bstSearch(ST[pre], val())));
       q(pre + "-delete").addEventListener("click", () => { if (rec()) return show(bstDeleteRec(ST[pre], val(), delPred)); const c = Ctx(1500); bstDelete(ST[pre], val(), c, bal); show(c); });
       q(pre + "-pred").addEventListener("click", () => show(neighbour(ST[pre], val(), true)));
-      q(pre + "-succ").addEventListener("click", () => show(neighbour(ST[pre], val(), false)));
       q(pre + "-rand").addEventListener("click", () => {
         const vals = D.randArray(9, 10, 99).filter((v, i, a) => a.indexOf(v) === i);
         show(buildBinary(pre, vals, bal));
@@ -1905,11 +1897,11 @@
     });
     q("bst-degenerate").addEventListener("click", () => {
       show(buildBinary("bst", [10, 20, 30, 40, 50, 60], false));
-      D.toast("Sorted input → a linked list. Search is now O(n).");
+      D.toast("Sorted input → a linked list. Search is now Θ(n).");
     });
     q("avl-degenerate").addEventListener("click", () => {
       show(buildBinary("avl", [10, 20, 30, 40, 50, 60], true));
-      D.toast("Same sorted input: rotations keep it O(log n).");
+      D.toast("Same sorted input: rotations keep it Θ(log n).");
     });
 
     /* ---- multiway ops ---- */
@@ -1945,11 +1937,6 @@
       dock.show(bstRec ? "bst_insert_rec" : "bst_insert");
       still("Code style: <b>" + (bstRec ? "recursive" : "iterative") + "</b>. " + (bstRec ? "insert, search and delete now run as calls on smaller subtrees, with the call stack beside the tree." : "insert, search and delete now walk down with a loop."));
     }, "iter");
-    q("del-with").addEventListener("change", (e) => {
-      delPred = e.target.value === "pred";
-      if (mode === "bst" || mode === "avl") dock.show(mode === "avl" ? "avl_delete" : bstRec ? (delPred ? "bst_delete_rec_p" : "bst_delete_rec") : (delPred ? "bst_delete_p" : "bst_delete"));
-      still("Deleting a node with two children now copies its <b>" + (delPred ? "predecessor (largest key on the left)" : "successor (smallest key on the right)") + "</b>.");
-    });
     q("bt-order").addEventListener("change", (e) => {
       const m = D.clamp(D.readInt(e.target) || 5, 3, 7);
       e.target.value = m;
@@ -1958,14 +1945,6 @@
       still("Rebuilt as an empty B-tree of order " + m + ": up to " + m + " children, " + (m - 1) + " keys per node, minimum " + (Math.ceil(m / 2) - 1) + " keys outside the root.");
     });
 
-    D.legend("#legend", [
-      { color: "var(--c-active)", label: "current node" },
-      { color: "var(--c-cmp)", label: "compared / on the path" },
-      { color: "var(--c-visit)", label: "already passed through" },
-      { color: "var(--c-swap)", label: "problem here (unbalanced / overflow / underflow)" },
-      { color: "var(--c-target)", label: "successor / separator key" },
-      { color: "var(--c-done)", label: "settled" },
-    ]);
 
     /* seed all five */
     let c0 = Ctx(9000);

@@ -169,7 +169,7 @@
       line: null, ns: ns(), es: Object.assign({}, tre), queue: [], tags: tags(), order: order.slice(),
       note: "BFS is done. Visit order: <b>" + order.map(name).join(" ") + "</b>. " +
         (unreached.length ? "Never reached: <b>" + unreached.join(", ") + "</b>. They are in different connected components." : "Every vertex was reached, so the graph is connected from " + name(start) + ".") +
-        " The green edges form the <b>BFS tree</b>, and each dist label is a shortest-path length. Total work O(V + E).",
+        " The green edges form the <b>BFS tree</b>, and each dist label is a shortest-path length. Total work Θ(V + E).",
     });
     return c;
   }
@@ -224,7 +224,7 @@
       line: null, ns: ns(), es: Object.assign({}, tre), stack: [], tags: tags(), order: order.slice(),
       note: "DFS complete. Discovery order: <b>" + order.map(name).join(" ") + "</b>. " +
         (unreached.length ? "Unreached: <b>" + unreached.join(", ") + "</b> (try <em>DFS forest</em> to cover them). " : "") +
-        "Every vertex has an interval [disc, fin]; two intervals are either nested or disjoint, never partially overlapping. That is the <b>parenthesis theorem</b>, and it is why sorting by decreasing finish time gives a topological order. O(V + E).",
+        "Every vertex has an interval [disc, fin]; two intervals are either nested or disjoint, never partially overlapping. That is the <b>parenthesis theorem</b>, and it is why sorting by decreasing finish time gives a topological order. Θ(V + E).",
     });
     return c;
   }
@@ -463,8 +463,8 @@
     },
   };
   D.specs(CODE, {
-    bfs: { does: "Breadth-first search from " + "<span class='mono'>s</span>" + ": visits vertices in order of distance, using a FIFO queue.", params: "<span class='mono'>s</span>: the start vertex", returns: "nothing; fills dist[] (edge counts) and parent[] (the BFS tree)", errors: "none: unreachable vertices keep no distance", time: "O(V + E): every vertex is enqueued once and every edge looked at once (O(V²) with a matrix)", space: "O(V): the queue, plus dist[], parent[] and seen[]", callVals: { s: "0" } },
-    dfs: { does: "Depth-first search: goes as deep as possible from " + "<span class='mono'>u</span>" + " before backtracking, recording discovery and finish times.", params: "<span class='mono'>u</span>: the vertex to explore from", returns: "nothing; colours every reachable vertex and records d[] / f[]", errors: "none", time: "O(V + E): every vertex is discovered once and every edge looked at once", space: "O(V): the recursion can go V calls deep, plus color[], d[] and f[]", callVals: { u: "0" } },
+    bfs: { does: "Breadth-first search from " + "<span class='mono'>s</span>" + ": visits vertices in order of distance, using a FIFO queue.", params: "<span class='mono'>s</span>: the start vertex", returns: "nothing; fills dist[] (edge counts) and parent[] (the BFS tree)", errors: "none: unreachable vertices keep no distance", time: "Θ(V + E): every vertex is enqueued once and every edge looked at once (Θ(V²) with a matrix)", space: "Θ(V): the queue, plus dist[], parent[] and seen[]", callVals: { s: "0" } },
+    dfs: { does: "Depth-first search: goes as deep as possible from " + "<span class='mono'>u</span>" + " before backtracking, recording discovery and finish times.", params: "<span class='mono'>u</span>: the vertex to explore from", returns: "nothing; colours every reachable vertex and records d[] / f[]", errors: "none", time: "Θ(V + E): every vertex is discovered once and every edge looked at once", space: "Θ(V): the recursion can go V calls deep, plus color[], d[] and f[]", callVals: { u: "0" } },
   });
 
   const FULL = D.classes(CODE, [{
@@ -647,13 +647,6 @@
     /* Play before any search has run: run BFS from the chosen start vertex */
     player.onIdle = () => go("bfs");
 
-    D.legend("#legend", [
-      { color: "var(--c-idle)", label: "undiscovered (white)" },
-      { color: "var(--c-cmp)", label: "discovered, in queue/stack (grey)" },
-      { color: "var(--c-active)", label: "being processed now" },
-      { color: "var(--c-done)", label: "finished (black)" },
-      { color: "var(--c-done)", label: "green edge = tree edge" },
-    ]);
 
     PRESETS.sample();
     refresh("A sample graph. Pick a start vertex and press <b>BFS</b> or <b>DFS</b>, or click the canvas to build your own.");
@@ -662,9 +655,9 @@
 
   const EXPL = {
     intro:
-      "<p><b>BFS is a ripple in a pond; DFS is a maze explored one corridor at a time.</b> BFS uses a queue and finishes everything at distance k before k + 1, so it finds shortest paths. DFS uses a stack and goes deep first, so it exposes cycles and components. Both are O(V + E).</p>",
+      "<p><b>BFS is a ripple in a pond; DFS is a maze explored one corridor at a time.</b> BFS uses a queue and finishes everything at distance k before k + 1, so it finds shortest paths. DFS uses a stack and goes deep first, so it exposes cycles and components. Both are Θ(V + E).</p>",
     bfs:
-      "<p><b>The ripple, ring by ring.</b> The queue only ever holds two neighbouring rings, and a vertex is marked the moment it joins. The green edges form a shortest-path tree: follow parents back to the source for a shortest path. O(V + E).</p>",
+      "<p><b>The ripple, ring by ring.</b> The queue only ever holds two neighbouring rings, and a vertex is marked the moment it joins. The green edges form a shortest-path tree: follow parents back to the source for a shortest path. Θ(V + E).</p>",
     dfs:
       "<p><b>Exploring a maze with a ball of string.</b> Each vertex gets a discovery and a finish time, and two vertices' intervals are either nested or separate. An edge back to a vertex still on the string means a cycle. Sort by finish time, latest first, to get a topological order.</p>",
     forest:

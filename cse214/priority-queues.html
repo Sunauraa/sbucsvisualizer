@@ -6,8 +6,8 @@
 <title>Priority Queues</title>
 <meta name="description" content="Compare priority queues built on lists and heaps, watch up-heap and down-heap, and see PQ-sort become selection, insertion or heap sort.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=42857f81850a">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=42857f81850a">
+<link rel="stylesheet" href="../assets/css/style.css?v=07e04f44212d">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=07e04f44212d">
 </head>
 <body>
 
@@ -24,7 +24,6 @@
 <section class="page-head" aria-label="Page heading">
   <div class="wrap has-action">
     <div class="page-title">
-      <p class="eyebrow">CSE 214 &middot; Module 5</p>
     <h1>Priority Queues</h1>
     </div>
     <button type="button" class="btn primary pg-open" id="pg-open" aria-expanded="false" aria-controls="playground" title="Write Java here and watch it run step by step">Code playground</button>
@@ -49,8 +48,8 @@
       <div class="toolbar" data-tab="aheap" style="margin:0">
         <div class="sep"></div>
         <input type="text" id="heap-input" class="wide" placeholder="37, 12, 55, … (blank = random)" aria-label="keys to build from">
-        <button id="op-heapify">bottom-up heapify O(n)</button>
-        <button id="op-build">build by insertion O(n log n)</button>
+        <button id="op-heapify">bottom-up heapify Θ(n)</button>
+        <button id="op-build">build by insertion Θ(n log n)</button>
       </div>
       <div class="toolbar" data-tab="sort" style="margin:0">
         <div class="field"><label for="sort-algo">sort</label>
@@ -69,7 +68,6 @@
     <div id="code"></div>
     <div class="stage" id="stage"></div>
     <div id="player"></div>
-    <div id="legend"></div>
   </div>
 
 
@@ -86,14 +84,14 @@
         <div style="overflow-x:auto" tabindex="0">
           <table class="tbl" data-cols="_ unsorted sorted aheap theap">
             <tr><th>Operation</th><th>Unsorted list</th><th>Sorted list</th><th>Array heap</th><th>Tree heap</th></tr>
-            <tr><td>insert</td><td class="one">O(1) / O(1)</td><td>O(n) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td></tr>
-            <tr><td>min</td><td>O(n) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
-            <tr><td>removeMin</td><td>O(n) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(log n) / O(1)</td><td class="one">O(log n) / O(1)</td></tr>
-            <tr><td>build from n keys</td><td class="one">O(n) / O(n)</td><td>O(n²) / O(n)</td><td class="one">O(n) / O(n) bottom-up</td><td>O(n log n) / O(n)</td></tr>
-            <tr><td>memory for n keys</td><td>O(n): key + list link(s)</td><td>O(n): key + list link(s)</td><td class="one">O(n): keys only</td><td>O(n): key + 3 pointers</td></tr>
+            <tr><td>insert</td><td class="one">Θ(1) / Θ(1)</td><td>Θ(n) / Θ(1)</td><td class="one">Θ(log n) / Θ(1)</td><td class="one">Θ(log n) / Θ(1)</td></tr>
+            <tr><td>min</td><td>Θ(n) / Θ(1)</td><td class="one">Θ(1) / Θ(1)</td><td class="one">Θ(1) / Θ(1)</td><td class="one">Θ(1) / Θ(1)</td></tr>
+            <tr><td>removeMin</td><td>Θ(n) / Θ(1)</td><td class="one">Θ(1) / Θ(1)</td><td class="one">Θ(log n) / Θ(1)</td><td class="one">Θ(log n) / Θ(1)</td></tr>
+            <tr><td>build from n keys</td><td class="one">Θ(n) / Θ(n)</td><td>Θ(n²) / Θ(n)</td><td class="one">Θ(n) / Θ(n) bottom-up</td><td>Θ(n log n) / Θ(n)</td></tr>
+            <tr><td>memory for n keys</td><td>Θ(n): key + list link(s)</td><td>Θ(n): key + list link(s)</td><td class="one">Θ(n): keys only</td><td>Θ(n): key + 3 pointers</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.6rem 0 0" data-part="aheap theap">No single insert or removeMin costs more than O(log n), which is why Java's <span class="mono">PriorityQueue</span> is a heap.</p>
+        <p class="small muted" style="margin:.6rem 0 0" data-part="aheap theap">No single insert or removeMin costs more than Θ(log n), which is why Java's <span class="mono">PriorityQueue</span> is a heap.</p>
       </div>
     </div>
     <div class="col">
@@ -102,12 +100,12 @@
         <div style="overflow-x:auto" tabindex="0">
           <table class="tbl" style="min-width:470px">
             <tr><th>PQ used</th><th>Sort you get</th><th>Phase 1<br>(n inserts)</th><th>Phase 2<br>(n removeMins)</th><th>Total time / space</th></tr>
-            <tr data-part="unsorted sort"><td>unsorted list</td><td>selection sort</td><td class="one">O(n)</td><td>O(n²)</td><td>O(n²) / O(n)</td></tr>
-            <tr data-part="sorted sort"><td>sorted list</td><td>insertion sort</td><td>O(n²)</td><td class="one">O(n)</td><td>O(n²) / O(n)</td></tr>
-            <tr data-part="aheap theap sort"><td>heap</td><td>heap sort</td><td class="one">O(n log n)</td><td class="one">O(n log n)</td><td class="one">O(n log n) / O(n)</td></tr>
+            <tr data-part="unsorted sort"><td>unsorted list</td><td>selection sort</td><td class="one">Θ(n)</td><td>Θ(n²)</td><td>Θ(n²) / Θ(n)</td></tr>
+            <tr data-part="sorted sort"><td>sorted list</td><td>insertion sort</td><td>Θ(n²)</td><td class="one">Θ(n)</td><td>Θ(n²) / Θ(n)</td></tr>
+            <tr data-part="aheap theap sort"><td>heap</td><td>heap sort</td><td class="one">Θ(n log n)</td><td class="one">Θ(n log n)</td><td class="one">Θ(n log n) / Θ(n)</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.6rem 0 0" data-part="aheap theap sort">Heap sort can also run <em>in place</em> in O(1) extra space; the Sorting module shows how.</p>
+        <p class="small muted" style="margin:.6rem 0 0" data-part="aheap theap sort">Heap sort can also run <em>in place</em> in Θ(1) extra space; the Sorting module shows how.</p>
         <dl class="kv" style="margin-top:.7rem" data-part="aheap theap">
           <dt>heap order</dt><dd>every node's key ≤ its children's keys</dd>
           <dt>complete</dt><dd>all levels full except the last, which fills left to right</dd>
@@ -128,12 +126,10 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../credits.html">Credits</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=42857f81850a"></script>
-<script src="../assets/js/account.js?v=42857f81850a"></script>
-<script src="../assets/js/motion.js?v=42857f81850a"></script>
-<script src="../assets/js/tutor.js?v=42857f81850a"></script>
-<script src="../assets/js/quiz.js?v=42857f81850a"></script>
-<script src="../assets/js/playground.js?v=42857f81850a"></script>
-<script src="../assets/js/pq.js?v=42857f81850a"></script>
+<script src="../assets/js/core.js?v=07e04f44212d"></script>
+<script src="../assets/js/account.js?v=07e04f44212d"></script>
+<script src="../assets/js/motion.js?v=07e04f44212d"></script>
+<script src="../assets/js/playground.js?v=07e04f44212d"></script>
+<script src="../assets/js/pq.js?v=07e04f44212d"></script>
 </body>
 </html>

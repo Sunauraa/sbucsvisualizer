@@ -87,23 +87,24 @@ const SORTS = {
   },
   quick(a) {
     let cmp = 0, mov = 0;
-    /* an explicit stack: sorted input makes this recursion n levels deep, which would overflow the call stack */
+    /* an explicit stack: sorted input makes this recursion n levels deep, which would overflow the call stack.
+       Same partition as the visualizer: pivot = first element, i scans right, j scans left until they cross. */
     const todo = [[0, a.length - 1]];
     while (todo.length) {
-      const [lo, hi] = todo.pop();
-      if (lo >= hi) continue;
-      const pivot = a[hi];
-      let i = lo;
-      for (let j = lo; j < hi; j++) {
-        cmp++;
-        if (a[j] < pivot) {
-          if (i !== j) { const t = a[i]; a[i] = a[j]; a[j] = t; mov += 2; }
-          i++;
-        }
+      const [low, high] = todo.pop();
+      if (low >= high) continue;
+      const pivot = a[low];
+      let i = low, j = high + 1;
+      while (true) {
+        while (true) { i++; cmp++; if (!(a[i] < pivot) || i === high) break; }
+        while (true) { j--; cmp++; if (!(pivot < a[j]) || j === low) break; }
+        if (i >= j) break;
+        const t = a[i]; a[i] = a[j]; a[j] = t;
+        mov += 2;
       }
-      const t = a[i]; a[i] = a[hi]; a[hi] = t;
+      const t = a[low]; a[low] = a[j]; a[j] = t;
       mov += 2;
-      todo.push([i + 1, hi], [lo, i - 1]);
+      todo.push([j + 1, high], [low, j - 1]);
     }
     return { cmp, mov };
   },

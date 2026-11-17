@@ -31,7 +31,7 @@
   };
   CODE.set = {
     title: "set(i, x)",
-    pseudo: ["set(i, x):", "  if i < 0 or i ≥ n: error @@check", "  A[i] ← x          // overwrite in place, O(1) @@write"],
+    pseudo: ["set(i, x):", "  if i < 0 or i ≥ n: error @@check", "  A[i] ← x          // overwrite in place, Θ(1) @@write"],
     java: ["void set(int i, double x) {", "  if (i < 0 || i >= n) throw new IndexOutOfBoundsException(); @@check", "  a[i] = x; @@write", "}"],
   };
   CODE.remove = {
@@ -173,9 +173,7 @@
     };
   }
   CODE.da_add_geo = daAddCode(true);
-  CODE.da_add_arith = daAddCode(false);
   CODE.da_insert_geo = daInsertCode(true);
-  CODE.da_insert_arith = daInsertCode(false);
 
   /* ---------- 2-D array ---------- */
   CODE.g_get = {
@@ -355,7 +353,7 @@
       "removeLast():",
       "  if head == tail: return removeFirst()   // 0 or 1 node @@one",
       "  prev ← head @@start",
-      "  while prev.next ≠ tail: prev ← prev.next   // O(n) walk @@walk",
+      "  while prev.next ≠ tail: prev ← prev.next   // Θ(n) walk @@walk",
       "  x ← tail.data @@save",
       "  prev.next ← null @@unlink",
       "  tail ← prev @@tail",
@@ -654,7 +652,7 @@
   };
   CODE.c_rotate = {
     title: "rotate() · circularly linked",
-    pseudo: ["rotate():                  // front element moves to the back", "  if tail ≠ null: @@check", "    tail ← tail.next        // one pointer move, O(1) @@rot"],
+    pseudo: ["rotate():                  // front element moves to the back", "  if tail ≠ null: @@check", "    tail ← tail.next        // one pointer move, Θ(1) @@rot"],
     java: ["void rotate() {", "  if (tail != null) @@check", "    tail = tail.next; @@rot", "}"],
   };
   CODE.c_indexOf = {
@@ -687,42 +685,40 @@
      ============================================================ */
   const M = (t) => "<span class='mono'>" + t + "</span>";
   D.specs(CODE, {
-    get: { does: "Returns the element at index " + M("i") + ".", params: M("i") + ": an index in [0, n)", returns: "the element " + M("A[i]"), errors: "index out of bounds if " + M("i < 0") + " or " + M("i ≥ n"), time: "O(1): one address calculation, no scanning", space: "O(1)" },
-    set: { does: "Overwrites the element at index " + M("i") + " with " + M("x") + ".", params: M("i") + ": an index in [0, n) · " + M("x") + ": the new value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n)"), time: "O(1)", space: "O(1)" },
-    remove: { does: "Removes and returns the element at index " + M("i") + ", shifting everything after it one slot left.", params: M("i") + ": an index in [0, n)", returns: "the removed element", errors: "index out of bounds if " + M("i ∉ [0, n)"), time: "O(n): n − i − 1 shifts, worst at i = 0", space: "O(1)" },
-    indexOf: { does: "Finds the first index holding " + M("x") + ".", params: M("x") + ": the value to look for", returns: "its index, or −1 if absent", errors: "none", time: "O(n): linear search, no order to exploit", space: "O(1)" },
-    fa_add: { does: "Appends " + M("x") + " after the last element of a fixed-capacity array.", params: M("x") + ": the value to append (any number)", returns: "nothing", errors: "array is full when " + M("n == capacity") + ": a fixed array cannot grow", time: "O(1)", space: "O(1)" },
-    fa_insert: { does: "Inserts " + M("x") + " at index " + M("i") + ", shifting " + M("A[i..n−1]") + " one slot right.", params: M("i") + ": a position in [0, n] (n = append) · " + M("x") + ": the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]") + "; array is full if " + M("n == capacity"), time: "O(n): n − i shifts, worst at i = 0", space: "O(1)" },
-    da_add_geo: { does: "Appends " + M("x") + "; when the array is full it first grows to <b>double</b> the capacity.", params: M("x") + ": the value to append (any number)", returns: "nothing", errors: "none: the array grows instead of failing", time: "O(n): when the array is full every element is copied into the new one; any other add is O(1)", space: "O(n): the new array made by a resize" },
-    da_add_arith: { does: "Appends " + M("x") + "; when the array is full it first grows by a <b>constant 2</b> slots.", params: M("x") + ": the value to append (any number)", returns: "nothing", errors: "none", time: "O(n): when the array is full every element is copied; with +2 growth that happens every other add", space: "O(n): the new array made by a resize" },
-    da_insert_geo: { does: "Inserts " + M("x") + " at index " + M("i") + ", doubling the capacity first if the array is full.", params: M("i") + ": a position in [0, n] · " + M("x") + ": the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]"), time: "O(n): shifting, plus copying when it resizes", space: "O(n): the new array made by a resize" },
-    da_insert_arith: { does: "Inserts " + M("x") + " at index " + M("i") + ", growing by 2 slots first if the array is full.", params: M("i") + ": a position in [0, n] · " + M("x") + ": the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]"), time: "O(n): shifting, plus copying when it resizes", space: "O(n): the new array made by a resize" },
-    g_get: { does: "Reads the cell at row " + M("r") + ", column " + M("c") + ".", params: M("r") + ": row in [0, rows) · " + M("c") + ": column in [0, cols)", returns: M("M[r][c]"), errors: "index out of bounds if either index is out of range", time: "O(1): the address is r · cols + c", space: "O(1)" },
-    g_set: { does: "Writes " + M("x") + " into row " + M("r") + ", column " + M("c") + ".", params: M("r") + ", " + M("c") + ": cell position · " + M("x") + ": the value (any number)", returns: "nothing", errors: "index out of bounds if either index is out of range", time: "O(1)", space: "O(1)" },
-    g_rowmajor: { does: "Visits every cell row by row, the order the cells sit in memory.", params: M("m") + ": the 2-D array", returns: "nothing (visits each cell)", errors: "none", time: "O(rows · cols): and cache-friendly, because each step is the next address", space: "O(1)" },
-    g_colmajor: { does: "Visits every cell column by column, jumping a whole row ahead in memory each step.", params: M("m") + ": the 2-D array", returns: "nothing (visits each cell)", errors: "none", time: "O(rows · cols): but each step jumps cols cells in memory, so it is slower on large arrays", space: "O(1)" },
-    g_rowsum: { does: "Adds up the values in row " + M("r") + ".", params: M("r") + ": a row in [0, rows)", returns: "the sum of the row", errors: "index out of bounds if " + M("r ∉ [0, rows)"), time: "O(cols)", space: "O(1)" },
-    g_find: { does: "Searches every cell, row by row, for " + M("x") + ".", params: M("x") + ": the value to look for", returns: "its (row, column), or (−1, −1) if absent", errors: "none", time: "O(rows · cols)", space: "O(1)" },
-    s_addFirst: { does: "Puts a new node holding " + M("x") + " at the front of a singly linked list.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "O(1): two pointer writes, no traversal", space: "O(1): one new node" },
-    s_addLast: { does: "Puts a new node holding " + M("x") + " at the back, using the tail reference.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "O(1): thanks to the tail pointer", space: "O(1): one new node" },
-    s_insert: { does: "Inserts " + M("x") + " so that it ends up at index " + M("i") + ", by walking to the node before it.", params: M("i") + ": a position in [1, size] (0 is addFirst) · " + M("x") + ": the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [1, size]"), time: "O(n): the walk to node i − 1; the splice itself is O(1)", space: "O(1): one new node" },
-    s_removeFirst: { does: "Unlinks and returns the first node's value.", params: "none", returns: "the removed value", errors: "list is empty if " + M("head == null"), time: "O(1)", space: "O(1)" },
-    s_removeLast: { does: "Unlinks and returns the last node's value. A singly linked list must walk to find the node before the tail.", params: "none", returns: "the removed value", errors: "list is empty (via removeFirst when there are 0 nodes)", time: "O(n): the walk to the second-to-last node", space: "O(1)" },
-    s_remove: { does: "Removes the node at index " + M("i") + " by walking to its predecessor and bypassing it.", params: M("i") + ": a position in [1, size) (0 is removeFirst)", returns: "the removed value", errors: "index out of bounds if " + M("i ∉ [1, size)"), time: "O(n): the walk to node i − 1", space: "O(1)" },
-    l_indexOf: { does: "Follows next pointers from the head until it finds " + M("x") + ".", params: M("x") + ": the value to look for", returns: "its index, or −1 if absent", errors: "none", time: "O(n)", space: "O(1)" },
-    s_reverse: { does: "Reverses the list in place by flipping every next pointer.", params: "none", returns: "nothing (head and tail swap roles)", errors: "none: works for 0 or 1 nodes too", time: "O(n): one pass", space: "O(1): three pointers, no copy of the list" },
-    d_addFirst: { does: "Puts a new node at the front of a doubly linked list, linking it both ways.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "O(1)", space: "O(1): one new node" },
-    d_addLast: { does: "Puts a new node at the back, linking it both ways.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "O(1)", space: "O(1): one new node" },
-    d_insert: { does: "Splices " + M("x") + " in before the node currently at index " + M("i") + ".", params: M("i") + ": a position in [1, size) (0 is addFirst, size is addLast) · " + M("x") + ": the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [1, size)"), time: "O(n): the walk; then four pointer writes", space: "O(1): one new node" },
-    d_removeFirst: { does: "Unlinks and returns the first node's value.", params: "none", returns: "the removed value", errors: "list is empty if " + M("head == null"), time: "O(1)", space: "O(1)" },
-    d_removeLast: { does: "Unlinks and returns the last node's value using " + M("tail.prev") + ": no walk.", params: "none", returns: "the removed value", errors: "list is empty if " + M("tail == null"), time: "O(1): tail.prev, no walk", space: "O(1)" },
-    d_remove: { does: "Removes the node at index " + M("i") + " by making its neighbours point past it.", params: M("i") + ": a position in [1, size − 1)", returns: "the removed value", errors: "index out of bounds if " + M("i ∉ [1, size − 1)"), time: "O(n): the walk; O(1) if you already hold the node", space: "O(1)" },
-    d_backward: { does: "Visits every value from the tail back to the head using prev links.", params: "none", returns: "nothing (visits each value)", errors: "none", time: "O(n)", space: "O(1)" },
-    c_addFirst: { does: "Adds " + M("x") + " as the new head of a circular list, the node right after the tail.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "O(1)", space: "O(1): one new node" },
-    c_addLast: { does: "Adds " + M("x") + " at the back: addFirst, then move the tail one step forward.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "O(1)", space: "O(1): one new node" },
-    c_removeFirst: { does: "Removes and returns the head (the node after the tail) and closes the ring past it.", params: "none", returns: "the removed value", errors: "list is empty if " + M("tail == null"), time: "O(1)", space: "O(1)" },
-    c_rotate: { does: "Moves the front element to the back by advancing the tail pointer; nothing is unlinked.", params: "none", returns: "nothing", errors: "none: does nothing on an empty ring", time: "O(1)", space: "O(1)" },
-    c_indexOf: { does: "Walks once around the ring looking for " + M("x") + ", stopping after a full lap.", params: M("x") + ": the value to look for", returns: "its index, or −1 if absent", errors: "none", time: "O(n)", space: "O(1)" },
+    get: { does: "Returns the element at index " + M("i") + ".", params: M("i") + ": an index in [0, n)", returns: "the element " + M("A[i]"), errors: "index out of bounds if " + M("i < 0") + " or " + M("i ≥ n"), time: "Θ(1): one address calculation, no scanning", space: "Θ(1)" },
+    set: { does: "Overwrites the element at index " + M("i") + " with " + M("x") + ".", params: M("i") + ": an index in [0, n) · " + M("x") + ": the new value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n)"), time: "Θ(1)", space: "Θ(1)" },
+    remove: { does: "Removes and returns the element at index " + M("i") + ", shifting everything after it one slot left.", params: M("i") + ": an index in [0, n)", returns: "the removed element", errors: "index out of bounds if " + M("i ∉ [0, n)"), time: "Θ(n): n − i − 1 shifts, worst at i = 0", space: "Θ(1)" },
+    indexOf: { does: "Finds the first index holding " + M("x") + ".", params: M("x") + ": the value to look for", returns: "its index, or −1 if absent", errors: "none", time: "Θ(n): linear search, no order to exploit", space: "Θ(1)" },
+    fa_add: { does: "Appends " + M("x") + " after the last element of a fixed-capacity array.", params: M("x") + ": the value to append (any number)", returns: "nothing", errors: "array is full when " + M("n == capacity") + ": a fixed array cannot grow", time: "Θ(1)", space: "Θ(1)" },
+    fa_insert: { does: "Inserts " + M("x") + " at index " + M("i") + ", shifting " + M("A[i..n−1]") + " one slot right.", params: M("i") + ": a position in [0, n] (n = append) · " + M("x") + ": the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]") + "; array is full if " + M("n == capacity"), time: "Θ(n): n − i shifts, worst at i = 0", space: "Θ(1)" },
+    da_add_geo: { does: "Appends " + M("x") + "; when the array is full it first grows to <b>double</b> the capacity.", params: M("x") + ": the value to append (any number)", returns: "nothing", errors: "none: the array grows instead of failing", time: "Θ(n): when the array is full every element is copied into the new one; any other add is Θ(1)", space: "Θ(n): the new array made by a resize" },
+    da_insert_geo: { does: "Inserts " + M("x") + " at index " + M("i") + ", doubling the capacity first if the array is full.", params: M("i") + ": a position in [0, n] · " + M("x") + ": the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [0, n]"), time: "Θ(n): shifting, plus copying when it resizes", space: "Θ(n): the new array made by a resize" },
+    g_get: { does: "Reads the cell at row " + M("r") + ", column " + M("c") + ".", params: M("r") + ": row in [0, rows) · " + M("c") + ": column in [0, cols)", returns: M("M[r][c]"), errors: "index out of bounds if either index is out of range", time: "Θ(1): the address is r · cols + c", space: "Θ(1)" },
+    g_set: { does: "Writes " + M("x") + " into row " + M("r") + ", column " + M("c") + ".", params: M("r") + ", " + M("c") + ": cell position · " + M("x") + ": the value (any number)", returns: "nothing", errors: "index out of bounds if either index is out of range", time: "Θ(1)", space: "Θ(1)" },
+    g_rowmajor: { does: "Visits every cell row by row, the order the cells sit in memory.", params: M("m") + ": the 2-D array", returns: "nothing (visits each cell)", errors: "none", time: "Θ(rows · cols): and cache-friendly, because each step is the next address", space: "Θ(1)" },
+    g_colmajor: { does: "Visits every cell column by column, jumping a whole row ahead in memory each step.", params: M("m") + ": the 2-D array", returns: "nothing (visits each cell)", errors: "none", time: "Θ(rows · cols): but each step jumps cols cells in memory, so it is slower on large arrays", space: "Θ(1)" },
+    g_rowsum: { does: "Adds up the values in row " + M("r") + ".", params: M("r") + ": a row in [0, rows)", returns: "the sum of the row", errors: "index out of bounds if " + M("r ∉ [0, rows)"), time: "Θ(cols)", space: "Θ(1)" },
+    g_find: { does: "Searches every cell, row by row, for " + M("x") + ".", params: M("x") + ": the value to look for", returns: "its (row, column), or (−1, −1) if absent", errors: "none", time: "Θ(rows · cols)", space: "Θ(1)" },
+    s_addFirst: { does: "Puts a new node holding " + M("x") + " at the front of a singly linked list.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "Θ(1): two pointer writes, no traversal", space: "Θ(1): one new node" },
+    s_addLast: { does: "Puts a new node holding " + M("x") + " at the back, using the tail reference.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "Θ(1): thanks to the tail pointer", space: "Θ(1): one new node" },
+    s_insert: { does: "Inserts " + M("x") + " so that it ends up at index " + M("i") + ", by walking to the node before it.", params: M("i") + ": a position in [1, size] (0 is addFirst) · " + M("x") + ": the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [1, size]"), time: "Θ(n): the walk to node i − 1; the splice itself is Θ(1)", space: "Θ(1): one new node" },
+    s_removeFirst: { does: "Unlinks and returns the first node's value.", params: "none", returns: "the removed value", errors: "list is empty if " + M("head == null"), time: "Θ(1)", space: "Θ(1)" },
+    s_removeLast: { does: "Unlinks and returns the last node's value. A singly linked list must walk to find the node before the tail.", params: "none", returns: "the removed value", errors: "list is empty (via removeFirst when there are 0 nodes)", time: "Θ(n): the walk to the second-to-last node", space: "Θ(1)" },
+    s_remove: { does: "Removes the node at index " + M("i") + " by walking to its predecessor and bypassing it.", params: M("i") + ": a position in [1, size) (0 is removeFirst)", returns: "the removed value", errors: "index out of bounds if " + M("i ∉ [1, size)"), time: "Θ(n): the walk to node i − 1", space: "Θ(1)" },
+    l_indexOf: { does: "Follows next pointers from the head until it finds " + M("x") + ".", params: M("x") + ": the value to look for", returns: "its index, or −1 if absent", errors: "none", time: "Θ(n)", space: "Θ(1)" },
+    s_reverse: { does: "Reverses the list in place by flipping every next pointer.", params: "none", returns: "nothing (head and tail swap roles)", errors: "none: works for 0 or 1 nodes too", time: "Θ(n): one pass", space: "Θ(1): three pointers, no copy of the list" },
+    d_addFirst: { does: "Puts a new node at the front of a doubly linked list, linking it both ways.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "Θ(1)", space: "Θ(1): one new node" },
+    d_addLast: { does: "Puts a new node at the back, linking it both ways.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "Θ(1)", space: "Θ(1): one new node" },
+    d_insert: { does: "Splices " + M("x") + " in before the node currently at index " + M("i") + ".", params: M("i") + ": a position in [1, size) (0 is addFirst, size is addLast) · " + M("x") + ": the value (any number)", returns: "nothing", errors: "index out of bounds if " + M("i ∉ [1, size)"), time: "Θ(n): the walk; then four pointer writes", space: "Θ(1): one new node" },
+    d_removeFirst: { does: "Unlinks and returns the first node's value.", params: "none", returns: "the removed value", errors: "list is empty if " + M("head == null"), time: "Θ(1)", space: "Θ(1)" },
+    d_removeLast: { does: "Unlinks and returns the last node's value using " + M("tail.prev") + ": no walk.", params: "none", returns: "the removed value", errors: "list is empty if " + M("tail == null"), time: "Θ(1): tail.prev, no walk", space: "Θ(1)" },
+    d_remove: { does: "Removes the node at index " + M("i") + " by making its neighbours point past it.", params: M("i") + ": a position in [1, size − 1)", returns: "the removed value", errors: "index out of bounds if " + M("i ∉ [1, size − 1)"), time: "Θ(n): the walk; Θ(1) if you already hold the node", space: "Θ(1)" },
+    d_backward: { does: "Visits every value from the tail back to the head using prev links.", params: "none", returns: "nothing (visits each value)", errors: "none", time: "Θ(n)", space: "Θ(1)" },
+    c_addFirst: { does: "Adds " + M("x") + " as the new head of a circular list, the node right after the tail.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "Θ(1)", space: "Θ(1): one new node" },
+    c_addLast: { does: "Adds " + M("x") + " at the back: addFirst, then move the tail one step forward.", params: M("x") + ": the value (any number)", returns: "nothing", errors: "none", time: "Θ(1)", space: "Θ(1): one new node" },
+    c_removeFirst: { does: "Removes and returns the head (the node after the tail) and closes the ring past it.", params: "none", returns: "the removed value", errors: "list is empty if " + M("tail == null"), time: "Θ(1)", space: "Θ(1)" },
+    c_rotate: { does: "Moves the front element to the back by advancing the tail pointer; nothing is unlinked.", params: "none", returns: "nothing", errors: "none: does nothing on an empty ring", time: "Θ(1)", space: "Θ(1)" },
+    c_indexOf: { does: "Walks once around the ring looking for " + M("x") + ", stopping after a full lap.", params: M("x") + ": the value to look for", returns: "its index, or −1 if absent", errors: "none", time: "Θ(n)", space: "Θ(1)" },
   });
 
   /* ============================================================
@@ -907,7 +903,7 @@
   };
   const SHARED = ["get", "set", "remove", "indexOf"];
   CLS.fixed.methods = SHARED.concat(["fa_add", "fa_insert"]);
-  CLS.dynamic.methods = SHARED.concat(["da_add_geo", "da_add_arith", "da_insert_geo", "da_insert_arith"]);
+  CLS.dynamic.methods = SHARED.concat(["da_add_geo", "da_insert_geo"]);
   CLS.single.methods = /^(s_|l_indexOf$)/;
   CLS.double.methods = /^(d_|l_indexOf$)/;
   D.classes(CODE, [
@@ -961,7 +957,7 @@
       FA.a[FA.n] = v;
       r.at("write").snap({ marks: { [FA.n]: "done" }, note: "Write " + v + " into slot n = " + FA.n + "." });
       FA.n++;
-      r.at("size").snap({ marks: { [FA.n - 1]: "done" }, note: "Bump n to " + FA.n + ". No shifting, so add at the end is <b>O(1)</b>." });
+      r.at("size").snap({ marks: { [FA.n - 1]: "done" }, note: "Bump n to " + FA.n + ". No shifting, so add at the end is <b>Θ(1)</b>." });
       return r;
     },
     insert(i, v) {
@@ -981,7 +977,7 @@
       FA.a[i] = v;
       r.at("write").snap({ marks: { [i]: "done" }, note: "Drop " + v + " into the gap at index " + i + "." });
       FA.n++;
-      r.at("size").snap({ marks: { [i]: "done" }, note: "n = " + FA.n + ". That took " + (FA.n - 1 - i) + " shift(s): insert is <b>O(n)</b>, worst at index 0." });
+      r.at("size").snap({ marks: { [i]: "done" }, note: "n = " + FA.n + ". That took " + (FA.n - 1 - i) + " shift(s): insert is <b>Θ(n)</b>, worst at index 0." });
       return r;
     },
     remove(i) { return removeAt(FA, faRec, i); },
@@ -993,7 +989,7 @@
       r.at("check^").snap({ marks: { [i]: "target" }, note: "Index " + i + " is inside [0, n)." });
       const old = FA.a[i];
       FA.a[i] = v;
-      r.at("write").snap({ marks: { [i]: "done" }, note: "Overwrite " + old + " with " + v + ": one write, <b>O(1)</b>, nothing moves." });
+      r.at("write").snap({ marks: { [i]: "done" }, note: "Overwrite " + old + " with " + v + ": one write, <b>Θ(1)</b>, nothing moves." });
       return r;
     },
     indexOf(v) { return linearSearch(FA, faRec, v); },
@@ -1014,7 +1010,7 @@
     S.a[S.n - 1] = null;
     S.n--;
     r.at("clear").snap({ note: "Clear the old last slot and set n = " + S.n + "." + (S.copies != null ? " Capacity stays " + S.cap + ": removing does not shrink the array." : "") });
-    r.at("ret").snap({ note: "Return " + v + ". " + (S.n - i) + " shift(s): remove is <b>O(n)</b>, worst at index 0." });
+    r.at("ret").snap({ note: "Return " + v + ". " + (S.n - i) + " shift(s): remove is <b>Θ(n)</b>, worst at index 0." });
     return r;
   }
   function getAt(S, mk, i) {
@@ -1022,7 +1018,7 @@
     r.snap({ note: "<b>get(" + i + ")</b>." });
     if (i < 0 || i >= S.n) return fail(r, "check", "index " + i + " is outside [0, n) = [0, " + S.n + ")." + (i >= S.n && i < S.cap ? " Slot " + i + " is allocated but holds no element, so reading it would return garbage." : ""));
     r.at("check^").snap({ marks: { [i]: "cmp" }, note: "Bounds check: 0 ≤ " + i + " &lt; n = " + S.n + "." });
-    r.at("ret").snap({ marks: { [i]: "target" }, note: "Address = base + " + i + " × cellSize: one multiply and one add, then a single read: <b>A[" + i + "] = " + S.a[i] + "</b>. No scanning: <b>O(1) random access</b>." });
+    r.at("ret").snap({ marks: { [i]: "target" }, note: "Address = base + " + i + " × cellSize: one multiply and one add, then a single read: <b>A[" + i + "] = " + S.a[i] + "</b>. No scanning: <b>Θ(1) random access</b>." });
     return r;
   }
   function linearSearch(S, mk, v) {
@@ -1036,7 +1032,7 @@
       }
       r.at("cmp").snap({ marks: { [i]: "cmp" }, note: "A[" + i + "] = " + S.a[i] + " ≠ " + v + ", keep going." });
     }
-    r.at("miss").snap({ note: "Reached n without a match, so return <b>−1</b>. Linear search is <b>O(n)</b>." });
+    r.at("miss").snap({ note: "Reached n without a match, so return <b>−1</b>. Linear search is <b>Θ(n)</b>." });
     return r;
   }
   const allMarks = (n, cls) => { const m = {}; for (let i = 0; i < n; i++) m[i] = cls; return m; };
@@ -1075,18 +1071,18 @@
   }
   const da = {
     add(v) {
-      const r = daRec().code(DA.geo ? "da_add_geo" : "da_add_arith");
+      const r = daRec().code("da_add_geo");
       r.snap({ note: "<b>add(" + v + ")</b>: n = " + DA.n + ", capacity = " + DA.cap + "." });
       if (DA.n === DA.cap) daGrow(r);
       else r.at("full^").snap({ note: "n = " + DA.n + " &lt; capacity " + DA.cap + ": there is room, no resize needed." });
       DA.a[DA.n] = v;
       r.at("write").snap({ marks: { [DA.n]: "done" }, note: "Write " + v + " into slot " + DA.n + "." });
       DA.n++;
-      r.at("size").snap({ marks: { [DA.n - 1]: "done" }, note: "n = " + DA.n + ". Most adds are this cheap: <b>O(1)</b>." });
+      r.at("size").snap({ marks: { [DA.n - 1]: "done" }, note: "n = " + DA.n + ". Most adds are this cheap: <b>Θ(1)</b>." });
       return r;
     },
     insert(i, v) {
-      const r = daRec().code(DA.geo ? "da_insert_geo" : "da_insert_arith");
+      const r = daRec().code("da_insert_geo");
       r.snap({ marks: { [i]: "target" }, note: "<b>insert(" + i + ", " + v + ")</b>." });
       if (i < 0 || i > DA.n) return fail(r, "check", "index " + i + " is outside [0, n] = [0, " + DA.n + "]. Growing adds room at the end, so it can't make this index valid.");
       r.at("check^").snap({ marks: { [i]: "target" }, note: "0 ≤ " + i + " ≤ n = " + DA.n + ": valid." });
@@ -1099,7 +1095,7 @@
       DA.a[i] = v;
       r.at("write").snap({ marks: { [i]: "done" }, note: "Write " + v + " into the gap at " + i + "." });
       DA.n++;
-      r.at("size").snap({ marks: { [i]: "done" }, note: "n = " + DA.n + ". Shifting makes insert <b>O(n)</b> no matter how the array grows." });
+      r.at("size").snap({ marks: { [i]: "done" }, note: "n = " + DA.n + ". Shifting makes insert <b>Θ(n)</b> no matter how the array grows." });
       return r;
     },
     remove(i) { return removeAt(DA, daRec, i); },
@@ -1127,7 +1123,7 @@
       if (!g2In(r0, c0)) return fail(r, "check", g2Why(r0, c0));
       r.at("check^").snap({ marks: { ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, note: "Row " + r0 + " is in [0, " + G2.rows + ") and column " + c0 + " is in [0, " + G2.cols + ")." });
       r.at("flat").snap({ marks: { [key2(r0, c0)]: "cmp", ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, flat: { [k]: "cmp" }, note: "Find the cell. Pseudocode: one row-major block, flat index <span class='mono'>r · cols + c = " + r0 + " · " + G2.cols + " + " + c0 + " = " + k + "</span>. Java: <span class='mono'>m[" + r0 + "]</span> fetches row " + r0 + ", then <span class='mono'>[" + c0 + "]</span> indexes it." });
-      r.at("ret").snap({ marks: { [key2(r0, c0)]: "target" }, flat: { [k]: "target" }, note: "One read: <b>M[" + r0 + "][" + c0 + "] = " + G2.m[r0][c0] + "</b>. Still O(1). A 2-D array is a 1-D array plus a little arithmetic." });
+      r.at("ret").snap({ marks: { [key2(r0, c0)]: "target" }, flat: { [k]: "target" }, note: "One read: <b>M[" + r0 + "][" + c0 + "] = " + G2.m[r0][c0] + "</b>. Still Θ(1). A 2-D array is a 1-D array plus a little arithmetic." });
       return r;
     },
     set(r0, c0, v) {
@@ -1138,7 +1134,7 @@
       r.at("check^").snap({ marks: { ["r" + r0]: "cmp", ["c" + c0]: "cmp" }, note: "Both indices are in range." });
       r.at("flat").snap({ marks: { [key2(r0, c0)]: "cmp" }, flat: { [k]: "cmp" }, note: "Locate the cell: flat index " + r0 + " · " + G2.cols + " + " + c0 + " = " + k + " (pseudocode), or row " + r0 + "'s array then column " + c0 + " (Java)." });
       G2.m[r0][c0] = v;
-      r.at("write").snap({ marks: { [key2(r0, c0)]: "done" }, flat: { [k]: "done" }, note: "Write " + v + ". <b>O(1)</b>." });
+      r.at("write").snap({ marks: { [key2(r0, c0)]: "done" }, flat: { [k]: "done" }, note: "Write " + v + ". <b>Θ(1)</b>." });
       return r;
     },
     traverse(rowMajor) {
@@ -1163,7 +1159,7 @@
       }
       r.at(null).snap({ marks: seen(order), flat: seenFlat(order), note: rowMajor
         ? "Every step moved to the <b>next</b> memory cell. Caches load memory in blocks, so this order is the fast one."
-        : "Each step jumped <b>" + G2.cols + "</b> cells. Same O(rows·cols) work, but on big arrays these jumps miss the cache and run several times slower." });
+        : "Each step jumped <b>" + G2.cols + "</b> cells. Same Θ(rows·cols) work, but on big arrays these jumps miss the cache and run several times slower." });
       return r;
       function seen(list, extra) { const m = {}; list.forEach((k) => (m[key2(Math.floor(k / G2.cols), k % G2.cols)] = "visit")); return Object.assign(m, extra || {}); }
       function seenFlat(list) { const m = {}; list.forEach((k) => (m[k] = "visit")); return m; }
@@ -1183,7 +1179,7 @@
         r.at("add").snap({ marks: Object.assign({ ["r" + r0]: "active" }, done), acc: s, note: "s += M[" + r0 + "][" + c + "] = " + G2.m[r0][c] + " → s = " + s + "." });
       }
       r.at("loop").snap({ marks: done, acc: s, note: "c = " + G2.cols + ": past the last column, the loop ends." });
-      r.at("ret").snap({ marks: done, acc: s, note: "Return <b>" + s + "</b>. One pass over one row: O(cols)." });
+      r.at("ret").snap({ marks: done, acc: s, note: "Return <b>" + s + "</b>. One pass over one row: Θ(cols)." });
       return r;
     },
     find(v) {
@@ -1201,7 +1197,7 @@
           seenM[key2(rr, cc)] = "visit";
         }
       }
-      r.at("miss").snap({ marks: seenM, note: "Checked all " + G2.rows * G2.cols + " cells: <b>not found</b>. O(rows · cols)." });
+      r.at("miss").snap({ marks: seenM, note: "Checked all " + G2.rows * G2.cols + " cells: <b>not found</b>. Θ(rows · cols)." });
       return r;
     },
   };
@@ -1233,7 +1229,7 @@
       L.unshift(v);
       r.at("head").snap({ marks: { 0: "done" }, note: "head ← node." });
       r.at(L.length === 1 ? "tail" : "tail^").snap({ marks: { 0: "done" }, note: L.length === 1 ? "The list was empty, so the new node is also the tail." : "tail is unchanged." });
-      r.at("size").snap({ marks: { 0: "done" }, note: "size = " + L.length + ". <b>O(1)</b>: no traversal at all." });
+      r.at("size").snap({ marks: { 0: "done" }, note: "size = " + L.length + ". <b>Θ(1)</b>: no traversal at all." });
       return r;
     },
     addLast(v) {
@@ -1248,7 +1244,7 @@
         L.push(v);
       }
       r.at("tail").snap({ marks: { [L.length - 1]: "done" }, note: "tail ← node." });
-      r.at("size").snap({ marks: { [L.length - 1]: "done" }, note: "size = " + L.length + ". <b>O(1)</b> thanks to the tail reference." });
+      r.at("size").snap({ marks: { [L.length - 1]: "done" }, note: "size = " + L.length + ". <b>Θ(1)</b> thanks to the tail reference." });
       return r;
     },
     insert(k, v) {
@@ -1262,7 +1258,7 @@
       L.splice(k, 0, v);
       r.at("splice").snap({ marks: { [k]: "done", [k - 1]: "active" }, ptrs: { prev: k - 1 }, note: "prev.next ← node. Two pointer writes and nothing shifts." });
       r.at(k === L.length - 1 ? "tail" : "tail^").snap({ marks: { [k]: "done" }, note: k === L.length - 1 ? "It went at the end, so it is the new tail." : "Not at the end, so tail is unchanged." });
-      r.at("size").snap({ marks: { [k]: "done" }, note: "size = " + L.length + ". The walk makes this <b>O(n)</b>. The splice itself is O(1)." });
+      r.at("size").snap({ marks: { [k]: "done" }, note: "size = " + L.length + ". The walk makes this <b>Θ(n)</b>. The splice itself is Θ(1)." });
       return r;
     },
     removeFirst(inner) {
@@ -1276,7 +1272,7 @@
       L.shift();
       r.at(L.length ? "tail^" : "tail").snap({ note: L.length ? "The list still has nodes; tail is unchanged." : "The list is now empty, so tail ← null too." });
       r.at("size").snap({ note: "size = " + L.length + "." });
-      r.at("ret").snap({ note: "Return " + v + ". The old node is unreachable and will be collected. <b>O(1)</b>." });
+      r.at("ret").snap({ note: "Return " + v + ". The old node is unreachable and will be collected. <b>Θ(1)</b>." });
       return r;
     },
     removeLast() {
@@ -1301,7 +1297,7 @@
       L.pop();
       r.at("tail").snap({ marks: { [n - 2]: "done" }, note: "tail ← prev." });
       r.at("size").snap({ marks: { [n - 2]: "done" }, note: "size = " + L.length + "." });
-      r.at("ret").snap({ note: "Return " + v + ". Even with a tail pointer this took " + (n - 2) + " hop(s): <b>O(n)</b>. A doubly linked list fixes this." });
+      r.at("ret").snap({ note: "Return " + v + ". Even with a tail pointer this took " + (n - 2) + " hop(s): <b>Θ(n)</b>. A doubly linked list fixes this." });
       return r;
     },
     remove(k) {
@@ -1329,7 +1325,7 @@
         r.at("next").snap({ marks: i + 1 < L.length ? { [i + 1]: "active" } : {}, ptrs: i + 1 < L.length ? { cur: i + 1 } : {}, note: "cur ← cur.next, i = " + (i + 1) + "." });
       }
       r.at("loop").snap({ note: "cur is null: we fell off the end." });
-      r.at("miss").snap({ note: "Return <b>−1</b>. Linear search, <b>O(n)</b>." });
+      r.at("miss").snap({ note: "Return <b>−1</b>. Linear search, <b>Θ(n)</b>." });
       return r;
     },
     reverse() {
@@ -1348,7 +1344,7 @@
       }
       r.at("loop").snap({ marks: Object.assign({}, flipped), ptrs: n ? { prev: n - 1 } : {}, flipped: n, note: "cur is null: every arrow is flipped." });
       L.reverse();
-      r.at("head").snap({ marks: { 0: "done" }, note: n < 2 ? "head ← prev. With " + n + " node" + (n === 1 ? "" : "s") + ": nothing to reorder, and no special case needed." : "head ← prev (the old tail). Reversed in one pass: <b>O(n)</b> time, <b>O(1)</b> extra space." });
+      r.at("head").snap({ marks: { 0: "done" }, note: n < 2 ? "head ← prev. With " + n + " node" + (n === 1 ? "" : "s") + ": nothing to reorder, and no special case needed." : "head ← prev (the old tail). Reversed in one pass: <b>Θ(n)</b> time, <b>Θ(1)</b> extra space." });
       return r;
     },
   };
@@ -1362,7 +1358,7 @@
       r.at(L.length ? "back" : ["back^", "backElse"]).snap({ float: { v: v, at: -1 }, floatLinks: L.length ? [0] : [], marks: L.length ? { 0: "cmp" } : {}, note: L.length ? "head.prev ← node: the old head now points back at the newcomer." : "The list was empty, so the node is also the tail." });
       L.unshift(v);
       r.at("head").snap({ marks: { 0: "done" }, note: "head ← node." });
-      r.at("size").snap({ marks: { 0: "done" }, note: "size = " + L.length + ". <b>O(1)</b>." });
+      r.at("size").snap({ marks: { 0: "done" }, note: "size = " + L.length + ". <b>Θ(1)</b>." });
       return r;
     },
     addLast(v) {
@@ -1373,7 +1369,7 @@
       r.at(L.length ? "back" : ["back^", "backElse"]).snap({ float: { v: v, at: L.length - 1 }, marks: L.length ? { [L.length - 1]: "cmp" } : {}, note: L.length ? "tail.next ← node." : "Empty list: head ← node." });
       L.push(v);
       r.at("tail").snap({ marks: { [L.length - 1]: "done" }, note: "tail ← node." });
-      r.at("size").snap({ marks: { [L.length - 1]: "done" }, note: "size = " + L.length + ". <b>O(1)</b>." });
+      r.at("size").snap({ marks: { [L.length - 1]: "done" }, note: "size = " + L.length + ". <b>Θ(1)</b>." });
       return r;
     },
     insert(k, v) {
@@ -1401,7 +1397,7 @@
       L.shift();
       r.at(L.length ? ["tail^", "tailElse"] : "tail").snap({ marks: L.length ? { 0: "cmp" } : {}, note: L.length ? "head.prev ← null: the new head must not point back at the removed node." : "Now empty, so tail ← null." });
       r.at("size").snap({ note: "size = " + L.length + "." });
-      r.at("ret").snap({ note: "Return " + v + ". <b>O(1)</b>." });
+      r.at("ret").snap({ note: "Return " + v + ". <b>Θ(1)</b>." });
       return r;
     },
     removeLast() {
@@ -1416,7 +1412,7 @@
       r.at(n > 1 ? ["unlink^", "unlinkElse"] : "unlink").snap({ marks: { [n - 1]: "swap", [n - 2]: "active" }, cut: n - 2, note: n > 1 ? "tail.next ← null." : "That was the only node: head ← null." });
       L.pop();
       r.at("size").snap({ marks: n > 1 ? { [n - 2]: "done" } : {}, note: "size = " + L.length + "." });
-      r.at("ret").snap({ note: "Return " + v + ". <b>O(1)</b>. Compare with the singly linked version, which had to walk n − 2 hops." });
+      r.at("ret").snap({ note: "Return " + v + ". <b>Θ(1)</b>. Compare with the singly linked version, which had to walk n − 2 hops." });
       return r;
     },
     remove(k) {
@@ -1429,7 +1425,7 @@
       r.at("back").snap({ marks: { [k]: "swap", [k + 1]: "active" }, ptrs: { cur: k }, bypass: { from: k - 1, to: k + 1 }, back: { from: k + 1, to: k - 1 }, note: "cur.next.prev ← cur.prev. Both neighbours now skip cur." });
       const v = L.splice(k, 1)[0];
       r.at("size").snap({ marks: { [k - 1]: "done", [k]: "done" }, note: "size = " + L.length + "." });
-      r.at("ret").snap({ note: "Return " + v + ". If you already held a reference to the node, this would be <b>O(1)</b>: no walk at all." });
+      r.at("ret").snap({ note: "Return " + v + ". If you already held a reference to the node, this would be <b>Θ(1)</b>: no walk at all." });
       return r;
     },
     backward() {
@@ -1462,7 +1458,7 @@
         L.unshift(v);
         r.at("splice").snap({ marks: { 0: "done", [L.length - 1]: "active" }, note: "tail.next ← node. The new node is now the head, sitting right after the tail in the ring." });
       }
-      r.at("size").snap({ marks: { 0: "done" }, note: "size = " + L.length + ". <b>O(1)</b>." });
+      r.at("size").snap({ marks: { 0: "done" }, note: "size = " + L.length + ". <b>Θ(1)</b>." });
       return r;
     },
     addLast(v) {
@@ -1474,7 +1470,7 @@
       r.code("c_addLast");
       r.at("first").snap({ marks: { 0: "done" }, note: "Back in addLast: " + v + " is at the front, right after the tail." });
       if (L.length > 1) L.push(L.shift());
-      r.at("tail").snap({ marks: { [L.length - 1]: "done" }, note: "tail ← tail.next. The ring is unchanged; only the tail label moved, so " + v + " is now last. <b>O(1)</b>." });
+      r.at("tail").snap({ marks: { [L.length - 1]: "done" }, note: "tail ← tail.next. The ring is unchanged; only the tail label moved, so " + v + " is now last. <b>Θ(1)</b>." });
       return r;
     },
     removeFirst() {
@@ -1493,7 +1489,7 @@
         L.shift();
       }
       r.at("size").snap({ note: "size = " + L.length + "." });
-      r.at("ret").snap({ note: "Return " + v + ". <b>O(1)</b>." });
+      r.at("ret").snap({ note: "Return " + v + ". <b>Θ(1)</b>." });
       return r;
     },
     rotate() {
@@ -1502,7 +1498,7 @@
       if (!L.length) { r.at("check^").snap({ note: "tail is null: an empty ring has nothing to rotate, so the body is skipped. No error: rotate() does nothing." }); return r; }
       r.at("check").snap({ marks: { 0: "cmp", [L.length - 1]: "active" }, note: "tail ≠ null." });
       L.push(L.shift());
-      r.at("rot").snap({ marks: { [L.length - 1]: "done", 0: "active" }, note: "tail ← tail.next: one pointer move, <b>O(1)</b>. " + L[L.length - 1] + " is now at the back and " + L[0] + " at the front." });
+      r.at("rot").snap({ marks: { [L.length - 1]: "done", 0: "active" }, note: "tail ← tail.next: one pointer move, <b>Θ(1)</b>. " + L[L.length - 1] + " is now at the back and " + L[0] + " at the front." });
       return r;
     },
     indexOf(v) {
@@ -1700,15 +1696,15 @@
      ============================================================ */
   const NOTES = {
     fixed:
-      "<p class='blurb'><b>A row of numbered lockers.</b> You can open locker 5 directly, so reads and writes are O(1). But the row is bolted down: inserting in the middle shifts everyone over, and once it's full there's no room.</p>",
+      "<p class='blurb'><b>A row of numbered lockers.</b> You can open locker 5 directly, so reads and writes are Θ(1). But the row is bolted down: inserting in the middle shifts everyone over, and once it's full there's no room.</p>",
     dynamic:
-      "<p class='blurb'><b>Moving to a bigger apartment.</b> When the array fills up, get one twice the size and move everything in. That move costs O(n), but each one buys twice as much room, so adds average O(1). Switch growth to “+2” and watch it move house constantly.</p>",
+      "<p class='blurb'><b>Moving to a bigger apartment.</b> When the array fills up, get one twice the size and move everything in. That move costs Θ(n), but each one buys twice as much room, so adds average Θ(1).</p>",
     grid:
       "<p class='blurb'><b>Seats in a theater.</b> (row, seat) is easy to find, but memory is one long line, so rows sit end to end: M[r][c] is at r·C + c. Java keeps each row as its own array instead, so rows can even differ in length.</p>",
     single:
-      "<p class='blurb'><b>A scavenger hunt:</b> each clue only says where the next one is. Adding at either end is O(1), but reaching anything else, or stepping back, means following clues from the start, so removeLast is O(n).</p>",
+      "<p class='blurb'><b>A scavenger hunt:</b> each clue only says where the next one is. Adding at either end is Θ(1), but reaching anything else, or stepping back, means following clues from the start, so removeLast is Θ(n).</p>",
     double:
-      "<p class='blurb'><b>A train coupled at both ends of every car.</b> One extra link per node lets you walk backwards and unhook a car you're holding in O(1), so removeLast is O(1) too. Java's LinkedList works this way.</p>",
+      "<p class='blurb'><b>A train coupled at both ends of every car.</b> One extra link per node lets you walk backwards and unhook a car you're holding in Θ(1), so removeLast is Θ(1) too. Java's LinkedList works this way.</p>",
     circular:
       "<p class='blurb'><b>Kids in a circle passing a ball.</b> The last node points back to the first, so one tail pointer reaches both ends and rotate() is a single step: right for taking turns. There's no end to stop at, so every loop stops after one lap.</p>",
   };
@@ -1724,12 +1720,6 @@
 
 
   function faFill(vals) { FA.a = new Array(FA.cap).fill(null); vals.forEach((v, i) => (FA.a[i] = v)); FA.n = vals.length; }
-  function setGrowth() {
-    const geo = q("growth").value === "geo";
-    if (geo === DA.geo) return;
-    DA.geo = geo;
-    dock.show(geo ? "da_add_geo" : "da_add_arith");
-  }
 
   function selectTab(id) {
     tab = id;
@@ -1739,7 +1729,7 @@
     q("notes").innerHTML = NOTES[id];
     shareClass(id);
     const first = {
-      fixed: "fa_insert", dynamic: DA.geo ? "da_add_geo" : "da_add_arith", grid: "g_get",
+      fixed: "fa_insert", dynamic: "da_add_geo", grid: "g_get",
       single: "s_addFirst", double: "d_addFirst", circular: "c_addFirst",
     }[id];
     dock.show(first);
@@ -1795,7 +1785,7 @@
       "Rotate Array",
       "rotate-array",
       "Medium",
-      "Moving every element: O(n) no matter how you do it."
+      "Moving every element: Î(n) no matter how you do it."
      ],
      [
       26,
@@ -1828,7 +1818,7 @@
       "Running Sum of 1d Array",
       "running-sum-of-1d-array",
       "Easy",
-      "Warm-up: indexed reads and writes are O(1)."
+      "Warm-up: indexed reads and writes are Î(1)."
      ],
      [
       1470,
@@ -1853,10 +1843,10 @@
      ],
      [
       380,
-      "Insert Delete GetRandom O(1)",
+      "Insert Delete GetRandom Θ(1)",
       "insert-delete-getrandom-o1",
       "Medium",
-      "Remove in O(1) by swapping with the last slot, then shrinking size."
+      "Remove in Î(1) by swapping with the last slot, then shrinking size."
      ]
     ]
    },
@@ -1990,7 +1980,7 @@
       "LRU Cache",
       "lru-cache",
       "Medium",
-      "A doubly linked list plus a hash map: O(1) remove from the middle."
+      "A doubly linked list plus a hash map: Î(1) remove from the middle."
      ],
      [
       430,
@@ -2018,7 +2008,7 @@
       "Design Circular Deque",
       "design-circular-deque",
       "Medium",
-      "Add and remove at both ends: what a doubly linked list does in O(1)."
+      "Add and remove at both ends: what a doubly linked list does in Î(1)."
      ]
     ]
    },
@@ -2093,7 +2083,6 @@
     q("fa-clear").onclick = () => { faFill([]); stillTab("Cleared: n = 0. The capacity is still " + FA.cap + "."); };
 
     /* dynamic */
-    q("growth").onchange = () => { setGrowth(); stillTab("Growth rule: <b>" + (DA.geo ? "×2 (geometric)" : "+2 (arithmetic)") + "</b>. Keep pressing add and watch the capacity history."); };
     q("da-add").onclick = () => load(da.add(val()));
     q("da-insert").onclick = () => { const i = idx(); if (i != null) load(da.insert(i, val())); };
     q("da-remove").onclick = () => { const i = idx(); if (i != null) load(da.remove(i)); };
@@ -2157,14 +2146,6 @@
     q("cl-rand").onclick = () => { LL.circular = D.randArray(D.randInt(4, 6), 10, 99); stillTab("Built a ring of " + LL.circular.length + " random nodes."); };
     q("cl-clear").onclick = () => { LL.circular = []; stillTab("Cleared: tail = null."); };
 
-    D.legend("#legend", [
-      { color: "var(--c-active)", label: "current position / pointer" },
-      { color: "var(--c-cmp)", label: "being examined" },
-      { color: "var(--c-swap)", label: "moving / being removed" },
-      { color: "var(--c-done)", label: "written / result" },
-      { color: "var(--c-target)", label: "the answer" },
-      { color: "var(--c-visit)", label: "already visited" },
-    ]);
 
     /* seed data */
     faFill([23, 47, 8, 91, 15]);

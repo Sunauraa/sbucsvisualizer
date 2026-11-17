@@ -6,8 +6,8 @@
 <title>Recursion</title>
 <meta name="description" content="Watch the call stack and recursion tree for factorial, Fibonacci, gcd, fast power, Towers of Hanoi, binary search and permutations.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=42857f81850a">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=42857f81850a">
+<link rel="stylesheet" href="../assets/css/style.css?v=07e04f44212d">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=07e04f44212d">
 </head>
 <body>
 
@@ -24,7 +24,6 @@
 <section class="page-head" aria-label="Page heading">
   <div class="wrap has-action">
     <div class="page-title">
-      <p class="eyebrow">CSE 214 &middot; Module 2</p>
     <h1>Recursion</h1>
     </div>
     <button type="button" class="btn primary pg-open" id="pg-open" aria-expanded="false" aria-controls="playground" title="Write Java here and watch it run step by step">Code playground</button>
@@ -49,30 +48,14 @@
       <div class="stage" id="main"></div>
     </div>
 
-    <div class="compare" data-tab="cmp">
-      <div class="pane" id="pane-L">
-        <div class="pane-head"><h3>Recursive</h3><span class="tagline">one stack frame per call</span></div>
-        <div id="L-code"></div>
-        <div class="stage" id="L-stage"></div>
-        <div class="pane-note" id="L-note"></div>
-      </div>
-      <div class="pane" id="pane-R">
-        <div class="pane-head"><h3>Iterative</h3><span class="tagline">a loop, with an explicit stack if needed</span></div>
-        <div id="R-code"></div>
-        <div class="stage" id="R-stage"></div>
-        <div class="pane-note" id="R-note"></div>
-      </div>
-    </div>
-
     <div id="player"></div>
-    <div id="legend"></div>
   </div>
 
 
   <section class="about" id="about" aria-labelledby="about-h">
     <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">Recursion is solving a problem by handing a smaller copy of it to yourself. Each call is a sticky note on a pile (the stack) that waits for the one above it. Try <b>Iterative</b> or <b>side by side</b> to see the same answer from a loop.</p>
+    <p class="intro">Recursion is solving a problem by handing a smaller copy of it to yourself. Each call is a sticky note on a pile (the stack) that waits for the one above it. Try <b>Iterative</b> to see the same answer from a loop.</p>
     <div style="margin-top:1rem">
       <div class="panel-title" style="margin-bottom:.4rem"><h3 id="fn-name">factorial(n)</h3></div>
       <div class="complexity" id="fn-big" style="margin-bottom:.5rem"></div>
@@ -83,17 +66,16 @@
     <div style="overflow-x:auto" tabindex="0">
       <table class="tbl" style="min-width:640px">
         <tr><th>Function</th><th>Recursive: time / stack space</th><th>Iterative: time / extra space</th><th>How the loop version works</th></tr>
-        <tr data-part="factorial"><td>factorial</td><td>O(n) / O(n)</td><td>O(n) / <span style="color:var(--t-done)">O(1)</span></td><td>accumulate the product upwards</td></tr>
-        <tr data-part="fib"><td>fib (naive)</td><td>O(2ⁿ) / O(n)</td><td><span style="color:var(--t-done)">O(n) / O(1)</span></td><td>keep only the last two values</td></tr>
-        <tr data-part="fibmemo"><td>fib (memoised)</td><td>O(n) / O(n)</td><td>O(n) / O(n)</td><td>fill the same table bottom-up</td></tr>
-        <tr data-part="gcd"><td>gcd</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--t-done)">O(1)</span></td><td>tail recursion → a while loop</td></tr>
-        <tr data-part="power"><td>fast power</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--t-done)">O(1)</span></td><td>read the bits of n</td></tr>
-        <tr data-part="bsearch"><td>binary search</td><td>O(log n) / O(log n)</td><td>O(log n) / <span style="color:var(--t-done)">O(1)</span></td><td>move lo / hi instead of recursing</td></tr>
-        <tr data-part="hanoi"><td>Towers of Hanoi</td><td>O(2ⁿ) / O(n)</td><td>O(2ⁿ) / O(n)</td><td>an explicit stack of tasks</td></tr>
-        <tr data-part="perms"><td>permutations</td><td>O(n·n!) / O(n)</td><td>O(n·n!) / O(n²)</td><td>an explicit stack of states</td></tr>
+        <tr data-part="factorial"><td>factorial</td><td>Θ(n) / Θ(n)</td><td>Θ(n) / <span style="color:var(--t-done)">Θ(1)</span></td><td>accumulate the product upwards</td></tr>
+        <tr data-part="fib"><td>fib</td><td>Θ(2ⁿ) / Θ(n)</td><td><span style="color:var(--t-done)">Θ(n) / Θ(1)</span></td><td>keep only the last two values</td></tr>
+        <tr data-part="gcd"><td>gcd</td><td>Θ(log n) / Θ(log n)</td><td>Θ(log n) / <span style="color:var(--t-done)">Θ(1)</span></td><td>tail recursion → a while loop</td></tr>
+        <tr data-part="power"><td>fast power</td><td>Θ(log n) / Θ(log n)</td><td>Θ(log n) / <span style="color:var(--t-done)">Θ(1)</span></td><td>read the bits of n</td></tr>
+        <tr data-part="bsearch"><td>binary search</td><td>Θ(log n) / Θ(log n)</td><td>Θ(log n) / <span style="color:var(--t-done)">Θ(1)</span></td><td>move lo / hi instead of recursing</td></tr>
+        <tr data-part="hanoi"><td>Towers of Hanoi</td><td>Θ(2ⁿ) / Θ(n)</td><td>Θ(2ⁿ) / Θ(n)</td><td>an explicit stack of tasks</td></tr>
+        <tr data-part="perms"><td>permutations</td><td>Θ(n·n!) / Θ(n)</td><td>Θ(n·n!) / Θ(n²)</td><td>an explicit stack of states</td></tr>
       </table>
     </div>
-    <p class="small muted" style="margin:.6rem 0 .4rem">Worst case throughout; recursion's space is its stack of waiting frames. When the call is the very last step (<b>tail recursion</b>), a loop does the same in O(1) space.</p>
+    <p class="small muted" style="margin:.6rem 0 .4rem">Worst case throughout; recursion's space is its stack of waiting frames. When the call is the very last step (<b>tail recursion</b>), a loop does the same in Θ(1) space.</p>
     <p class="small muted" style="margin-bottom:0">Recursion reads best when a problem branches. Loops save space and can't hit <span class="mono">StackOverflowError</span>.</p>
   </div>
 
@@ -119,10 +101,10 @@
     <div style="overflow-x:auto" tabindex="0">
       <table class="tbl">
         <tr><th>Recurrence</th><th>Tree shape</th><th>Total time</th></tr>
-        <tr data-part="factorial"><td>T(n) = T(n−1) + O(1)</td><td>a chain of depth n</td><td>O(n)</td></tr>
-        <tr data-part="power bsearch"><td>T(n) = T(n/2) + O(1)</td><td>a chain of depth log n</td><td>O(log n)</td></tr>
-        <tr data-part="fib hanoi"><td>T(n) = 2T(n−1) + O(1)</td><td>complete binary tree of depth n</td><td>O(2ⁿ)</td></tr>
-        <tr data-part="perms"><td>T(n) = n·T(n−1) + O(1)</td><td>n! leaves</td><td>O(n·n!)</td></tr>
+        <tr data-part="factorial"><td>T(n) = T(n−1) + Θ(1)</td><td>a chain of depth n</td><td>Θ(n)</td></tr>
+        <tr data-part="power bsearch"><td>T(n) = T(n/2) + Θ(1)</td><td>a chain of depth log n</td><td>Θ(log n)</td></tr>
+        <tr data-part="fib hanoi"><td>T(n) = 2T(n−1) + Θ(1)</td><td>complete binary tree of depth n</td><td>Θ(2ⁿ)</td></tr>
+        <tr data-part="perms"><td>T(n) = n·T(n−1) + Θ(1)</td><td>n! leaves</td><td>Θ(n·n!)</td></tr>
       </table>
     </div>
     </div>
@@ -139,12 +121,10 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../credits.html">Credits</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=42857f81850a"></script>
-<script src="../assets/js/account.js?v=42857f81850a"></script>
-<script src="../assets/js/motion.js?v=42857f81850a"></script>
-<script src="../assets/js/tutor.js?v=42857f81850a"></script>
-<script src="../assets/js/quiz.js?v=42857f81850a"></script>
-<script src="../assets/js/playground.js?v=42857f81850a"></script>
-<script src="../assets/js/recursion.js?v=42857f81850a"></script>
+<script src="../assets/js/core.js?v=07e04f44212d"></script>
+<script src="../assets/js/account.js?v=07e04f44212d"></script>
+<script src="../assets/js/motion.js?v=07e04f44212d"></script>
+<script src="../assets/js/playground.js?v=07e04f44212d"></script>
+<script src="../assets/js/recursion.js?v=07e04f44212d"></script>
 </body>
 </html>

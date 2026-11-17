@@ -10,18 +10,18 @@ nothing to run.
 
 | Module | File | Contents |
 |---|---|---|
-| Arrays & Lists | `cse214/arrays.html` | fixed array; dynamic array with ×2 (geometric) vs +2 (arithmetic) growth and a capacity history; 2-D array with row-major memory layout; singly, doubly and circularly linked lists |
-| Recursion | `cse214/recursion.html` | call stack (one card per frame, with its variables and what it waits on) + recursion tree for 8 functions, each with an iterative version and a side-by-side mode; a ▶ Play button above the board loads the steps (tabs, modes and inputs only show the starting picture), negative inputs run the error checks |
-| Stacks, Queues & Deques | `cse214/stacks-queues.html` | array stack; plain array queue; circular array queue (with ring view); circular deque; side-by-side plain-array vs circular queue; bracket checker; postfix evaluator; LIFO / FIFO definitions |
-| Trees | `cse214/trees.html` | four traversals and recursive height / size with a live call stack; BST insert/search/delete as loops or as recursion, predecessor / successor, two-child delete by successor or predecessor; AVL with all four rotation cases; (2,4)-trees; B-trees of order 3–7 |
+| Arrays & Lists | `cse214/arrays.html` | fixed array; dynamic array that doubles when full, with a capacity history; 2-D array with row-major memory layout; singly, doubly and circularly linked lists |
+| Recursion | `cse214/recursion.html` | call stack (one card per frame, with its variables and what it waits on) + recursion tree for 7 functions, each with an iterative version; a ▶ Play button above the board loads the steps (tabs, modes and inputs only show the starting picture), negative inputs run the error checks |
+| Stacks, Queues & Deques | `cse214/stacks-queues.html` | array stack; circular array queue (with ring view); circular deque; bracket checker; postfix evaluator; LIFO / FIFO definitions |
+| Trees | `cse214/trees.html` | four traversals and recursive height / size with a live call stack; BST insert/search/delete as loops or as recursion, predecessor, two-child delete by the in-order predecessor; AVL with all four rotation cases; (2,4)-trees; B-trees of order 3–7 |
 | Priority Queues | `cse214/priority-queues.html` | unsorted list, sorted list, array-based heap, linked tree-based heap; bottom-up heapify vs build-by-insertion; PQ-sort as selection / insertion / heap sort |
 | Hash Tables | `cse214/hashtables.html` | separate chaining, linear probing, quadratic probing; load factor, tombstones, rehashing; integer and string keys |
 | Graphs | `cse214/graphs.html` | click-to-build graph editor (add/delete, drag vertices in any mode, even mid-traversal, directed toggle, 7 presets); BFS with live queue; DFS with live stack and discovery/finish times; DFS forest; synchronised adjacency matrix and list |
 | Sorting | `cse214/sorting.html` | bubble, selection, insertion, heap, merge, quick, two-third and counting sort; negative and decimal values (bars grow down from a zero line) |
 
-Every module shares the same layout: site bar with breadcrumbs → page heading (course and module number, title) →
-tabs → toolbar → **code dock** (worst-case time/space badge, spec, the running function, all the code of its structure, and the
-running line highlighted in pseudocode or Java) → stage → player → legend → **Study notes** (key terms, cost
+Every module shares the same layout: site bar with breadcrumbs → page heading (title, Code playground button) →
+tabs → toolbar → **code dock** (worst-case time/space badge, what the function does and its call, the running function, and the
+running line highlighted in pseudocode or Java) → stage → player → **Study notes** (key terms, cost
 tables, LeetCode practice; starts hidden) → footer.
 
 The pages are written to be information-first: semantic landmarks (`header`, `nav`, `main`, `footer`), one `h1`
@@ -37,9 +37,9 @@ growth chart only starts measuring once its box is opened. It lives in `DSA.coll
 Study notes gets the button with no extra code. Call it again after redrawing a box's contents, as the practice list
 does.
 
-The code dock starts **collapsed**: a newcomer sees only the running operation's name and its time/space badge.
-"show code" opens the spec, listing and all the code, and that choice is remembered from page to page (`localStorage`
-key `dsa.codeHidden.v3`). The side-by-side comparison panes always show their code.
+The code dock appears only once the reader runs an operation, and starts **collapsed**: just the operation's name and
+its time/space badge. "show code" opens a one-line summary, the call and the listing of that one function; the next page load starts
+collapsed again.
 
 Inputs take negative and decimal numbers. Java listings use `double` for stored values (indices stay `int`); where
 the Java parameter is an `int` (recursion's n, hash-table keys, counting sort keys) a decimal is rejected with a
@@ -53,9 +53,7 @@ These sit in the player of every module, and none of them needs changes to a mod
 
 | Tool | File | What it does |
 |---|---|---|
-| Animation | `assets/js/motion.js` | Values slide to their new place on each step, and tree edges follow their nodes. It compares the pictures before and after each repaint (FLIP), so stepping back works too. The slider jumps without animating, and `prefers-reduced-motion` fades instead of moving. Add `data-motion="off"` to anything whose text is not a value that travels, such as a counter. |
-| Why? | `assets/js/tutor.js`, `assets/js/why-data.js` | A hand-written reason for every line of every listing, loaded on first use. Add a key to `why-data.js` when you add a line: the tests fail if an entry names a line that no longer exists. |
-| Quiz me | `assets/js/quiz.js` | Stops before some steps and asks which line runs next or what happens next. Questions are built from the recorded frames, and the right answer is simply the next frame. |
+| Animation | `assets/js/motion.js` | Values slide to their new place on each step, and tree edges follow their nodes. It compares the pictures before and after each repaint (FLIP), so stepping back works too. The slider jumps without animating, and `prefers-reduced-motion` fades instead of moving. Add `data-motion="off"` to anything whose text is not a value that travels, such as a counter. It is always on: there is no switch. |
 | Growth chart | `assets/js/growth.js`, `assets/js/growth-worker.js` | On the Sorting page: runs all eight sorts up to n = 10,000 in a Web Worker and plots the operation counts. The worker has its own fast copies of the sorts, and the tests check their counts match the visualizer's. |
 | Code playground | `assets/js/playground.js`, `assets/js/playground-examples.js`, `assets/js/java-interp.js` | The button by each module's title opens a panel under the visualizer, where a student types Java and steps through it. It opens on a starter program for the current tab, and keeps the student's own code per module. `java-interp.js` is a small interpreter in a Web Worker: it never uses `eval`, and it records frames like any module, so all the tools above work there too. The panel lists what it supports. The editor and starter programs load the first time it opens. Add a starter by adding an entry to `playground-examples.js`: the tests compile it with `javac` and compare the output. |
 
@@ -87,7 +85,7 @@ That is the whole site. There is no `package.json` at this level, so Vercel has 
 ### Accounts and sync (optional)
 
 Students can **sign in with Google** to get, on every computer they use, a **progress map** (per module: tabs opened,
-operations run, quiz answers, LeetCode solved, notes; on the CSE 214 page), a **status on every LeetCode problem**
+operations run, LeetCode solved, notes; on the CSE 214 page), a **status on every LeetCode problem**
 (To do / Solved / Revisit) and **notes pinned to a step**: a note on one exact moment of an animation that reopens
 that moment, with the steps around it, on any computer. Signed out, the site is exactly as before.
 
@@ -98,13 +96,15 @@ that moment, with the steps around it, on any computer. Signed out, the site is 
   rows. `api/keepalive.js` runs daily on Vercel Cron so the free project never pauses, and restores it if it does.
 - It stays off until `DSA.ACCOUNT` in `core.js` has a URL and key. **To turn it on, follow `supabase/SETUP.md`**
   (one time, about 20 minutes; no upkeep after that).
-- Modules don't know about accounts: they announce what happens through `DSA.emit` (`tab`, `run`, `quiz`, `practice`)
+- Modules don't know about accounts: they announce what happens through `DSA.emit` (`tab`, `run`, `practice`)
   and `account.js` listens.
 
-### The AI tutor is archived
+### Archived features
 
-The optional Ask AI function now lives in `archive/ai-tutor/`, out of the deployment. Its README says how to bring
-it back and what to fix first. Without it, **Why?** works fully on the saved explanations and shows no question box.
+`archive/` is not deployed. Each folder's README says how to bring it back.
+
+- `archive/quiz-and-why/`: the **Quiz me** and **Why?** buttons, removed on 2026-11-16 to keep the module pages simple.
+- `archive/ai-tutor/`: the optional Ask AI function that sat under Why?.
 
 ## How it works
 
@@ -201,6 +201,7 @@ cse214/*.html           the eight modules
 sw.js                   offline copy of the site (service worker)
 api/keepalive.js        daily Vercel Cron job that keeps the free Supabase project awake (and restores it)
 supabase/               the database (schema.sql) and the one-time setup guide (SETUP.md); not deployed
+archive/quiz-and-why/   the archived Quiz me and Why? buttons, and how to bring them back
 archive/ai-tutor/       the archived Ask AI function, and how to bring it back
 notes/                  problems met while building this, and the system design decisions with their reasons (not deployed)
 abilities/              third-party AI design skills, kept for reference (not deployed, not in git)
@@ -263,7 +264,7 @@ running: insert(k) · AVL`), add a short-answer question such as "Where were you
 
 To add a visualizer:
 
-1. Copy any `cse214/*.html` as a starting shell (topbar, `#code`, `#stage`, `#player`, legend).
+1. Copy any `cse214/*.html` as a starting shell (topbar, `#code`, `#stage`, `#player`).
 2. Write `assets/js/yourmodule.js`:
 
 ```js
@@ -285,13 +286,13 @@ Reuse the shared state classes so colours mean the same thing everywhere: `activ
 
 ```sh
 cd tests && npm install && npm test        # everything; takes a few minutes
-npm test -- motion quiz                    # only some suites
+npm test -- motion scroll                  # only some suites
 npm run serve                              # the site at http://localhost:3000, as Vercel serves it
 npm run serve:accounts                     # the same, with accounts on against a stand-in Supabase (nothing is saved)
 ```
 
 `tests/run.mjs` drives the Chrome installed on your computer, against a local copy of what Vercel serves (the static
-files plus the function, with a stand-in for the AI provider, so it uses no key and costs nothing).
+files plus the functions in `api/`, with a stand-in for Supabase, so it uses no key and costs nothing).
 
 - **static**: every listing has the same anchors in pseudocode and Java, no other languages, and a time and space spec.
 - **fuzz**: every tab, button and select, with empty, negative, decimal, zero, out-of-range and non-numeric input. It
@@ -299,17 +300,11 @@ files plus the function, with a stand-in for the AI provider, so it uses no key 
   `[object …]` reaching the page, and horizontal overflow at 390 px. It prints which code lines no run reached.
 - **motion**: a swap moves exactly two bars, an AVL rotation moves its nodes, everything lands clean, a jump does not
   animate, and reduced motion fades.
-- **quiz**: every module asks questions, and each answer marked correct really is the next step.
-- **why**: every anchored line has a saved explanation, and every saved explanation names a real line. This checks that
-  they exist and match, not that they are true: that takes a person reading them against the code.
-- **tutor**: with the function archived, Why? still works and offers no question box. If `api/tutor.js` is put back,
-  the full suite runs: no key, a key, over the limit, a provider outage, bad input, another site, per-visitor limits.
 - **growth**: the worker's counts equal the visualizer's across every algorithm and input shape, and the measured
   growth rates are about ×100, ×13 and ×10.
 - **playground**: on every module, the button opens the panel on the right program for the tab, and every starter runs
   and draws cleanly, at phone width too. Also errors, a student's code surviving a reload, and links carrying code.
-- **scroll**: starting a run brings the picture on screen once; playing, stepping and quiz questions never move the page.
-- **fullcode**: the "all the code" box follows the running function, shades it, and can show any other structure.
+- **scroll**: starting a run brings the picture on screen once; playing and stepping never move the page.
 - **jvm**: also compiles every structure's full code with `javac`, so a function that is called but not shown fails the
   test, then runs AVL trees, B-trees, BSTs, hash tables and more against `java.util` over thousands of random operations
   (`tests/full-code-drivers.json`). Before that: every starter program, plus programs aimed at Java's trickier rules, compiled with `javac` and run on a real

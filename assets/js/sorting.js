@@ -163,36 +163,46 @@
 
     quick: {
       pseudo: [
-        "quickSort(A, lo, hi): @@fn",
-        "  if lo ≥ hi: return @@base",
-        "  p ← partition(A, lo, hi) @@part",
-        "  quickSort(A, lo, p-1) @@rec1",
-        "  quickSort(A, p+1, hi) @@rec2",
+        "quickSort(A, low, high): @@fn",
+        "  if low ≥ high: return @@base",
+        "  s ← partition(A, low, high)      // s is a split position @@part",
+        "  quickSort(A, low, s-1) @@rec1",
+        "  quickSort(A, s+1, high) @@rec2",
         "",
-        "partition(A, lo, hi):                // Lomuto, pivot = A[hi]",
-        "  pivot ← A[hi];  i ← lo @@pivot",
-        "  for j ← lo to hi-1 @@ploop",
-        "    if A[j] < pivot @@pcmp",
-        "      swap A[i], A[j];  i ← i+1 @@pswap",
-        "  swap A[i], A[hi]                   // pivot lands at i @@pfinal",
-        "  return i @@pfinal",
+        "partition(A, low, high):",
+        "  pivot ← A[low]                   // first element is the pivot @@pivot",
+        "  i ← low;  j ← high+1 @@pivot",
+        "  while true: @@ploop",
+        "    while A[++i] < pivot: @@pi",
+        "      if i = high: break @@pi",
+        "    while pivot < A[--j]: @@pj",
+        "      if j = low: break @@pj",
+        "    if i ≥ j: break @@pcross",
+        "    swap A[i], A[j] @@pswap",
+        "  swap A[low], A[j]                // pivot lands at j @@pfinal",
+        "  return j @@pfinal",
       ],
       java: [
-        "static void quickSort(double[] a, int lo, int hi) { @@fn",
-        "  if (lo >= hi) return; @@base",
-        "  int p = partition(a, lo, hi); @@part",
-        "  quickSort(a, lo, p - 1); @@rec1",
-        "  quickSort(a, p + 1, hi); @@rec2",
+        "static void quickSort(double[] a, int low, int high) { @@fn",
+        "  if (low >= high) return; @@base",
+        "  int s = partition(a, low, high);   // s is a split position @@part",
+        "  quickSort(a, low, s - 1); @@rec1",
+        "  quickSort(a, s + 1, high); @@rec2",
         "}",
         "",
-        "static int partition(double[] a, int lo, int hi) {   // Lomuto",
-        "  double pivot = a[hi];  int i = lo; @@pivot",
-        "  for (int j = lo; j < hi; j++) @@ploop",
-        "    if (a[j] < pivot) { @@pcmp",
-        "      double t = a[i]; a[i] = a[j]; a[j] = t;  i++; @@pswap",
-        "    }",
-        "  double t = a[i]; a[i] = a[hi]; a[hi] = t;   // pivot to i @@pfinal",
-        "  return i; @@pfinal",
+        "static int partition(double[] a, int low, int high) {",
+        "  double pivot = a[low];             // first element is the pivot @@pivot",
+        "  int i = low, j = high + 1; @@pivot",
+        "  while (true) { @@ploop",
+        "    while (a[++i] < pivot) @@pi",
+        "      if (i == high) break; @@pi",
+        "    while (pivot < a[--j]) @@pj",
+        "      if (j == low) break; @@pj",
+        "    if (i >= j) break; @@pcross",
+        "    double t = a[i]; a[i] = a[j]; a[j] = t; @@pswap",
+        "  }",
+        "  double t = a[low]; a[low] = a[j]; a[j] = t;   // pivot lands at j @@pfinal",
+        "  return j; @@pfinal",
         "}",
       ],
     },
@@ -257,9 +267,9 @@
   ALGO.bubble = {
     label: "Bubble Sort",
     code: CODE.bubble,
-    big: ["O(n²) time (worst)", "O(1) space", "best case O(n)", "stable"],
+    big: ["Θ(n²) time (worst)", "Θ(1) space", "best case Θ(n)", "stable"],
     blurb:
-      "<p><b>Bubbles rising in a glass.</b> Swap out-of-order neighbours, pass after pass, and the largest values float to the end, so each pass gets shorter. A pass with no swaps means it's sorted: O(n) in the best case.</p>",
+      "<p><b>Bubbles rising in a glass.</b> Swap out-of-order neighbours, pass after pass, and the largest values float to the end, so each pass gets shorter. A pass with no swaps means it's sorted: Θ(n) in the best case.</p>",
     run(a, s) {
       const n = a.length;
       for (let i = n - 1; i >= 1; i--) {
@@ -293,7 +303,7 @@
   ALGO.selection = {
     label: "Selection Sort",
     code: CODE.selection,
-    big: ["O(n²) time (worst)", "O(1) space", "every case O(n²)", "not stable"],
+    big: ["Θ(n²) time (worst)", "Θ(1) space", "every case Θ(n²)", "not stable"],
     blurb:
       "<p><b>Picking teams: always take the best one left.</b> Find the minimum of the unsorted part and swap it to the front. Always n(n−1)/2 comparisons, but at most n − 1 swaps.</p>",
     run(a, s) {
@@ -329,7 +339,7 @@
   ALGO.insertion = {
     label: "Insertion Sort",
     code: CODE.insertion,
-    big: ["O(n²) time (worst)", "O(1) space", "best case O(n)", "stable"],
+    big: ["Θ(n²) time (worst)", "Θ(1) space", "best case Θ(n)", "stable"],
     blurb:
       "<p><b>Sorting a hand of cards.</b> Take the next card and slide it left past the bigger ones into place. Nearly sorted input barely moves, so libraries use it for small pieces.</p>",
     run(a, s) {
@@ -366,9 +376,9 @@
   ALGO.heap = {
     label: "Heap Sort",
     code: CODE.heap,
-    big: ["O(n log n) time (worst)", "O(1) space", "not stable"],
+    big: ["Θ(n log n) time (worst)", "Θ(1) space", "not stable"],
     blurb:
-      "<p><b>A tournament.</b> Build a max-heap in O(n) so the champion is on top, swap it to the end, shrink the heap, and let the next champion rise. O(n log n), with no extra memory.</p>",
+      "<p><b>A tournament.</b> Build a max-heap in Θ(n) so the champion is on top, swap it to the end, shrink the heap, and let the next champion rise. Θ(n log n), with no extra memory.</p>",
     run(a, s) {
       const n = a.length;
       const down = (i, size) => {
@@ -416,9 +426,9 @@
   ALGO.merge = {
     label: "Merge Sort",
     code: CODE.merge,
-    big: ["O(n log n) time (worst)", "O(n) space", "stable"],
+    big: ["Θ(n log n) time (worst)", "Θ(n) space", "stable"],
     blurb:
-      "<p><b>Merging two sorted stacks of exams</b> by always taking the smaller top sheet. Split in half, sort each half, merge. O(n log n) on every input and stable, but the merge needs an O(n) scratch buffer.</p>",
+      "<p><b>Merging two sorted stacks of exams</b> by always taking the smaller top sheet. Split in half, sort each half, merge. Θ(n log n) on every input and stable, but the merge needs an Θ(n) scratch buffer.</p>",
     run(a, s) {
       const rangeMarks = (lo, hi, cls) => { const m = {}; for (let t = lo; t <= hi; t++) m[t] = cls || "range"; return m; };
       const merge = (lo, mid, hi) => {
@@ -469,47 +479,64 @@
   ALGO.quick = {
     label: "Quick Sort",
     code: CODE.quick,
-    big: ["O(n²) time (worst)", "O(n) stack space (worst)", "average O(n log n)", "not stable"],
+    big: ["Θ(n²) time (worst)", "Θ(n) stack space (worst)", "average Θ(n log n)", "not stable"],
     blurb:
-      "<p><b>Lining up around one person's height:</b> shorter to the left, taller to the right, then repeat on each side. This uses Lomuto partitioning with the last element as pivot. Sorted input makes every split lopsided: O(n²).</p>",
+      "<p><b>Lining up around one person's height:</b> shorter to the left, taller to the right, then repeat on each side. The pivot is the first element; i scans right for a key ≥ pivot, j scans left for a key ≤ pivot, and each such pair swaps until the two scans cross. Sorted input makes every split lopsided: Θ(n²).</p>",
     run(a, s) {
       const rangeMarks = (lo, hi) => { const m = {}; for (let t = lo; t <= hi; t++) m[t] = "range"; return m; };
-      const part = (lo, hi) => {
-        const pivot = a[hi];
-        let i = lo;
-        s.snap(Object.assign(rangeMarks(lo, hi), { [hi]: "pivot" }), "pivot", "partition: pivot ← A[" + hi + "] = " + pivot + ", i ← " + lo + ".");
-        for (let j = lo; j < hi; j++) {
-          s.cmp++;
-          const less = a[j] < pivot;
-          s.snap(Object.assign(rangeMarks(lo, hi), { [hi]: "pivot", [j]: "cmp", [i]: "active" }), ["ploop", "pcmp"], "j = " + j + ": is A[" + j + "] = " + a[j] + " &lt; pivot " + pivot + "? " + (less ? "<b>Yes</b>." : "No."));
-          if (less) {
-            if (i !== j) { [a[i], a[j]] = [a[j], a[i]]; s.mov += 2; }
-            s.snap(Object.assign(rangeMarks(lo, hi), { [hi]: "pivot", [i]: "swap", [j]: "swap" }), "pswap", i !== j
-              ? "Swap A[" + i + "] and A[" + j + "] to grow the &lt;-pivot region, then i ← " + (i + 1) + "."
-              : "i = j, so the swap changes nothing. i ← " + (i + 1) + ".");
+      const part = (low, high) => {
+        const pivot = a[low];
+        let i = low, j = high + 1;
+        const marks = (extra) => Object.assign(rangeMarks(low, high), { [low]: "pivot" }, extra || {});
+        const at = () => { const m = {}; if (i > low && i <= high) m[i] = "active"; if (j >= low && j <= high && j !== low) m[j] = "cmp"; return m; };
+        s.snap(marks(), "pivot", "partition: pivot ← A[" + low + "] = " + pivot + " (the first element), i ← " + low + ", j ← " + (high + 1) + ".");
+        while (true) {
+          if (s.stop()) return low;
+          s.snap(marks(at()), "ploop", "Scan for an out-of-place pair.");
+          while (true) {
             i++;
+            s.cmp++;
+            const less = a[i] < pivot;
+            const edge = less && i === high;
+            s.snap(marks(at()), "pi", "i = " + i + ": is A[" + i + "] = " + a[i] + " &lt; pivot " + pivot + "? " + (less ? "<b>Yes</b>" + (edge ? ", but i = high, so stop." : ", keep going.") : "No, so i stops here."));
+            if (!less || i === high) break;
           }
+          while (true) {
+            j--;
+            s.cmp++;
+            const more = pivot < a[j];
+            const edge = more && j === low;
+            s.snap(marks(at()), "pj", "j = " + j + ": is pivot " + pivot + " &lt; A[" + j + "] = " + a[j] + "? " + (more ? "<b>Yes</b>" + (edge ? ", but j = low, so stop." : ", keep going.") : "No, so j stops here."));
+            if (!more || j === low) break;
+          }
+          if (i >= j) {
+            s.snap(marks(at()), "pcross", "i = " + i + " ≥ j = " + j + ": the scans crossed, so stop.");
+            break;
+          }
+          [a[i], a[j]] = [a[j], a[i]];
+          s.mov += 2;
+          s.snap(marks({ [i]: "swap", [j]: "swap" }), "pswap", "Swap A[" + i + "] and A[" + j + "]: now " + a[i] + " ≤ pivot sits left and " + a[j] + " ≥ pivot sits right.");
         }
-        [a[i], a[hi]] = [a[hi], a[i]];
+        [a[low], a[j]] = [a[j], a[low]];
         s.mov += 2;
-        s.done.add(i);
-        s.snap(Object.assign(rangeMarks(lo, hi), { [i]: "done" }), "pfinal", "Swap the pivot into A[" + i + "]: smaller keys left, ≥ keys right, so " + pivot + " is final. Return " + i + ".");
-        return i;
+        s.done.add(j);
+        s.snap(Object.assign(rangeMarks(low, high), { [j]: "done" }), "pfinal", "Swap the pivot into A[" + j + "]: keys ≤ " + pivot + " are left of it and keys ≥ " + pivot + " are right, so it is final. Return " + j + ".");
+        return j;
       };
-      const qs = (lo, hi) => {
+      const qs = (low, high) => {
         if (s.stop()) return;
-        s.snap(lo <= hi ? rangeMarks(lo, hi) : {}, "fn", "quickSort(A, " + lo + ", " + hi + ").");
-        if (lo >= hi) {
-          if (lo === hi) s.done.add(lo);
-          s.snap(lo === hi ? { [lo]: "done" } : {}, "base", lo === hi ? "A[" + lo + "] is a single element: return." : "Empty range: return.");
+        s.snap(low <= high ? rangeMarks(low, high) : {}, "fn", "quickSort(A, " + low + ", " + high + ").");
+        if (low >= high) {
+          if (low === high) s.done.add(low);
+          s.snap(low === high ? { [low]: "done" } : {}, "base", low === high ? "A[" + low + "] is a single element: return." : "Empty range: return.");
           return;
         }
-        s.snap(rangeMarks(lo, hi), "part", "Partition A[" + lo + "…" + hi + "] around the pivot A[" + hi + "].");
-        const p = part(lo, hi);
-        s.snap(p - 1 >= lo ? rangeMarks(lo, p - 1) : {}, "rec1", "partition returned p = " + p + ". Sort the left part A[" + lo + "…" + (p - 1) + "].");
-        qs(lo, p - 1);
-        s.snap(p + 1 <= hi ? rangeMarks(p + 1, hi) : {}, "rec2", "Back in quickSort(A, " + lo + ", " + hi + "). Sort the right part A[" + (p + 1) + "…" + hi + "].");
-        qs(p + 1, hi);
+        s.snap(rangeMarks(low, high), "part", "Partition A[" + low + "…" + high + "] around its first element A[" + low + "] = " + a[low] + ".");
+        const p = part(low, high);
+        s.snap(p - 1 >= low ? rangeMarks(low, p - 1) : {}, "rec1", "partition returned s = " + p + ". Sort the left part A[" + low + "…" + (p - 1) + "].");
+        qs(low, p - 1);
+        s.snap(p + 1 <= high ? rangeMarks(p + 1, high) : {}, "rec2", "Back in quickSort(A, " + low + ", " + high + "). Sort the right part A[" + (p + 1) + "…" + high + "].");
+        qs(p + 1, high);
       };
       qs(0, a.length - 1);
       for (let k = 0; k < a.length; k++) s.done.add(k);
@@ -520,9 +547,9 @@
   ALGO.twothird = {
     label: "Two-Third Sort",
     code: CODE.twothird,
-    big: ["O(n^2.71) time", "O(log n) stack space", "not stable"],
+    big: ["Θ(n^2.71) time", "Θ(log n) stack space", "not stable"],
     blurb:
-      "<p><b>A deliberately bad sort, good for practising recurrences.</b> Fix the ends, then sort the first two-thirds, the last two-thirds, and the first two-thirds again; the repeat is what makes it correct. T(n) = 3T(2n/3) + O(1) ≈ O(n<sup>2.71</sup>).</p>",
+      "<p><b>A deliberately bad sort, good for practising recurrences.</b> Fix the ends, then sort the first two-thirds, the last two-thirds, and the first two-thirds again; the repeat is what makes it correct. T(n) = 3T(2n/3) + Θ(1) ≈ Θ(n<sup>2.71</sup>).</p>",
     maxN: 14,
     run(a, s) {
       const rangeMarks = (lo, hi) => { const m = {}; for (let t = lo; t <= hi; t++) m[t] = "range"; return m; };
@@ -559,9 +586,9 @@
   ALGO.counting = {
     label: "Counting Sort",
     code: CODE.counting,
-    big: ["O(n + k) time", "O(n + k) space", "stable", "not comparison-based", "k = max − min"],
+    big: ["Θ(n + k) time", "Θ(n + k) space", "stable", "not comparison-based", "k = max − min"],
     blurb:
-      "<p><b>Sorting mail into pigeonholes.</b> Count each key, turn the counts into running totals (where each key's block ends), then place items from the right to keep them stable. No comparisons: O(n + k), best when the key range is small.</p>",
+      "<p><b>Sorting mail into pigeonholes.</b> Count each key, turn the counts into running totals (where each key's block ends), then place items from the right to keep them stable. No comparisons: Θ(n + k), best when the key range is small.</p>",
     kRange: true,
     run(a, s) {
       const n = a.length;
@@ -599,7 +626,7 @@
       }
       for (let i = 0; i < n; i++) { a[i] = B[i]; s.done.add(i); }
       s.snap({}, "back", "Copy B back into A.", { rows: rows({}, allMarks(n, "done")) });
-      s.snap({}, null, "Sorted with zero comparisons: O(n + k) = O(" + n + " + " + k + ") time and extra space.", { rows: rows() });
+      s.snap({}, null, "Sorted with zero comparisons: Θ(n + k) = Θ(" + n + " + " + k + ") time and extra space.", { rows: rows() });
       function allMarks(m, cls) { const o = {}; for (let t = 0; t < m; t++) o[t] = cls; return o; }
     },
   };
@@ -640,14 +667,14 @@
   const HI = { pseudo: "n − 1", java: "a.length - 1" };
   const sortSpec = (does, time, space, extra) => Object.assign({ does: does, params: M("A") + ": the array to sort (changed in place; negatives and decimals are fine)", returns: "nothing: A ends up in ascending order", errors: "none", time: time, space: space }, extra || {});
   D.specs(LISTINGS, {
-    bubble: sortSpec("Repeatedly swaps neighbours that are out of order; stops early after a pass with no swaps. Stable.", "O(n²): reversed input; O(n) when already sorted", "O(1)"),
-    selection: sortSpec("Repeatedly selects the minimum of the unsorted part and swaps it into place. Not stable.", "O(n²): on every input, though at most n − 1 swaps", "O(1)"),
-    insertion: sortSpec("Grows a sorted prefix, shifting larger values right to drop each new key into place. Stable.", "O(n²): reversed input; O(n) when nearly sorted", "O(1)"),
-    heap: sortSpec("Builds a max-heap in the array, then repeatedly swaps the maximum to the end and repairs the heap. Not stable.", "O(n log n)", "O(1): the heap lives inside A"),
-    merge: sortSpec("Splits the range in half, sorts each half recursively, then merges the two sorted halves. Stable.", "O(n log n)", "O(n): the copies L and R, plus O(log n) stack", { params: M("A") + ": the array · " + M("lo") + ", " + M("hi") + ": the range to sort (call with 0 and n − 1)", callVals: { lo: "0", hi: HI } }),
-    quick: sortSpec("Partitions around a pivot (Lomuto: the last element), then sorts both sides recursively. Not stable.", "O(n²): sorted input with this pivot; O(n log n) on average", "O(n): stack depth on sorted input; O(log n) on average", { params: M("A") + ": the array · " + M("lo") + ", " + M("hi") + ": the range to sort (call with 0 and n − 1)", callVals: { lo: "0", hi: HI } }),
-    twothird: sortSpec("Sorts the first two-thirds, the last two-thirds, then the first two-thirds again, correct, but famously slow.", "O(n^2.71): T(n) = 3T(2n/3) + O(1)", "O(log n): the recursion depth", { params: M("A") + ": the array · " + M("i") + ", " + M("j") + ": the range (call with 0 and n − 1)", callVals: { i: "0", j: HI } }),
-    counting: sortSpec("Counts how many times each key occurs, turns the counts into positions, then places every key directly, no comparisons. Stable.", "O(n + k): k = max − min", "O(n + k): C and B", { params: M("A") + ": integer keys (negative is fine; a decimal makes it throw)", errors: "IllegalArgumentException if a key is not an integer" }),
+    bubble: sortSpec("Repeatedly swaps neighbours that are out of order; stops early after a pass with no swaps. Stable.", "Θ(n²): reversed input; Θ(n) when already sorted", "Θ(1)"),
+    selection: sortSpec("Repeatedly selects the minimum of the unsorted part and swaps it into place. Not stable.", "Θ(n²): on every input, though at most n − 1 swaps", "Θ(1)"),
+    insertion: sortSpec("Grows a sorted prefix, shifting larger values right to drop each new key into place. Stable.", "Θ(n²): reversed input; Θ(n) when nearly sorted", "Θ(1)"),
+    heap: sortSpec("Builds a max-heap in the array, then repeatedly swaps the maximum to the end and repairs the heap. Not stable.", "Θ(n log n)", "Θ(1): the heap lives inside A"),
+    merge: sortSpec("Splits the range in half, sorts each half recursively, then merges the two sorted halves. Stable.", "Θ(n log n)", "Θ(n): the copies L and R, plus Θ(log n) stack", { params: M("A") + ": the array · " + M("lo") + ", " + M("hi") + ": the range to sort (call with 0 and n − 1)", callVals: { lo: "0", hi: HI } }),
+    quick: sortSpec("Partitions around a pivot (the first element): i scans right, j scans left, and out-of-place pairs swap until they cross; then sorts both sides recursively. Not stable.", "Θ(n²): sorted input with this pivot; Θ(n log n) on average", "Θ(n): stack depth on sorted input; Θ(log n) on average", { params: M("A") + ": the array · " + M("low") + ", " + M("high") + ": the range to sort (call with 0 and n − 1)", callVals: { low: "0", high: HI } }),
+    twothird: sortSpec("Sorts the first two-thirds, the last two-thirds, then the first two-thirds again, correct, but famously slow.", "Θ(n^2.71): T(n) = 3T(2n/3) + Θ(1)", "Θ(log n): the recursion depth", { params: M("A") + ": the array · " + M("i") + ", " + M("j") + ": the range (call with 0 and n − 1)", callVals: { i: "0", j: HI } }),
+    counting: sortSpec("Counts how many times each key occurs, turns the counts into positions, then places every key directly, no comparisons. Stable.", "Θ(n + k): k = max − min", "Θ(n + k): C and B", { params: M("A") + ": integer keys (negative is fine; a decimal makes it throw)", errors: "IllegalArgumentException if a key is not an integer" }),
   });
   D.sortAlgos = ALGO;   /* the growth-chart test checks its operation counts against these */
   const dock = D.CodeDock("#code", LISTINGS, { full: [{ name: "Sorts", title: "All the sorts", keys: Object.keys(LISTINGS), helpers: [{
@@ -830,7 +857,7 @@
       "Sort an Array",
       "sort-an-array",
       "Medium",
-      "Selection sort is always O(n²): see where it fails."
+      "Selection sort is always Î(n²): see where it fails."
      ],
      [
       1051,
@@ -882,7 +909,7 @@
       "Sort an Array",
       "sort-an-array",
       "Medium",
-      "Heap sort passes in O(n log n) with O(1) space."
+      "Heap sort passes in Î(n log n) with Î(1) space."
      ],
      [
       215,
@@ -922,7 +949,7 @@
       "Sort List",
       "sort-list",
       "Medium",
-      "Merge sort a linked list in O(n log n)."
+      "Merge sort a linked list in Î(n log n)."
      ],
      [
       912,
@@ -989,7 +1016,7 @@
       "Sort an Array",
       "sort-an-array",
       "Medium",
-      "Watch it time out: O(n^2.71) is slower than bubble sort."
+      "Watch it time out: Î(n^2.71) is slower than bubble sort."
      ],
      [
       509,
@@ -1022,7 +1049,7 @@
       "Height Checker",
       "height-checker",
       "Easy",
-      "Small key range, so counting sort is O(n + k)."
+      "Small key range, so counting sort is Î(n + k)."
      ],
      [
       389,
@@ -1064,16 +1091,6 @@
       drawStatic();
       D.toast("Loaded " + v.length + " values.");
     });
-    D.legend("#legend", [
-      { color: "var(--c-idle)", label: "unsorted" },
-      { color: "#bfdbfe", label: "active subarray" },
-      { color: "var(--c-cmp)", label: "comparing" },
-      { color: "var(--c-swap)", label: "moving / writing" },
-      { color: "var(--c-active)", label: "cursor" },
-      { color: "var(--c-pivot)", label: "pivot" },
-      { color: "var(--c-target)", label: "current min" },
-      { color: "var(--c-done)", label: "final position" },
-    ]);
     arr = D.randArray(20, 5, 99);
     selectAlgo("bubble");
     newArray(20, "random");

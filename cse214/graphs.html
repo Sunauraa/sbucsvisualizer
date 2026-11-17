@@ -6,8 +6,8 @@
 <title>Graphs</title>
 <meta name="description" content="Build a graph by clicking, then step through BFS and DFS with the live queue or stack and the adjacency matrix and list.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=42857f81850a">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=42857f81850a">
+<link rel="stylesheet" href="../assets/css/style.css?v=07e04f44212d">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=07e04f44212d">
 </head>
 <body>
 
@@ -24,7 +24,6 @@
 <section class="page-head" aria-label="Page heading">
   <div class="wrap has-action">
     <div class="page-title">
-      <p class="eyebrow">CSE 214 &middot; Module 7</p>
     <h1>Graphs</h1>
     </div>
     <button type="button" class="btn primary pg-open" id="pg-open" aria-expanded="false" aria-controls="playground" title="Write Java here and watch it run step by step">Code playground</button>
@@ -68,16 +67,15 @@
         <div style="margin-top:.8rem" id="frontier"></div>
       </div>
       <div class="col" style="flex:1 1 250px">
-        <div class="small muted" style="margin-bottom:.35rem">adjacency matrix <span class="mono">O(V²) space</span></div>
+        <div class="small muted" style="margin-bottom:.35rem">adjacency matrix <span class="mono">Θ(V²) space</span></div>
         <div class="stage" style="padding:.6rem;overflow:auto"><div id="matrix"></div></div>
-        <div class="small muted" style="margin:.8rem 0 .35rem">adjacency list <span class="mono">O(V+E) space</span></div>
+        <div class="small muted" style="margin:.8rem 0 .35rem">adjacency list <span class="mono">Θ(V+E) space</span></div>
         <div class="stage" style="padding:.6rem"><div id="adjlist"></div></div>
       </div>
     </div>
 
     <div id="player"></div>
 
-    <div id="legend"></div>
   </div>
 
 
@@ -95,8 +93,8 @@
             <tr><td></td><th>BFS</th><th>DFS</th></tr>
             <tr><td>frontier</td><td>queue (FIFO)</td><td>stack (LIFO / recursion)</td></tr>
             <tr><td>order</td><td>by distance from source</td><td>deepest-first, backtracking</td></tr>
-            <tr><td>time (worst case)</td><td class="one">O(V + E)</td><td class="one">O(V + E)</td></tr>
-            <tr><td>extra space (worst case)</td><td>O(V), a whole level in the queue</td><td>O(V), the deepest path on the stack</td></tr>
+            <tr><td>time (worst case)</td><td class="one">Θ(V + E)</td><td class="one">Θ(V + E)</td></tr>
+            <tr><td>extra space (worst case)</td><td>Θ(V), a whole level in the queue</td><td>Θ(V), the deepest path on the stack</td></tr>
             <tr><td>gives you</td><td>shortest paths (unweighted)</td><td>cycles, components, topo order</td></tr>
             <tr><td>tree edges</td><td>shortest-path tree</td><td>DFS tree / forest</td></tr>
           </table>
@@ -109,11 +107,11 @@
         <div style="overflow-x:auto" tabindex="0">
           <table class="tbl" style="min-width:400px">
             <tr><th>Operation (time / extra space)</th><th>Matrix</th><th>List</th></tr>
-            <tr><td>memory for the graph</td><td>O(V²)</td><td class="one">O(V + E)</td></tr>
-            <tr><td>is (u,v) an edge?</td><td class="one">O(1) / O(1)</td><td>O(deg u) / O(1)</td></tr>
-            <tr><td>iterate neighbours of u</td><td>O(V) / O(1)</td><td class="one">O(deg u) / O(1)</td></tr>
-            <tr><td>add edge</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
-            <tr><td>BFS / DFS overall</td><td>O(V²) / O(V)</td><td class="one">O(V + E) / O(V)</td></tr>
+            <tr><td>memory for the graph</td><td>Θ(V²)</td><td class="one">Θ(V + E)</td></tr>
+            <tr><td>is (u,v) an edge?</td><td class="one">Θ(1) / Θ(1)</td><td>Θ(deg u) / Θ(1)</td></tr>
+            <tr><td>iterate neighbours of u</td><td>Θ(V) / Θ(1)</td><td class="one">Θ(deg u) / Θ(1)</td></tr>
+            <tr><td>add edge</td><td class="one">Θ(1) / Θ(1)</td><td class="one">Θ(1) / Θ(1)</td></tr>
+            <tr><td>BFS / DFS overall</td><td>Θ(V²) / Θ(V)</td><td class="one">Θ(V + E) / Θ(V)</td></tr>
           </table>
         </div>
         <p class="small muted" style="margin:.7rem 0 .7rem">Real graphs are <b>sparse</b> (E is near V, not V²), so lists win. Only dense graphs, like the <em>complete K₆</em> preset, favour the matrix.</p>
@@ -141,12 +139,10 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../credits.html">Credits</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=42857f81850a"></script>
-<script src="../assets/js/account.js?v=42857f81850a"></script>
-<script src="../assets/js/motion.js?v=42857f81850a"></script>
-<script src="../assets/js/tutor.js?v=42857f81850a"></script>
-<script src="../assets/js/quiz.js?v=42857f81850a"></script>
-<script src="../assets/js/playground.js?v=42857f81850a"></script>
-<script src="../assets/js/graphs.js?v=42857f81850a"></script>
+<script src="../assets/js/core.js?v=07e04f44212d"></script>
+<script src="../assets/js/account.js?v=07e04f44212d"></script>
+<script src="../assets/js/motion.js?v=07e04f44212d"></script>
+<script src="../assets/js/playground.js?v=07e04f44212d"></script>
+<script src="../assets/js/graphs.js?v=07e04f44212d"></script>
 </body>
 </html>

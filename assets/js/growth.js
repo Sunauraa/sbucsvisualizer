@@ -1,7 +1,7 @@
 /* ============================================================
    growth.js: "how does it scale?" on the Sorting page.
    Runs the sorts at n = 10 … 10,000 in a Web Worker and plots total
-   operations against n, so O(n²) visibly pulls away from O(n log n).
+   operations against n, so Θ(n²) visibly pulls away from Θ(n log n).
    Drawn with the same small SVG helpers as the rest of the site, so it
    adds no library and no build step.
    ============================================================ */
@@ -215,7 +215,7 @@
         if (i) insight.appendChild(document.createTextNode(", "));
         insight.appendChild(D.el("b", { text: x.s.label + " ×" + (x.r.f < 100 ? x.r.f.toFixed(1) : Math.round(x.r.f)) }));
       });
-      insight.appendChild(document.createTextNode(". O(n) would be about ×10, O(n log n) about ×13, and O(n²) about ×100."));
+      insight.appendChild(document.createTextNode(". Θ(n) would be about ×10, Θ(n log n) about ×13, and Θ(n²) about ×100."));
     }
 
     /* ---------- running ---------- */

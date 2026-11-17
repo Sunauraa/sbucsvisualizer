@@ -9,7 +9,7 @@
 -- ============================================================
 
 -- ---------- progress: one row per student per module page ----------
--- data = { tabs: [...], tabsTotal, ops: [...], opsTotal, quiz: { right, total }, lc: [problem numbers] }
+-- data = { tabs: [...], tabsTotal, ops: [...], opsTotal, lc: [problem numbers] }
 create table if not exists public.progress (
   user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
   page       text not null check (char_length(page) between 1 and 40),

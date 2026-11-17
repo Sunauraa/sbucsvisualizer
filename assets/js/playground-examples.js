@@ -660,7 +660,7 @@ class CircularList {
   }
 }
 ` },
-      { name: "fibonacci: naive", tabs: /naive/, code: `public class Main {
+      { name: "fibonacci", tabs: /^fib/, code: `public class Main {
   public static void main(String[] args) {
     System.out.println(fib(5));
     System.out.println(fibIter(5));
@@ -687,40 +687,7 @@ class CircularList {
   }
 }
 ` },
-      { name: "fibonacci: memoised", tabs: /memo/, code: `import java.util.*;
-
-public class Main {
-  public static void main(String[] args) {
-    System.out.println(fib(8, new HashMap<>()));
-    System.out.println(fibTable(8));
-  }
-
-  static long fib(int n, Map<Integer, Long> memo) {
-    if (memo.containsKey(n)) {
-      return memo.get(n);
-    }
-    if (n <= 1) {
-      return n;
-    }
-    long v = fib(n - 1, memo) + fib(n - 2, memo);
-    memo.put(n, v);
-    return v;
-  }
-
-  static long fibTable(int n) {
-    if (n <= 1) {
-      return n;
-    }
-    long[] t = new long[n + 1];
-    t[1] = 1;
-    for (int i = 2; i <= n; i++) {
-      t[i] = t[i - 1] + t[i - 2];
-    }
-    return t[n];
-  }
-}
-` },
-      { name: "gcd: Euclid", tabs: /gcd/, code: `public class Main {
+      { name: "gcd", tabs: /gcd/, code: `public class Main {
   public static void main(String[] args) {
     System.out.println(gcd(84, 30));
     System.out.println(gcdIter(84, 30));
@@ -743,7 +710,7 @@ public class Main {
   }
 }
 ` },
-      { name: "power: fast", tabs: /power/, code: `public class Main {
+      { name: "power", tabs: /power/, code: `public class Main {
   public static void main(String[] args) {
     System.out.println(power(2, 10));
     System.out.println(power(2, -2));
@@ -933,77 +900,6 @@ class ArrayStack {
   int top() {
     if (t == -1) throw new RuntimeException("empty");
     return data[t];
-  }
-}
-` },
-      { name: "queue: plain array", tabs: /plain array/, code: `public class Main {
-  public static void main(String[] args) {
-    ArrayQueue queue = new ArrayQueue(4);
-    queue.enqueue(1);
-    queue.enqueue(2);
-    queue.enqueue(3);
-    System.out.println("dequeue() = " + queue.dequeue());
-  }
-}
-
-class ArrayQueue {
-  int[] data;   // the front is always data[0]
-  int n = 0;
-
-  ArrayQueue(int capacity) {
-    data = new int[capacity];
-  }
-
-  void enqueue(int x) {
-    if (n == data.length) throw new IllegalStateException("full");
-    data[n] = x;
-    n++;
-  }
-
-  int dequeue() {
-    if (n == 0) throw new RuntimeException("empty");
-    int x = data[0];
-    for (int k = 1; k < n; k++) {
-      data[k - 1] = data[k];
-    }
-    n--;
-    data[n] = 0;
-    return x;
-  }
-}
-` },
-      { name: "queue: front moves, no wrap", tabs: /plain vs/, code: `public class Main {
-  public static void main(String[] args) {
-    DriftingQueue queue = new DriftingQueue(4);
-    queue.enqueue(1);
-    queue.enqueue(2);
-    System.out.println("dequeue() = " + queue.dequeue());
-    queue.enqueue(3);
-    System.out.println("front " + queue.front + ", rear " + queue.rear);
-  }
-}
-
-class DriftingQueue {
-  int[] data;
-  int front = 0;   // index of the front element
-  int rear = 0;    // index of the next free slot
-
-  DriftingQueue(int capacity) {
-    data = new int[capacity];
-  }
-
-  void enqueue(int x) {
-    if (rear == data.length) throw new IllegalStateException("full");
-    data[rear] = x;
-    rear++;
-  }
-
-  int dequeue() {
-    if (front == rear) throw new RuntimeException("empty");
-    int x = data[front];
-    data[front] = 0;
-    front++;
-    return x;
   }
 }
 ` },
@@ -1245,7 +1141,6 @@ class Node {
     }
     System.out.println("search(40) found: " + (tree.search(40) != null));
     System.out.println("predecessor(50) = " + tree.predecessor(50).key);
-    System.out.println("successor(40) = " + tree.successor(40).key);
     tree.delete(30);
     System.out.println("search(30) found: " + (tree.search(30) != null));
   }
@@ -1294,8 +1189,8 @@ class BinarySearchTree {
     Node n = search(k);
     if (n == null) return;
     if (n.left != null && n.right != null) {
-      Node s = n.right;   // the successor; n.left's rightmost node also works
-      while (s.left != null) s = s.left;
+      Node s = n.left;   // the in-order predecessor: the rightmost node on the left
+      while (s.right != null) s = s.right;
       n.key = s.key;
       n = s;
     }
@@ -1320,22 +1215,6 @@ class BinarySearchTree {
     }
     Node p = n.parent;
     while (p != null && n == p.left) {
-      n = p;
-      p = p.parent;
-    }
-    return p;
-  }
-
-  Node successor(int k) {
-    Node n = search(k);
-    if (n == null) return null;
-    if (n.right != null) {
-      n = n.right;
-      while (n.left != null) n = n.left;
-      return n;
-    }
-    Node p = n.parent;
-    while (p != null && n == p.right) {
       n = p;
       p = p.parent;
     }
@@ -1378,9 +1257,9 @@ class BinarySearchTree {
     } else {
       if (n.left == null) return n.right;
       if (n.right == null) return n.left;
-      Node s = min(n.right);   // or max(n.left), then delete from n.left
+      Node s = max(n.left);   // the in-order predecessor
       n.key = s.key;
-      n.right = delete(n.right, s.key);
+      n.left = delete(n.left, s.key);
     }
     return n;
   }
@@ -1414,7 +1293,6 @@ class Node {
     System.out.println("root = " + tree.root.key);
     System.out.println("search(25) found: " + (tree.search(25) != null));
     System.out.println("predecessor(28) = " + tree.predecessor(28).key);
-    System.out.println("successor(25) = " + tree.successor(25).key);
     tree.delete(10);
     System.out.println("root = " + tree.root.key);
   }
@@ -1532,8 +1410,8 @@ class AVLTree {
     Node n = search(k);
     if (n == null) return null;
     if (n.left != null && n.right != null) {
-      Node s = n.right;
-      while (s.left != null) s = s.left;
+      Node s = n.left;
+      while (s.right != null) s = s.right;
       n.key = s.key;
       n = s;
     }
@@ -1559,22 +1437,6 @@ class AVLTree {
     }
     Node p = n.parent;
     while (p != null && n == p.left) {
-      n = p;
-      p = p.parent;
-    }
-    return p;
-  }
-
-  Node successor(int k) {
-    Node n = search(k);
-    if (n == null) return null;
-    if (n.right != null) {
-      n = n.right;
-      while (n.left != null) n = n.left;
-      return n;
-    }
-    Node p = n.parent;
-    while (p != null && n == p.right) {
       n = p;
       p = p.parent;
     }
@@ -2549,28 +2411,30 @@ public class Main {
     while (j < R.length) a[k++] = R[j++];
   }
 `, "mergeSort(data, 0, data.length - 1)") },
-      { name: "quick sort", tabs: /Quick/, code: sortProgram(`  static void quickSort(int[] a, int lo, int hi) {
-    if (lo >= hi) return;
-    int p = partition(a, lo, hi);
-    quickSort(a, lo, p - 1);
-    quickSort(a, p + 1, hi);
+      { name: "quick sort", tabs: /Quick/, code: sortProgram(`  static void quickSort(int[] a, int low, int high) {
+    if (low >= high) return;
+    int s = partition(a, low, high);   // s is a split position
+    quickSort(a, low, s - 1);
+    quickSort(a, s + 1, high);
   }
 
-  static int partition(int[] a, int lo, int hi) {
-    int pivot = a[hi];
-    int i = lo;
-    for (int j = lo; j < hi; j++) {
-      if (a[j] < pivot) {
-        int t = a[i];
-        a[i] = a[j];
-        a[j] = t;
-        i++;
-      }
+  static int partition(int[] a, int low, int high) {
+    int pivot = a[low];                // first element is the pivot
+    int i = low, j = high + 1;
+    while (true) {
+      while (a[++i] < pivot)
+        if (i == high) break;
+      while (pivot < a[--j])
+        if (j == low) break;
+      if (i >= j) break;
+      int t = a[i];
+      a[i] = a[j];
+      a[j] = t;
     }
-    int t = a[i];
-    a[i] = a[hi];
-    a[hi] = t;
-    return i;
+    int t = a[low];
+    a[low] = a[j];
+    a[j] = t;
+    return j;
   }
 `, "quickSort(data, 0, data.length - 1)") },
       { name: "two-third sort", tabs: /Two-Third/, code: sortProgram(`  static void twoThirdSort(int[] a, int i, int j) {

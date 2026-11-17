@@ -6,8 +6,8 @@
 <title>Stacks, Queues &amp; Deques</title>
 <meta name="description" content="Step through array stacks, plain and circular queues and deques, plus a bracket checker and a postfix evaluator.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=42857f81850a">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=42857f81850a">
+<link rel="stylesheet" href="../assets/css/style.css?v=07e04f44212d">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=07e04f44212d">
 </head>
 <body>
 
@@ -24,7 +24,6 @@
 <section class="page-head" aria-label="Page heading">
   <div class="wrap has-action">
     <div class="page-title">
-      <p class="eyebrow">CSE 214 &middot; Module 3</p>
     <h1>Stacks, Queues &amp; Deques</h1>
     </div>
     <button type="button" class="btn primary pg-open" id="pg-open" aria-expanded="false" aria-controls="playground" title="Write Java here and watch it run step by step">Code playground</button>
@@ -37,19 +36,14 @@
 
   <div class="panel main">
     <div class="toolbar">
-      <div class="field" data-tab="stack aqueue cqueue deque compare"><label for="val">value</label><input type="number" step="any" id="val" placeholder="random"></div>
-      <div class="sep" data-tab="stack aqueue cqueue deque compare"></div>
+      <div class="field" data-tab="stack cqueue deque"><label for="val">value</label><input type="number" step="any" id="val" placeholder="random"></div>
+      <div class="sep" data-tab="stack cqueue deque"></div>
 
       <div class="toolbar" data-tab="stack" style="margin:0">
         <button id="s-push">push</button>
         <button id="s-pop">pop</button>
         <button id="s-peek">top</button>
         <button class="danger" id="s-clear">clear</button>
-      </div>
-      <div class="toolbar" data-tab="aqueue" style="margin:0">
-        <button id="a-enq">enqueue</button>
-        <button id="a-deq">dequeue</button>
-        <button class="danger" id="a-clear">clear</button>
       </div>
       <div class="toolbar" data-tab="cqueue" style="margin:0">
         <button id="q-enq">enqueue</button>
@@ -64,18 +58,6 @@
         <button id="k-rl">removeLast</button>
         <button class="danger" id="k-clear">clear</button>
       </div>
-      <div class="toolbar" data-tab="compare" style="margin:0">
-        <button id="c-enq">enqueue on both</button>
-        <button id="c-deq">dequeue on both</button>
-        <div class="field">
-          <label for="c-left">left queue</label>
-          <select id="c-left">
-            <option value="shift">front pinned at 0 (shift)</option>
-            <option value="drift">front moves, no wrap</option>
-          </select>
-        </div>
-        <button class="danger" id="c-clear">reset both</button>
-      </div>
       <div class="toolbar" data-tab="app" style="margin:0">
         <input type="text" id="bstr" class="wide" value="{ a[ i ] + (b * c) }" aria-label="expression">
         <button id="ap-brackets">check brackets</button>
@@ -86,28 +68,12 @@
     </div>
 
 
-    <div data-tab="stack aqueue cqueue deque app">
+    <div data-tab="stack cqueue deque app">
       <div id="code"></div>
       <div class="stage" id="stage"></div>
     </div>
 
-    <div class="compare" data-tab="compare">
-      <div class="pane" id="pane-L">
-        <div class="pane-head"><h3 id="L-title">Plain array queue</h3><span class="tagline" id="L-tag"></span></div>
-        <div id="L-code"></div>
-        <div class="stage" id="L-stage"></div>
-        <div class="pane-note" id="L-note"></div>
-      </div>
-      <div class="pane" id="pane-R">
-        <div class="pane-head"><h3>Circular array queue</h3><span class="tagline">indices wrap with mod</span></div>
-        <div id="R-code"></div>
-        <div class="stage" id="R-stage"></div>
-        <div class="pane-note" id="R-note"></div>
-      </div>
-    </div>
-
     <div id="player"></div>
-    <div id="legend"></div>
   </div>
 
 
@@ -121,29 +87,15 @@
         <h3>Words to know</h3>
         <dl class="kv defs">
           <dt data-part="stack app">LIFO</dt><dd data-part="stack app"><b>Last In, First Out</b>, like a pile of plates. Stacks are LIFO.</dd>
-          <dt data-part="aqueue cqueue compare">FIFO</dt><dd data-part="aqueue cqueue compare"><b>First In, First Out</b>, like a checkout line. Queues are FIFO.</dd>
+          <dt data-part="cqueue">FIFO</dt><dd data-part="cqueue"><b>First In, First Out</b>, like a checkout line. Queues are FIFO.</dd>
           <dt data-part="stack app">stack</dt><dd data-part="stack app">a LIFO list. <span class="mono">push(x)</span> adds on top, <span class="mono">pop()</span>
             removes the top, <span class="mono">top()</span> (or peek) looks at it without removing it.</dd>
-          <dt data-part="aqueue cqueue compare">queue</dt><dd data-part="aqueue cqueue compare">a FIFO list. <span class="mono">enqueue(x)</span> joins at the <b>rear</b>,
+          <dt data-part="cqueue">queue</dt><dd data-part="cqueue">a FIFO list. <span class="mono">enqueue(x)</span> joins at the <b>rear</b>,
             <span class="mono">dequeue()</span> leaves from the <b>front</b>, <span class="mono">first()</span> looks at the front.</dd>
           <dt data-part="deque">deque</dt><dd data-part="deque">“double-ended queue”, said “deck”. You can add and remove at both ends.</dd>
-          <dt data-part="stack aqueue cqueue deque compare">overflow</dt><dd data-part="stack aqueue cqueue deque compare">adding to a structure that is already full (here, all 8 array slots are in use).</dd>
+          <dt data-part="stack cqueue deque">overflow</dt><dd data-part="stack cqueue deque">adding to a structure that is already full (here, all 8 array slots are in use).</dd>
           <dt>underflow</dt><dd>removing from (or looking into) an empty structure.</dd>
         </dl>
-        <div data-part="aqueue cqueue compare">
-        <h4 style="margin-top:1.2rem">Why a circular array?</h4>
-        <p class="small muted">A queue's front keeps moving. Three ways to handle that:</p>
-        <div style="overflow-x:auto" tabindex="0">
-          <table class="tbl" style="min-width:470px">
-            <tr><th>Array queue strategy</th><th>enqueue</th><th>dequeue</th><th>problem</th></tr>
-            <tr><td>front pinned at index 0</td><td class="one">O(1)</td><td>O(n)</td><td>every dequeue shifts n − 1 elements</td></tr>
-            <tr><td>front index moves, no wrap</td><td class="one">O(1)</td><td class="one">O(1)</td><td>freed slots are never reused: “full” with empty space</td></tr>
-            <tr><td>circular (front + size, mod N)</td><td class="one">O(1)</td><td class="one">O(1)</td><td>none. Every slot is reusable.</td></tr>
-          </table>
-        </div>
-        <p class="small muted" style="margin:.6rem 0 .4rem">Times are worst case, and all three use O(1) extra space.</p>
-        <p class="small muted" style="margin-bottom:0">In the circular one, the front wraps from N − 1 to 0, and <span class="mono">size</span> tells full from empty. The <b>plain vs circular</b> tab runs both.</p>
-        </div>
       </div>
     </div>
     <div class="col">
@@ -153,18 +105,18 @@
         <div style="overflow-x:auto" tabindex="0" data-part="stack cqueue deque">
           <table class="tbl" data-cols="_ stack cqueue deque">
             <tr><td></td><th>Stack (array)</th><th>Queue (circular)</th><th>Deque (circular)</th></tr>
-            <tr><td>add at front</td><td>–</td><td>–</td><td class="one">O(1) / O(1)</td></tr>
-            <tr><td>add at rear / push</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
-            <tr><td>remove front</td><td>–</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
-            <tr><td>remove rear / pop</td><td class="one">O(1) / O(1)</td><td>–</td><td class="one">O(1) / O(1)</td></tr>
-            <tr><td>peek (top / first)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td><td class="one">O(1) / O(1)</td></tr>
-            <tr><td>whole structure</td><td>– / O(N)</td><td>– / O(N)</td><td>– / O(N)</td></tr>
+            <tr><td>add at front</td><td>–</td><td>–</td><td class="one">Θ(1) / Θ(1)</td></tr>
+            <tr><td>add at rear / push</td><td class="one">Θ(1) / Θ(1)</td><td class="one">Θ(1) / Θ(1)</td><td class="one">Θ(1) / Θ(1)</td></tr>
+            <tr><td>remove front</td><td>–</td><td class="one">Θ(1) / Θ(1)</td><td class="one">Θ(1) / Θ(1)</td></tr>
+            <tr><td>remove rear / pop</td><td class="one">Θ(1) / Θ(1)</td><td>–</td><td class="one">Θ(1) / Θ(1)</td></tr>
+            <tr><td>peek (top / first)</td><td class="one">Θ(1) / Θ(1)</td><td class="one">Θ(1) / Θ(1)</td><td class="one">Θ(1) / Θ(1)</td></tr>
+            <tr><td>whole structure</td><td>– / Θ(N)</td><td>– / Θ(N)</td><td>– / Θ(N)</td></tr>
           </table>
         </div>
-        <p class="small muted" style="margin:.5rem 0 .7rem" data-part="app">The bracket checker and postfix evaluator are O(n) time and space for n characters.</p>
+        <p class="small muted" style="margin:.5rem 0 .7rem" data-part="app">The bracket checker and postfix evaluator are Θ(n) time and space for n characters.</p>
         <dl class="kv">
           <dt data-part="stack app">Used for</dt><dd data-part="stack app">call frames, undo/redo, DFS, bracket matching, postfix evaluation</dd>
-          <dt data-part="cqueue aqueue compare">Used for</dt><dd data-part="cqueue aqueue compare">BFS, print/task scheduling, buffers, level-order traversal</dd>
+          <dt data-part="cqueue">Used for</dt><dd data-part="cqueue">BFS, print/task scheduling, buffers, level-order traversal</dd>
           <dt data-part="deque">Used for</dt><dd data-part="deque">sliding-window maximum, work stealing, palindrome checks</dd>
         </dl>
       </div>
@@ -182,12 +134,10 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../credits.html">Credits</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=42857f81850a"></script>
-<script src="../assets/js/account.js?v=42857f81850a"></script>
-<script src="../assets/js/motion.js?v=42857f81850a"></script>
-<script src="../assets/js/tutor.js?v=42857f81850a"></script>
-<script src="../assets/js/quiz.js?v=42857f81850a"></script>
-<script src="../assets/js/playground.js?v=42857f81850a"></script>
-<script src="../assets/js/stacks.js?v=42857f81850a"></script>
+<script src="../assets/js/core.js?v=07e04f44212d"></script>
+<script src="../assets/js/account.js?v=07e04f44212d"></script>
+<script src="../assets/js/motion.js?v=07e04f44212d"></script>
+<script src="../assets/js/playground.js?v=07e04f44212d"></script>
+<script src="../assets/js/stacks.js?v=07e04f44212d"></script>
 </body>
 </html>

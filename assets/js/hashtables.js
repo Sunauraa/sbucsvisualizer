@@ -71,7 +71,7 @@
         "  b ← h(k) mod m                     // which bucket @@hash",
         "  for each key x in bucket[b]:       // walk the chain @@loop",
         "    if x == k: return                // already present @@dup",
-        "  bucket[b].addFirst(k)              // O(1) @@add",
+        "  bucket[b].addFirst(k)              // Θ(1) @@add",
         "  n ← n + 1 @@add",
         "  if n / m > maxLoad: rehash() @@rehash",
       ],
@@ -234,19 +234,19 @@
     [false, true].forEach((str) => {
       const sfx = str ? "_s" : "";
       const h = str ? "the polynomial hash of k" : "k itself";
-      const L = str ? " (+ O(|k|) to hash)" : "";
-      specs["ch_put" + sfx] = { does: "Adds k to bucket " + M("h(k) mod m") + "'s list if absent, then rehashes if α is too high. h(k) is " + h + "." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "none", time: "O(n): if every key lands in the same bucket, or when the put triggers a rehash; O(1 + α) expected" + L, space: "O(1): one list node (O(n + m) during a rehash)" };
-      specs["ch_get" + sfx] = { does: "Walks bucket " + M("h(k) mod m") + "'s list looking for k." + eq(str), params: keyP(str), returns: "true if k is in the table", errors: "none", time: "O(n): if every key collides into one chain; O(1 + α) expected" + L, space: "O(1)" };
-      specs["ch_remove" + sfx] = { does: "Unlinks k from its bucket's list, if present. No tombstones are needed." + eq(str), params: keyP(str), returns: "nothing (a missing key is ignored)", errors: "none", time: "O(n): if every key collides into one chain; O(1 + α) expected" + L, space: "O(1)" };
-      specs["rehash" + sfx] = { does: "Allocates a table of the next prime size above 2m and re-inserts every key; tombstones are dropped.", params: "none", returns: "nothing", errors: "none", time: "O(n + m): every key is re-inserted", space: "O(n + m): the new table" };
+      const L = str ? " (+ Θ(|k|) to hash)" : "";
+      specs["ch_put" + sfx] = { does: "Adds k to bucket " + M("h(k) mod m") + "'s list if absent, then rehashes if α is too high. h(k) is " + h + "." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "none", time: "Θ(n): if every key lands in the same bucket, or when the put triggers a rehash; Θ(1 + α) expected" + L, space: "Θ(1): one list node (Θ(n + m) during a rehash)" };
+      specs["ch_get" + sfx] = { does: "Walks bucket " + M("h(k) mod m") + "'s list looking for k." + eq(str), params: keyP(str), returns: "true if k is in the table", errors: "none", time: "Θ(n): if every key collides into one chain; Θ(1 + α) expected" + L, space: "Θ(1)" };
+      specs["ch_remove" + sfx] = { does: "Unlinks k from its bucket's list, if present. No tombstones are needed." + eq(str), params: keyP(str), returns: "nothing (a missing key is ignored)", errors: "none", time: "Θ(n): if every key collides into one chain; Θ(1 + α) expected" + L, space: "Θ(1)" };
+      specs["rehash" + sfx] = { does: "Allocates a table of the next prime size above 2m and re-inserts every key; tombstones are dropped.", params: "none", returns: "nothing", errors: "none", time: "Θ(n + m): every key is re-inserted", space: "Θ(n + m): the new table" };
       ["linear", "quad"].forEach((mode) => {
         const how = mode === "linear" ? "the next slot, i = 1, 2, 3 …" : "offsets i² = 1, 4, 9 …";
-        specs["oa_put_" + mode + sfx] = { does: "Probes from " + M("h(k) mod m") + " (" + how + ") and stores k in the first EMPTY slot or tombstone." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "no free slot found: the table is full" + (mode === "quad" ? ", or quadratic probing missed the free slots (possible when α ≥ ½)" : ""), time: "O(m): a probe can visit every slot; O(1) expected while α stays small" + L, space: "O(1)" };
-        specs["oa_get_" + mode + sfx] = { does: "Follows put's probe sequence until it finds k or an EMPTY slot; tombstones don't stop it." + eq(str), params: keyP(str), returns: "true if k is in the table", errors: "none", time: "O(m): a probe can visit every slot; O(1) expected" + L, space: "O(1)" };
-        specs["oa_remove_" + mode + sfx] = { does: "Replaces k with a DELETED tombstone, so later searches still pass through." + eq(str), params: keyP(str), returns: "nothing (a missing key is ignored)", errors: "none", time: "O(m): a probe can visit every slot; O(1) expected" + L, space: "O(1)" };
+        specs["oa_put_" + mode + sfx] = { does: "Probes from " + M("h(k) mod m") + " (" + how + ") and stores k in the first EMPTY slot or tombstone." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "no free slot found: the table is full" + (mode === "quad" ? ", or quadratic probing missed the free slots (possible when α ≥ ½)" : ""), time: "Θ(m): a probe can visit every slot; Θ(1) expected while α stays small" + L, space: "Θ(1)" };
+        specs["oa_get_" + mode + sfx] = { does: "Follows put's probe sequence until it finds k or an EMPTY slot; tombstones don't stop it." + eq(str), params: keyP(str), returns: "true if k is in the table", errors: "none", time: "Θ(m): a probe can visit every slot; Θ(1) expected" + L, space: "Θ(1)" };
+        specs["oa_remove_" + mode + sfx] = { does: "Replaces k with a DELETED tombstone, so later searches still pass through." + eq(str), params: keyP(str), returns: "nothing (a missing key is ignored)", errors: "none", time: "Θ(m): a probe can visit every slot; Θ(1) expected" + L, space: "Θ(1)" };
       });
     });
-    specs.hash_s = { does: "Turns a string into an int: h = 31·h + code(c) for each character. Position matters, so anagrams hash differently; different strings can still collide (\"Aa\" and \"BB\" both give 2112).", params: M("s") + ": the string", returns: "a 32-bit int, possibly negative after overflow: that is why the table uses floorMod", errors: "none", time: "O(length of s): Java caches the result inside the String", space: "O(1)", callVals: { s: '"cat"' } };
+    specs.hash_s = { does: "Turns a string into an int: h = 31·h + code(c) for each character. Position matters, so anagrams hash differently; different strings can still collide (\"Aa\" and \"BB\" both give 2112).", params: M("s") + ": the string", returns: "a 32-bit int, possibly negative after overflow: that is why the table uses floorMod", errors: "none", time: "Θ(length of s): Java caches the result inside the String", space: "Θ(1)", callVals: { s: '"cat"' } };
     D.specs(CODE, specs);
   }
 
@@ -451,7 +451,7 @@
     chain.unshift(k);
     T.n++;
     c.probes++;
-    c.at("add").snap({ [i]: "done" }, "Add it at the <b>front</b> of bucket " + i + "'s list: O(1). Chain length " + chain.length + ", load factor α = n/m = " + T.n + "/" + T.m + " = " + alpha().toFixed(2) + ".", { chainMark: { b: i, j: 0, cls: "done" } });
+    c.at("add").snap({ [i]: "done" }, "Add it at the <b>front</b> of bucket " + i + "'s list: Θ(1). Chain length " + chain.length + ", load factor α = n/m = " + T.n + "/" + T.m + " = " + alpha().toFixed(2) + ".", { chainMark: { b: i, j: 0, cls: "done" } });
     c.at(alpha() > threshold() ? "rehash" : "rehash^").snap({}, "α = " + alpha().toFixed(2) + (alpha() > threshold() ? " is above " : " ≤ ") + "maxLoad = " + threshold() + (alpha() > threshold() ? (T.auto ? ": time to rehash." : ", but auto-rehash is off.") : ": no rehash needed."));
   }
   function chainSearch(c, k) {
@@ -464,7 +464,7 @@
       c.probes++;
       c.at("loop").snap({ [i]: "cmp" }, "Node " + j + " of the chain holds " + fmtk(chain[j]) + ".", { chainMark: { b: i, j: j, cls: "cmp" } });
       if (String(chain[j]) !== String(k)) c.at("found^").snap({ [i]: "cmp" }, fmtk(chain[j]) + " ≠ " + fmtk(k) + ".", { chainMark: { b: i, j: j, cls: "cmp" } });
-      if (String(chain[j]) === String(k)) { c.at("found").snap({ [i]: "done" }, "<b>Found</b> after " + c.probes + " comparison(s). The expected cost is 1 + α/2, which is O(1) as long as α stays small.", { chainMark: { b: i, j: j, cls: "done" } }); return; }
+      if (String(chain[j]) === String(k)) { c.at("found").snap({ [i]: "done" }, "<b>Found</b> after " + c.probes + " comparison(s). The expected cost is 1 + α/2, which is Θ(1) as long as α stays small.", { chainMark: { b: i, j: j, cls: "done" } }); return; }
     }
     c.at("loop").snap({ [i]: "cmp" }, chain.length ? "No more nodes in the chain." : "Bucket " + i + " is empty, so the loop body never runs.");
     c.at("miss").snap({ [i]: "swap" }, chain.length ? "End of the chain: <b>not found</b> after " + c.probes + " comparison(s)." : "Bucket " + i + " is empty, so <b>" + fmtk(k) + " is not in the table</b>.");
@@ -579,7 +579,7 @@
       c.at("loop").snap({}, "Next old key: " + fmtk(k) + ".");
       if (T.mode === "chain") { T.slots[h1(k, T.m)].unshift(k); T.n++; }
       else { for (let i = 0; i < T.m; i++) { const p = probeAt(k, i); if (T.slots[p] === null) { T.slots[p] = k; T.n++; break; } } }
-      c.at("put").snap({ [h1(k, T.m)]: "done" }, "put(" + fmtk(k) + "): h(k) mod " + T.m + " = " + h1(k, T.m) + ". Changing m changes every hash, so every key moves: O(n + m).");
+      c.at("put").snap({ [h1(k, T.m)]: "done" }, "put(" + fmtk(k) + "): h(k) mod " + T.m + " = " + h1(k, T.m) + ". Changing m changes every hash, so every key moves: Θ(n + m).");
     });
     c.at("loop").snap({}, "Rehash complete. α is back down to " + alpha().toFixed(2) + ". The table roughly doubles, so rehashes are rare.");
   }
@@ -777,7 +777,7 @@
       "Contains Duplicate",
       "contains-duplicate",
       "Easy",
-      "Membership tests in O(1) expected."
+      "Membership tests in Î(1) expected."
      ],
      [
       387,
@@ -791,7 +791,7 @@
       "Longest Consecutive Sequence",
       "longest-consecutive-sequence",
       "Medium",
-      "O(n) only because lookups are O(1)."
+      "Î(n) only because lookups are Î(1)."
      ],
      [
       219,
@@ -911,13 +911,6 @@
       player.load(c.frames, true);
     });
     q("op-clear").addEventListener("click", () => { fresh(T.m); T.probesTotal = 0; T.opsTotal = 0; still("Cleared."); });
-    D.legend("#legend", [
-      { color: "var(--c-active)", label: "home slot / free slot found" },
-      { color: "var(--c-cmp)", label: "occupied: collision, keep probing" },
-      { color: "var(--c-visit)", label: "tombstone (deleted)" },
-      { color: "var(--c-done)", label: "stored / found" },
-      { color: "var(--c-swap)", label: "not found" },
-    ]);
 
     fresh(11);
     [23, 45, 12, 34, 56].forEach((k) => { T.slots[h1(k, 11)].unshift(k); T.n++; });

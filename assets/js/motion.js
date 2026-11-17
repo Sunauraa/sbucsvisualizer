@@ -23,13 +23,12 @@
 (function () {
   "use strict";
   const D = window.DSA;
-  const LS = "dsa.motion";
   const MAX_UNITS = 400;                    /* past this, repainting is clearer than a swarm */
   const SKIP = ".code-dock, .player, .about, #practice, .toolbar, .growth, [data-motion='off']";
   const ease = (t) => 1 - Math.pow(1 - t, 4);
 
+  /* always on: there is no switch any more, and an old saved "off" (dsa.motion) is ignored */
   let on = true;
-  try { on = localStorage.getItem(LS) !== "0"; } catch (e) {}
   const reducedQ = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
 
   /* ---------- what counts as a value on screen ---------- */
@@ -219,7 +218,7 @@
 
   D.motion = {
     get enabled() { return on; },
-    set enabled(v) { on = !!v; try { localStorage.setItem(LS, on ? "1" : "0"); } catch (e) {} },
+    set enabled(v) { on = !!v; },
     /** Called just before a repaint. `step` says whether this repaint is one step of the same run. */
     begin(player, step) {
       stop(player);
@@ -239,12 +238,4 @@
       };
     },
   };
-
-  /* the on/off switch next to Speed */
-  D.playerAddons.push(function (player) {
-    const box = D.el("input", { type: "checkbox", "aria-label": "Animate each step" });
-    box.checked = on;
-    box.addEventListener("change", () => { D.motion.enabled = box.checked; });
-    player.tools.appendChild(D.el("label", { class: "tool-check", title: "Slide values to their new places on each step" }, [box, "Animate"]));
-  });
 })();

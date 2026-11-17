@@ -108,7 +108,7 @@
   FN.factorial = {
     label: "factorial(n)",
     inputs: [{ id: "n", label: "n", value: 5, min: -99, max: 10, int: true }],
-    big: ["T(n) = T(n−1) + O(1)", "O(n) time", "O(n) stack space"],
+    big: ["T(n) = T(n−1) + Θ(1)", "Θ(n) time", "Θ(n) stack space"],
     blurb:
       "<p><b>Nesting dolls.</b> factorial(n) opens a smaller doll, factorial(n−1), until the smallest one (n ≤ 1) answers directly. Nothing is multiplied on the way in: each frame waits, and the multiplying happens as the dolls close. Try a negative n.</p>",
     code: {
@@ -141,11 +141,11 @@
   };
 
   FN.fib = {
-    label: "fib(n) · naive",
+    label: "fib(n)",
     inputs: [{ id: "n", label: "n", value: 5, min: -99, max: 8, int: true }],
-    big: ["T(n) = T(n−1) + T(n−2) + O(1)", "O(2ⁿ) time", "O(n) stack space"],
+    big: ["T(n) = T(n−1) + T(n−2) + Θ(1)", "Θ(2ⁿ) time", "Θ(n) stack space"],
     blurb:
-      "<p><b>Asking two friends, who each ask two friends.</b> fib(n) calls fib(n−1) and fib(n−2), so the same questions get asked again and again: count the fib(2)s. About 1.618ⁿ calls, so O(2ⁿ).</p>",
+      "<p><b>Asking two friends, who each ask two friends.</b> fib(n) calls fib(n−1) and fib(n−2), so the same questions get asked again and again: count the fib(2)s. About 1.618ⁿ calls, so Θ(2ⁿ).</p>",
     code: {
       pseudo: [
         "fib(n): @@fn",
@@ -178,63 +178,15 @@
     },
   };
 
-  FN.fibmemo = {
-    label: "fib(n) · memoised",
-    inputs: [{ id: "n", label: "n", value: 8, min: -99, max: 14, int: true }],
-    big: ["O(n) time", "O(n) space", "top-down DP"],
-    blurb:
-      "<p><b>Write each answer down the first time.</b> A memo table turns every repeat question into a lookup, so each n is computed once: O(n) instead of exponential.</p>",
-    code: {
-      pseudo: [
-        "fib(n, memo): @@fn",
-        "  if n < 0: error \"n must be ≥ 0\" @@neg",
-        "  if n in memo: return memo[n]          // hit @@hit",
-        "  if n ≤ 1: memo[n] ← n;  return n @@base",
-        "  v ← fib(n-1, memo) + fib(n-2, memo) @@rec",
-        "  memo[n] ← v @@store",
-        "  return v @@ret",
-      ],
-      java: [
-        "static long fib(int n, Map<Integer, Long> memo) { @@fn",
-        "  if (n < 0) throw new IllegalArgumentException(\"n < 0\"); @@neg",
-        "  if (memo.containsKey(n)) return memo.get(n);   // hit @@hit",
-        "  if (n <= 1) { memo.put(n, (long) n);  return n; } @@base",
-        "  long v = fib(n - 1, memo) + fib(n - 2, memo); @@rec",
-        "  memo.put(n, v); @@store",
-        "  return v; @@ret",
-        "}",
-      ],
-    },
-    run(t, args) {
-      const memo = {};
-      t.view = { type: "memo", memo: memo, n: Math.max(0, args.n) };
-      (function f(n) {
-        const id = t.at("fn").enter("fib(" + n + ")", { n: n });
-        if (n < 0) return t.at("neg").fail(id, "<b>Error:</b> n = " + n + " &lt; 0, so Java throws <span class='mono'>IllegalArgumentException</span> before touching the memo.");
-        if (memo[n] !== undefined) return t.at(["neg^", "hit"]).exit(id, memo[n], "<b>Memo hit!</b> fib(" + n + ") = " + memo[n] + " was already computed. Return it without recursing: this subtree is pruned.");
-        t.at(["neg^", "hit^"]).step("n ≥ 0, and fib(" + n + ") is not in the memo yet.");
-        if (n <= 1) { memo[n] = n; return t.at("base").exit(id, n, "n ≤ 1: base case. Store memo[" + n + "] = " + n + " and return it."); }
-        t.at("base^").step("n = " + n + " &gt; 1: not the base case.");
-        t.wait(id, "v ← fib(" + (n - 1) + ") + fib(" + (n - 2) + ")").at("rec").step("Compute fib(" + (n - 1) + ") first, then fib(" + (n - 2) + ").");
-        const a = f(n - 1);
-        t.wait(id, "v ← " + a + " + fib(" + (n - 2) + ")").at("rec").step("Back in fib(" + n + "): fib(" + (n - 1) + ") = " + a + ". Now fib(" + (n - 2) + ")" + (memo[n - 2] !== undefined ? ", which is already in the memo." : "."));
-        const b = f(n - 2);
-        memo[n] = a + b;
-        t.wait(id, null).set(id, { v: a + b }).at("store").step("v = " + a + " + " + b + " = " + (a + b) + ". Store <b>memo[" + n + "] = " + (a + b) + "</b> so nobody recomputes it.");
-        return t.at("ret").exit(id, memo[n], "Return " + memo[n] + ".");
-      })(args.n);
-    },
-  };
-
   FN.gcd = {
-    label: "gcd(a, b) · Euclid",
+    label: "gcd(a, b)",
     inputs: [
       { id: "a", label: "a", value: 84, min: -9999, max: 9999, int: true },
       { id: "b", label: "b", value: 30, min: -9999, max: 9999, int: true },
     ],
-    big: ["O(log min(a, b)) time", "O(log min(a, b)) stack space", "tail recursive"],
+    big: ["Θ(log min(a, b)) time", "Θ(log min(a, b)) stack space", "tail recursive"],
     blurb:
-      "<p><b>The biggest tile that fits two lengths exactly.</b> Anything that fits a and b also fits b and a mod b, so gcd(a, b) = gcd(b, a mod b). The numbers shrink fast, O(log n) calls, and since the call is the last step, a loop can replace it.</p>",
+      "<p><b>The biggest tile that fits two lengths exactly.</b> Anything that fits a and b also fits b and a mod b, so gcd(a, b) = gcd(b, a mod b). The numbers shrink fast, Θ(log n) calls, and since the call is the last step, a loop can replace it.</p>",
     code: {
       pseudo: ["gcd(a, b): @@fn", "  if b == 0: return a          // base case @@base", "  return gcd(b, a mod b)       // tail call @@rec"],
       java: ["static int gcd(int a, int b) { @@fn", "  if (b == 0) return a;        // base case @@base", "  return gcd(b, a % b);        // tail call @@rec", "}"],
@@ -253,12 +205,12 @@
   };
 
   FN.power = {
-    label: "power(x, n) · fast",
+    label: "power(x, n)",
     inputs: [
       { id: "x", label: "x", value: 3, min: -1e6, max: 1e6 },
       { id: "n", label: "n", value: 13, min: -64, max: 64, int: true },
     ],
-    big: ["T(n) = T(n/2) + O(1)", "O(log n) time", "O(log n) stack space"],
+    big: ["T(n) = T(n/2) + Θ(1)", "Θ(log n) time", "Θ(log n) stack space"],
     blurb:
       "<p><b>Doubling up instead of counting up.</b> x<sup>13</sup> = x · (x<sup>6</sup>)², and x<sup>6</sup> = (x<sup>3</sup>)²: halve the exponent each call instead of multiplying n times. That's log₂n levels. A negative n computes 1 / x<sup>−n</sup>.</p>",
     code: {
@@ -307,7 +259,7 @@
   FN.hanoi = {
     label: "Towers of Hanoi",
     inputs: [{ id: "n", label: "disks", value: 3, min: 1, max: 5, int: true }],
-    big: ["T(n) = 2T(n−1) + O(1)", "O(2ⁿ) time", "O(n) stack space"],
+    big: ["T(n) = 2T(n−1) + Θ(1)", "Θ(2ⁿ) time", "Θ(n) stack space"],
     blurb:
       "<p><b>Delegate and trust.</b> To move n disks from A to C, have someone move the top n−1 to B, move the biggest disk yourself, then have them move the n−1 onto C. You never plan the small moves: that's the recursive call's job. 2ⁿ − 1 moves in all.</p>",
     code: {
@@ -348,7 +300,7 @@
   FN.bsearch = {
     label: "binarySearch(A, target)",
     inputs: [{ id: "target", label: "target", value: 47, min: -1e9, max: 1e9 }],
-    big: ["T(n) = T(n/2) + O(1)", "O(log n) time", "O(log n) stack space"],
+    big: ["T(n) = T(n/2) + Θ(1)", "Θ(log n) time", "Θ(log n) stack space"],
     blurb:
       "<p><b>Finding a word in a dictionary.</b> Open to the middle, decide which half the word must be in, and ignore the other half. Each call halves what's left: at most ⌈log₂n⌉ + 1 comparisons. It only works on a sorted array.</p>",
     code: {
@@ -403,7 +355,7 @@
     label: "permutations(s)",
     inputs: [],
     stringInput: { id: "str", label: "string", value: "ABC", max: 4 },
-    big: ["n! leaves", "O(n · n!) time", "O(n) stack space"],
+    big: ["n! leaves", "Θ(n · n!) time", "Θ(n) stack space"],
     blurb:
       "<p><b>Trying on outfits.</b> Pick a first item, arrange the rest, then put it back and try another: choose, recurse, undo. That's backtracking. n choices, then n−1, and so on: n! arrangements.</p>",
     code: {
@@ -478,7 +430,7 @@
     factorial: {
       code: {
         title: "factorialIter(n) · a loop",
-        pseudo: ["factorialIter(n):", "  if n < 0: error \"n must be ≥ 0\" @@neg", "  result ← 1 @@init", "  for i ← 2 to n: @@loop", "    result ← result · i @@mul", "  return result            // no call stack: O(1) space @@ret"],
+        pseudo: ["factorialIter(n):", "  if n < 0: error \"n must be ≥ 0\" @@neg", "  result ← 1 @@init", "  for i ← 2 to n: @@loop", "    result ← result · i @@mul", "  return result            // no call stack: Θ(1) space @@ret"],
         java: ["static long factorialIter(int n) {", "  if (n < 0) throw new IllegalArgumentException(\"n < 0\"); @@neg", "  long result = 1; @@init", "  for (int i = 2; i <= n; i++) @@loop", "    result *= i; @@mul", "  return result; @@ret", "}"],
       },
       run(it, a) {
@@ -492,7 +444,7 @@
           it.set({ result: num(r) }).row().at("mul").step("result = " + num(r / i) + " · " + i + " = <b>" + num(r) + "</b>.");
         }
         it.at("loop").step("i = " + Math.max(2, a.n + 1) + " &gt; n, so the loop ends.");
-        it.at("ret").step("Return <b>" + num(r) + "</b>. Only a few variables were ever used: <b>O(1)</b> extra space, compared with " + Math.max(1, a.n) + " stack frames for the recursive version.");
+        it.at("ret").step("Return <b>" + num(r) + "</b>. Only a few variables were ever used: <b>Θ(1)</b> extra space, compared with " + Math.max(1, a.n) + " stack frames for the recursive version.");
       },
     },
     fib: {
@@ -513,30 +465,7 @@
           [a, b] = [b, a + b];
           it.set({ a: a, b: b }).row().at("step").step("a ← " + a + ", b ← " + b + " = fib(" + i + "). Each Fibonacci number is computed <b>exactly once</b>.");
         }
-        it.at("ret").step("Return <b>" + b + "</b> after " + (x.n - 1) + " loop steps: <b>O(n)</b> time, <b>O(1)</b> space. The naive recursion made about 1.618ⁿ calls.");
-      },
-    },
-    fibmemo: {
-      code: {
-        title: "fibTable(n) · bottom-up DP",
-        pseudo: ["fibTable(n):                   // bottom-up dynamic programming", "  if n < 0: error \"n must be ≥ 0\" @@neg", "  if n ≤ 1: return n @@base", "  T ← new array[n+1];  T[0] ← 0;  T[1] ← 1 @@init", "  for i ← 2 to n: @@loop", "    T[i] ← T[i-1] + T[i-2]       // fill left to right @@fill", "  return T[n] @@ret"],
-        java: ["static long fibTable(int n) {", "  if (n < 0) throw new IllegalArgumentException(\"n < 0\"); @@neg", "  if (n <= 1) return n; @@base", "  long[] t = new long[n + 1];  t[1] = 1; @@init", "  for (int i = 2; i <= n; i++) @@loop", "    t[i] = t[i - 1] + t[i - 2]; @@fill", "  return t[n]; @@ret", "}"],
-      },
-      run(it, x) {
-        const T = {};
-        it.set({ n: x.n });
-        if (x.n < 0) { it.at("neg").step("<b>Error:</b> n = " + x.n + " &lt; 0, so the method throws."); return; }
-        it.view = { type: "memo", memo: T, n: x.n };
-        if (x.n <= 1) { it.at(["neg^", "base"]).step("n = " + x.n + " ≤ 1: return " + x.n + "."); return; }
-        it.at(["neg^", "base^"]).step("n = " + x.n + ": not negative and not ≤ 1.");
-        T[0] = 0; T[1] = 1;
-        it.at("init").step("Allocate a table of " + (x.n + 1) + " cells: O(n) extra space. T[0] = 0, T[1] = 1.");
-        for (let i = 2; i <= x.n; i++) {
-          it.set({ i: i }).at("loop").step("i = " + i + ".");
-          T[i] = T[i - 1] + T[i - 2];
-          it.row().at("fill").step("T[" + i + "] = T[" + (i - 1) + "] + T[" + (i - 2) + "] = " + T[i - 1] + " + " + T[i - 2] + " = <b>" + T[i] + "</b>.");
-        }
-        it.at("ret").step("Return T[" + x.n + "] = <b>" + T[x.n] + "</b>. It fills the same table as the memoised recursion, but in order, with no calls and no stack.");
+        it.at("ret").step("Return <b>" + b + "</b> after " + (x.n - 1) + " loop steps: <b>Θ(n)</b> time, <b>Θ(1)</b> space. The recursive version made about 1.618ⁿ calls.");
       },
     },
     gcd: {
@@ -577,7 +506,7 @@
           it.set({ x: num(x), n: n }).row().at("half").step("Square x (now " + num(x) + ") and shift n right to " + n + ".");
         }
         it.at("loop").step("n = 0: every bit has been read.");
-        it.at("ret").step("Return <b>" + num(r) + "</b> after " + it.iters + " iterations, one per bit of n: <b>O(log n)</b> time and O(1) space. The recursion halves n top-down; the loop reads the same bits bottom-up.");
+        it.at("ret").step("Return <b>" + num(r) + "</b> after " + it.iters + " iterations, one per bit of n: <b>Θ(log n)</b> time and Θ(1) space. The recursion halves n top-down; the loop reads the same bits bottom-up.");
       },
     },
     hanoi: {
@@ -662,7 +591,7 @@
           it.view.mid = null;
         }
         it.at("loop").step("lo = " + lo + " &gt; hi = " + hi + ": the range is empty.");
-        it.at("miss").step("Return <b>−1</b>. Same O(log n) steps as the recursion, but O(1) space instead of O(log n) stack frames.");
+        it.at("miss").step("Return <b>−1</b>. Same Θ(log n) steps as the recursion, but Θ(1) space instead of Θ(log n) stack frames.");
       },
     },
     perms: {
@@ -705,7 +634,7 @@
   /* =======================================================
      layout + rendering
      ======================================================= */
-  let nodes = [], geom = { w: 400, h: 200, nw: 90 }, dock, dockL, dockR;
+  let nodes = [], geom = { w: 400, h: 200, nw: 90 }, dock;
 
   function layout(ns) {
     if (!ns.length) return;
@@ -727,7 +656,6 @@
   }
 
   function render(f) {
-    if (f.L) return renderCompare(f);
     const host = q("main");
     host.innerHTML = "";
     host.appendChild(f.kind === "iter" ? iterView(f) : recView(f, false));
@@ -817,18 +745,7 @@
     return box;
   }
 
-  function renderCompare(f) {
-    const L = f.L, R = f.R;
-    dockL.sync(L); dockR.sync(R);
-    const ls = q("L-stage"), rs = q("R-stage");
-    ls.innerHTML = ""; rs.innerHTML = "";
-    ls.appendChild(recView(L, true));
-    rs.appendChild(iterView(R));
-    q("L-note").innerHTML = L.note || "";
-    q("R-note").innerHTML = R.note || "";
-    q("pane-L").classList.toggle("finished", f.done[0] && player.index > 0);
-    q("pane-R").classList.toggle("finished", f.done[1] && player.index > 0);
-  }
+
 
   function sideView(v) {
     let el;
@@ -854,10 +771,6 @@
       if (v.mid != null) ptrs[v.mid] = (ptrs[v.mid] ? ptrs[v.mid] + "/" : "") + "mid";
       if (v.hi >= 0) ptrs[v.hi] = (ptrs[v.hi] ? ptrs[v.hi] + "/" : "") + "hi";
       el = D.cells(v.arr, { marks: marks, ptrs: ptrs, live: (x, i) => i >= v.lo && i <= v.hi, show: (x) => num(x), w: 40, h: 36, label: "searching for <b>" + num(v.target) + "</b>: dashed cells have been discarded" });
-    } else if (v.type === "memo") {
-      const arr = [];
-      for (let i = 0; i <= v.n; i++) arr.push(v.memo[i] === undefined ? null : v.memo[i]);
-      el = D.cells(arr, { marks: arr.reduce((m, x, i) => { if (x != null) m[i] = "done"; return m; }, {}), w: 40, h: 34, label: "table T[0…" + v.n + "]: green cells never need recomputing" });
     } else if (v.type === "list") {
       el = D.cells(v.items, { index: false, marks: v.items.reduce((m, x, i) => { m[i] = "done"; return m; }, {}), w: 52, h: 32, label: v.label + " (" + v.items.length + ")", emptyText: "none yet" });
     } else el = D.el("div");
@@ -878,7 +791,7 @@
   /* =======================================================
      init
      ======================================================= */
-  const ORDER = ["factorial", "fib", "fibmemo", "gcd", "power", "hanoi", "bsearch", "perms"];
+  const ORDER = ["factorial", "fib", "gcd", "power", "hanoi", "bsearch", "perms"];
   let cur = "factorial", player, sortedArr = [], mode = "rec", modeSeg, built = "";
 
   function buildInputs(id) {
@@ -915,8 +828,6 @@
     D.showFor(m);
     if (modeSeg && modeSeg.current !== m) modeSeg.pick(m, true);
     dock.show(cur + (m === "iter" ? "_iter" : "_rec"));
-    dockL.show(cur + "_rec");
-    dockR.show(cur + "_iter");
   }
 
   function select(id) {
@@ -1004,12 +915,7 @@
     let frames;
     pendingOver = false;
     if (mode === "rec") { const t = traceRec(args); pendingOver = t.over; frames = t.frames; }
-    else if (mode === "iter") { frames = traceIter(args).frames; }
-    else {
-      const t = traceRec(args), it = traceIter(args);
-      frames = D.zip(t.frames, it.frames, (L, R, i, a, b) =>
-        "Same input, two programs, one step each per frame. Recursive: <b>" + a + "</b> steps. Iterative: <b>" + b + "</b> steps." + (i >= Math.min(a, b) - 1 ? " The shorter one has finished and waits with a ✓." : ""));
-    }
+    else frames = traceIter(args).frames;
     /* "fib(n)" → "fib(6)": put the input values into the call */
     const call = FN[cur].label.replace(/\s+·.*$/, "").replace(/\(([^)]*)\)/, (m, ps) => "(" + ps.split(",").map((x) => {
       const k = x.trim();
@@ -1065,7 +971,7 @@
     ]
    },
    "fib": {
-    "label": "fib (naive)",
+    "label": "fib",
     "items": [
      [
       509,
@@ -1087,46 +993,6 @@
       "climbing-stairs",
       "Easy",
       "Fibonacci in disguise."
-     ]
-    ]
-   },
-   "fibmemo": {
-    "label": "fib (memoised)",
-    "items": [
-     [
-      70,
-      "Climbing Stairs",
-      "climbing-stairs",
-      "Easy",
-      "Add a memo and it becomes O(n)."
-     ],
-     [
-      746,
-      "Min Cost Climbing Stairs",
-      "min-cost-climbing-stairs",
-      "Easy",
-      "Top-down memo or bottom-up table."
-     ],
-     [
-      198,
-      "House Robber",
-      "house-robber",
-      "Medium",
-      "The next step in dynamic programming."
-     ],
-     [
-      62,
-      "Unique Paths",
-      "unique-paths",
-      "Medium",
-      "paths(r, c) = paths(r-1, c) + paths(r, c-1), memoised."
-     ],
-     [
-      322,
-      "Coin Change",
-      "coin-change",
-      "Medium",
-      "Memoise the best answer for each amount."
      ]
     ]
    },
@@ -1344,22 +1210,20 @@
     const M = (t) => "<span class='mono'>" + t + "</span>";
     const HI = { pseudo: "n − 1", java: "a.length - 1" };
     D.specs(listings, {
-      factorial_rec: { does: "Computes n! = n · (n−1)!, with 0! = 1! = 1 as the base case.", params: M("n") + ": an int", returns: "n!", errors: "IllegalArgumentException if n &lt; 0; overflows a long beyond 20!", time: "O(n): one call per value n, n−1, …, 1", space: "O(n): n stack frames are alive at the deepest point" },
-      factorial_iter: { does: "Computes n! with a loop that multiplies 2, 3, …, n into one variable.", params: M("n") + ": an int", returns: "n!", errors: "IllegalArgumentException if n &lt; 0; overflows a long beyond 20!", time: "O(n)", space: "O(1)" },
-      fib_rec: { does: "Computes the n-th Fibonacci number straight from the definition fib(n) = fib(n−1) + fib(n−2).", params: M("n") + ": an int", returns: "fib(n)", errors: "IllegalArgumentException if n &lt; 0", time: "O(2ⁿ): about 1.618ⁿ calls, because the same values are recomputed over and over", space: "O(n): the deepest chain of calls" },
-      fib_iter: { does: "Computes fib(n) by sliding two variables (the previous two numbers) forward.", params: M("n") + ": an int", returns: "fib(n)", errors: "IllegalArgumentException if n &lt; 0", time: "O(n)", space: "O(1)" },
-      fibmemo_rec: { does: "Recursive fib that stores each answer in a memo, so every fib(k) is computed only once (top-down DP).", params: M("n") + ": an int · " + M("memo") + ": the map of answers found so far", returns: "fib(n)", errors: "IllegalArgumentException if n &lt; 0", time: "O(n): each fib(k) is computed once", space: "O(n): the memo plus O(n) stack frames", callVals: { memo: { pseudo: "{}", java: "new HashMap<>()" } } },
-      fibmemo_iter: { does: "Fills a table T[0..n] from the bottom up: T[i] = T[i−1] + T[i−2].", params: M("n") + ": an int", returns: "T[n] = fib(n)", errors: "IllegalArgumentException if n &lt; 0", time: "O(n)", space: "O(n): the table" },
-      gcd_rec: { does: "Euclid's algorithm: gcd(a, b) = gcd(b, a mod b), and gcd(a, 0) = a.", params: M("a") + ", " + M("b") + ": ints (negative allowed)", returns: "their greatest common divisor (negative when Java's % keeps a negative sign)", errors: "none", time: "O(log min(|a|, |b|)): the numbers at least halve every two calls", space: "O(log min(|a|, |b|)): one frame per call" },
-      gcd_iter: { does: "Euclid's algorithm as a loop: replace (a, b) by (b, a mod b) until b is 0.", params: M("a") + ", " + M("b") + ": ints (negative allowed)", returns: "gcd(a, b)", errors: "none", time: "O(log min(|a|, |b|))", space: "O(1)" },
-      power_rec: { does: "Computes xⁿ by squaring: xⁿ = (x^⌊n/2⌋)², times x when n is odd. A negative n uses x⁻ⁿ = 1 / xⁿ.", params: M("x") + ": any double (negative or decimal) · " + M("n") + ": an int exponent", returns: "xⁿ", errors: "none (0 to a negative power gives Infinity)", time: "O(log |n|): n halves on every call", space: "O(log |n|): one frame per halving" },
-      power_iter: { does: "Computes xⁿ by reading the bits of n: square x each step, multiply it in when the bit is 1.", params: M("x") + ": any double · " + M("n") + ": an int exponent", returns: "xⁿ", errors: "none", time: "O(log |n|)", space: "O(1)" },
-      hanoi_rec: { does: "Moves n disks from one peg to another: move n−1 out of the way, move the biggest, move n−1 back on top.", params: M("n") + ": number of disks · the three pegs", returns: "nothing (prints the moves)", errors: "none", time: "O(2ⁿ): exactly 2ⁿ − 1 moves", space: "O(n): the recursion is n frames deep", callVals: { from: "'A'", to: "'C'", via: "'B'", src: "'A'", dst: "'C'" } },
-      hanoi_iter: { does: "The same moves, driven by an explicit stack of pending tasks instead of the call stack.", params: M("n") + ": number of disks", returns: "nothing (prints the moves)", errors: "none", time: "O(2ⁿ)", space: "O(n): the explicit stack holds at most about 2n tasks" },
-      bsearch_rec: { does: "Binary search in a sorted array: compare with the middle, then recurse into the half that can hold the target.", params: M("A") + ": sorted array (negatives and decimals fine) · " + M("target") + ": the key · " + M("lo") + ", " + M("hi") + ": the range (call with 0 and n − 1)", returns: "an index holding target, or −1", errors: "wrong answers if A is not sorted", time: "O(log n)", space: "O(log n): one frame per halving", callVals: { lo: "0", hi: HI, A: "A", a: "a" } },
-      bsearch_iter: { does: "The same binary search with a loop that moves lo and hi.", params: M("A") + ": sorted array · " + M("target") + ": the key", returns: "an index holding target, or −1", errors: "wrong answers if A is not sorted", time: "O(log n)", space: "O(1)" },
-      perms_rec: { does: "Prints every ordering of the characters: fix each remaining character next, then permute the rest.", params: M("chosen") + ": the prefix built so far · " + M("rest") + ": characters still to place", returns: "nothing (prints n! strings)", errors: "none", time: "O(n · n!): n! leaves, each built in O(n)", space: "O(n) frames (plus the strings they hold)", callVals: { chosen: '""' } },
-      perms_iter: { does: "The same orderings, produced by an explicit stack of (chosen, rest) states.", params: M("s") + ": the characters", returns: "nothing (prints n! strings)", errors: "none", time: "O(n · n!)", space: "O(n²): the stack holds up to about n²/2 states" },
+      factorial_rec: { does: "Computes n! = n · (n−1)!, with 0! = 1! = 1 as the base case.", params: M("n") + ": an int", returns: "n!", errors: "IllegalArgumentException if n &lt; 0; overflows a long beyond 20!", time: "Θ(n): one call per value n, n−1, …, 1", space: "Θ(n): n stack frames are alive at the deepest point" },
+      factorial_iter: { does: "Computes n! with a loop that multiplies 2, 3, …, n into one variable.", params: M("n") + ": an int", returns: "n!", errors: "IllegalArgumentException if n &lt; 0; overflows a long beyond 20!", time: "Θ(n)", space: "Θ(1)" },
+      fib_rec: { does: "Computes the n-th Fibonacci number straight from the definition fib(n) = fib(n−1) + fib(n−2).", params: M("n") + ": an int", returns: "fib(n)", errors: "IllegalArgumentException if n &lt; 0", time: "Θ(2ⁿ): about 1.618ⁿ calls, because the same values are recomputed over and over", space: "Θ(n): the deepest chain of calls" },
+      fib_iter: { does: "Computes fib(n) by sliding two variables (the previous two numbers) forward.", params: M("n") + ": an int", returns: "fib(n)", errors: "IllegalArgumentException if n &lt; 0", time: "Θ(n)", space: "Θ(1)" },
+      gcd_rec: { does: "Euclid's algorithm: gcd(a, b) = gcd(b, a mod b), and gcd(a, 0) = a.", params: M("a") + ", " + M("b") + ": ints (negative allowed)", returns: "their greatest common divisor (negative when Java's % keeps a negative sign)", errors: "none", time: "Θ(log min(|a|, |b|)): the numbers at least halve every two calls", space: "Θ(log min(|a|, |b|)): one frame per call" },
+      gcd_iter: { does: "Euclid's algorithm as a loop: replace (a, b) by (b, a mod b) until b is 0.", params: M("a") + ", " + M("b") + ": ints (negative allowed)", returns: "gcd(a, b)", errors: "none", time: "Θ(log min(|a|, |b|))", space: "Θ(1)" },
+      power_rec: { does: "Computes xⁿ by squaring: xⁿ = (x^⌊n/2⌋)², times x when n is odd. A negative n uses x⁻ⁿ = 1 / xⁿ.", params: M("x") + ": any double (negative or decimal) · " + M("n") + ": an int exponent", returns: "xⁿ", errors: "none (0 to a negative power gives Infinity)", time: "Θ(log |n|): n halves on every call", space: "Θ(log |n|): one frame per halving" },
+      power_iter: { does: "Computes xⁿ by reading the bits of n: square x each step, multiply it in when the bit is 1.", params: M("x") + ": any double · " + M("n") + ": an int exponent", returns: "xⁿ", errors: "none", time: "Θ(log |n|)", space: "Θ(1)" },
+      hanoi_rec: { does: "Moves n disks from one peg to another: move n−1 out of the way, move the biggest, move n−1 back on top.", params: M("n") + ": number of disks · the three pegs", returns: "nothing (prints the moves)", errors: "none", time: "Θ(2ⁿ): exactly 2ⁿ − 1 moves", space: "Θ(n): the recursion is n frames deep", callVals: { from: "'A'", to: "'C'", via: "'B'", src: "'A'", dst: "'C'" } },
+      hanoi_iter: { does: "The same moves, driven by an explicit stack of pending tasks instead of the call stack.", params: M("n") + ": number of disks", returns: "nothing (prints the moves)", errors: "none", time: "Θ(2ⁿ)", space: "Θ(n): the explicit stack holds at most about 2n tasks" },
+      bsearch_rec: { does: "Binary search in a sorted array: compare with the middle, then recurse into the half that can hold the target.", params: M("A") + ": sorted array (negatives and decimals fine) · " + M("target") + ": the key · " + M("lo") + ", " + M("hi") + ": the range (call with 0 and n − 1)", returns: "an index holding target, or −1", errors: "wrong answers if A is not sorted", time: "Θ(log n)", space: "Θ(log n): one frame per halving", callVals: { lo: "0", hi: HI, A: "A", a: "a" } },
+      bsearch_iter: { does: "The same binary search with a loop that moves lo and hi.", params: M("A") + ": sorted array · " + M("target") + ": the key", returns: "an index holding target, or −1", errors: "wrong answers if A is not sorted", time: "Θ(log n)", space: "Θ(1)" },
+      perms_rec: { does: "Prints every ordering of the characters: fix each remaining character next, then permute the rest.", params: M("chosen") + ": the prefix built so far · " + M("rest") + ": characters still to place", returns: "nothing (prints n! strings)", errors: "none", time: "Θ(n · n!): n! leaves, each built in Θ(n)", space: "Θ(n) frames (plus the strings they hold)", callVals: { chosen: '""' } },
+      perms_iter: { does: "The same orderings, produced by an explicit stack of (chosen, rest) states.", params: M("s") + ": the characters", returns: "nothing (prints n! strings)", errors: "none", time: "Θ(n · n!)", space: "Θ(n²): the stack holds up to about n²/2 states" },
     });
     /* the call line shows the values in the input boxes */
     const inputArgs = () => {
@@ -1375,8 +1239,6 @@
       pseudo: ["move(from, to):               // one disk, shown as a line of output", "  print \"move from → to\""],
       java: ["static void move(int from, int to) {   // from and to are the peg letters", "  System.out.println(\"move \" + (char) from + \" to \" + (char) to);", "}"],
     }] }], args: inputArgs });
-    dockL = D.CodeDock("#L-code", listings, { args: inputArgs });
-    dockR = D.CodeDock("#R-code", listings, { args: inputArgs });
     player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock, onIdle: run });
     q("run").addEventListener("click", run);
     const tabs = q("fn-tabs");
@@ -1384,15 +1246,7 @@
     modeSeg = D.Segmented("#mode", [
       { id: "rec", label: "Recursive" },
       { id: "iter", label: "Iterative" },
-      { id: "cmp", label: "Side by side" },
     ], (m) => { setMode(m); rebuild(false); }, "rec");
-    D.legend("#legend", [
-      { color: "var(--c-active)", label: "running frame (top of the stack)" },
-      { color: "var(--c-visit)", label: "waiting frame: paused until its call returns" },
-      { color: "var(--c-done)", label: "returned / computed" },
-      { color: "var(--c-swap)", label: "threw an error" },
-      { color: "#2563eb", label: "variable that just changed" },
-    ]);
     select("factorial");
   });
 })();

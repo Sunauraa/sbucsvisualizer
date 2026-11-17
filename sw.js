@@ -12,7 +12,7 @@
      /api/     never touched.
 
    On install it saves every page and every script a page loads up front. The
-   heavy tools (editor, starter programs, Why? notes, the Java runner, the
+   heavy tools (editor, starter programs, the Java runner, the
    growth worker) are saved the first time a student opens them, so a first
    visit downloads no more than it did before. The tests check PAGES and
    ASSETS against what the pages really load.
@@ -41,8 +41,6 @@ const ASSETS = [
   "assets/js/core.js",
   "assets/js/account.js",
   "assets/js/motion.js",
-  "assets/js/tutor.js",
-  "assets/js/quiz.js",
   "assets/js/playground.js",
   "assets/js/growth.js",
   "assets/js/arrays.js",

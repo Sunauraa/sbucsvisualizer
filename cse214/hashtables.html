@@ -6,8 +6,8 @@
 <title>Hash Tables</title>
 <meta name="description" content="Watch separate chaining, linear probing and quadratic probing, with load factor, tombstones and rehashing.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=42857f81850a">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=42857f81850a">
+<link rel="stylesheet" href="../assets/css/style.css?v=07e04f44212d">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=07e04f44212d">
 </head>
 <body>
 
@@ -24,7 +24,6 @@
 <section class="page-head" aria-label="Page heading">
   <div class="wrap has-action">
     <div class="page-title">
-      <p class="eyebrow">CSE 214 &middot; Module 6</p>
     <h1>Hash Tables</h1>
     </div>
     <button type="button" class="btn primary pg-open" id="pg-open" aria-expanded="false" aria-controls="playground" title="Write Java here and watch it run step by step">Code playground</button>
@@ -56,14 +55,13 @@
     <div class="stage" id="table-view"></div>
     <div id="player"></div>
 
-    <div id="legend"></div>
   </div>
 
 
   <section class="about" id="about" aria-labelledby="about-h">
     <h2 id="about-h">Study notes</h2>
     <div class="about-body">
-    <p class="intro">A hash table is a coat check: the hash turns your key into a ticket number, so finding it is O(1). The catch is two coats getting the same number, and every design here is a way to handle that.</p>
+    <p class="intro">A hash table is a coat check: the hash turns your key into a ticket number, so finding it is Θ(1). The catch is two coats getting the same number, and every design here is a way to handle that.</p>
     <div class="blurb" id="mode-blurb"></div>
   <div class="row" style="margin-bottom:2rem">
     <div class="col">
@@ -73,12 +71,12 @@
         <div style="overflow-x:auto;margin-bottom:1rem">
           <table class="tbl" data-cols="_ chain linear,quad">
             <tr><td></td><th>separate chaining</th><th>linear / quadratic probing</th></tr>
-            <tr><td>put(k)</td><td>O(n) / O(1)<br><span class="small muted">(O(1 + α))</span></td><td>O(m) / O(1)<br><span class="small muted">(O(1))</span></td></tr>
-            <tr><td>get(k)</td><td>O(n) / O(1)<br><span class="small muted">(O(1 + α))</span></td><td>O(m) / O(1)<br><span class="small muted">(O(1))</span></td></tr>
-            <tr><td>remove(k)</td><td>O(n) / O(1)<br><span class="small muted">(O(1 + α))</span></td><td>O(m) / O(1)<br><span class="small muted">(O(1))</span></td></tr>
-            <tr><td>rehash()</td><td>O(n + m) / O(n + m)</td><td>O(n + m) / O(n + m)</td></tr>
-            <tr><td>hash(s), String keys</td><td colspan="2">O(length of s) / O(1)</td></tr>
-            <tr><td>memory for the table</td><td>O(n + m)</td><td>O(m)</td></tr>
+            <tr><td>put(k)</td><td>Θ(n) / Θ(1)<br><span class="small muted">(Θ(1 + α))</span></td><td>Θ(m) / Θ(1)<br><span class="small muted">(Θ(1))</span></td></tr>
+            <tr><td>get(k)</td><td>Θ(n) / Θ(1)<br><span class="small muted">(Θ(1 + α))</span></td><td>Θ(m) / Θ(1)<br><span class="small muted">(Θ(1))</span></td></tr>
+            <tr><td>remove(k)</td><td>Θ(n) / Θ(1)<br><span class="small muted">(Θ(1 + α))</span></td><td>Θ(m) / Θ(1)<br><span class="small muted">(Θ(1))</span></td></tr>
+            <tr><td>rehash()</td><td>Θ(n + m) / Θ(n + m)</td><td>Θ(n + m) / Θ(n + m)</td></tr>
+            <tr><td>hash(s), String keys</td><td colspan="2">Θ(length of s) / Θ(1)</td></tr>
+            <tr><td>memory for the table</td><td>Θ(n + m)</td><td>Θ(m)</td></tr>
           </table>
         </div>
         <h4 style="font-size:1rem">Expected probes vs load factor</h4>
@@ -106,7 +104,7 @@
           <dt data-part="linear quad">tombstone build-up</dt><dd data-part="linear quad">searches slow down even though n is small; rehash to clear them</dd>
           <dt>bad hash</dt><dd>e.g. summing characters: "cat" and "act" collide; multiply by 31 instead</dd>
           <dt>mutable keys</dt><dd>change a key after inserting it and you can't find it again, because its hash moved</dd>
-          <dt>rehash cost</dt><dd>O(n + m) time and O(n + m) space, since every index depends on m</dd>
+          <dt>rehash cost</dt><dd>Θ(n + m) time and Θ(n + m) space, since every index depends on m</dd>
         </dl>
         <p class="small muted" style="margin:.7rem 0 0" data-part="linear quad">Try it: add random keys, delete a few, then search for a missing key and watch it walk through the tombstones.</p>
       </div>
@@ -124,12 +122,10 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../credits.html">Credits</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=42857f81850a"></script>
-<script src="../assets/js/account.js?v=42857f81850a"></script>
-<script src="../assets/js/motion.js?v=42857f81850a"></script>
-<script src="../assets/js/tutor.js?v=42857f81850a"></script>
-<script src="../assets/js/quiz.js?v=42857f81850a"></script>
-<script src="../assets/js/playground.js?v=42857f81850a"></script>
-<script src="../assets/js/hashtables.js?v=42857f81850a"></script>
+<script src="../assets/js/core.js?v=07e04f44212d"></script>
+<script src="../assets/js/account.js?v=07e04f44212d"></script>
+<script src="../assets/js/motion.js?v=07e04f44212d"></script>
+<script src="../assets/js/playground.js?v=07e04f44212d"></script>
+<script src="../assets/js/hashtables.js?v=07e04f44212d"></script>
 </body>
 </html>

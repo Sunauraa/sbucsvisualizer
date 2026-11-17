@@ -8,7 +8,7 @@
 
    The interpreter runs in a Web Worker (java-interp.js) and returns
    frames, exactly like a module records its own, so the same Player,
-   animation, quiz and Why? all work here too.
+   and its animation work here too.
    ============================================================ */
 (function () {
   "use strict";
@@ -402,7 +402,7 @@
         "</div>" +
         '<p class="pg-err" id="pg-err" role="alert"></p>' +
         '<div class="pg-grid"><div class="pg-editor" id="pg-editor"></div><div class="stage pg-stage" tabindex="0" role="group" aria-label="What the program is doing"><div id="pg-view"></div><h3>Output</h3><pre class="pg-out" id="pg-out" role="log" aria-label="Program output" tabindex="0"></pre></div></div>' +
-        '<div id="pg-player"></div><div id="pg-legend"></div>' +
+        '<div id="pg-player"></div>' +
         '<details class="pg-help"><summary>What Java works here?</summary>' +
         '<p>Your code runs entirely in your browser and is saved on this device. Nothing is uploaded.</p>' +
         '<p>In the editor, Tab indents your code. To move on with the keyboard, press Esc and then Tab.</p>' +
@@ -433,12 +433,6 @@
       q("pg-run").addEventListener("click", () => runCode(true));
       q("pg-close").addEventListener("click", () => toggle(false));
 
-      D.legend("#pg-legend", [
-        { color: "var(--c-swap)", label: "changed by the last step" },
-        { color: "var(--c-active)", label: "running frame" },
-        { color: "var(--c-visit)", label: "waiting frame" },
-        { color: "var(--c-done)", label: "returning frame" },
-      ]);
       showIntro();
     });
     return building;

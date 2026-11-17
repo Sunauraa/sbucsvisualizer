@@ -1,6 +1,6 @@
 /* ============================================================
    account.js: optional sign-in (Google) that syncs, across every computer a student uses:
-     - a progress map: tabs opened, operations run, quiz answers, per module
+     - a progress map: tabs opened and operations run, per module
      - a LeetCode status on every practice problem: To do / Solved / Revisit
      - notes pinned to a step: a note on one exact moment of an animation, which reopens that moment
 
@@ -224,13 +224,11 @@
         rest("notes?select=id,page,body,meta,deleted,updated_at"),
       ].map((x) => x.then((r) => r.json())));
       p.forEach((row) => {
-        const mine = cache.progress[row.page];
-        if (!mine) cache.progress[row.page] = { data: row.data, updated_at: row.updated_at };
-        else {
-          const merged = mergeProgress(mine.data, row.data);
-          if (JSON.stringify(merged) !== JSON.stringify(row.data) && !cache.dirty.progress.includes(row.page)) cache.dirty.progress.push(row.page);
-          mine.data = merged;
-        }
+        const mine = cache.progress[row.page] || (cache.progress[row.page] = { data: {}, updated_at: row.updated_at });
+        const merged = mergeProgress(mine.data, row.data);
+        /* write back anything this computer adds, or anything the merge leaves out (old quiz counts) */
+        if (canon(merged) !== canon(row.data) && !cache.dirty.progress.includes(row.page)) cache.dirty.progress.push(row.page);
+        mine.data = merged;
       });
       const newer = (table, key, row) => {
         const mine = cache[table][key];
@@ -249,22 +247,19 @@
   async function sync() { await flush(); await pull(); }
 
   /* ================= progress ================= */
-  /* quiz answers are counted per computer and added up, so two computers never double-count or lose answers */
+  /* rows saved before the quiz was removed (archive/quiz-and-why) also hold quiz counts; merging leaves them out,
+     so they are gone after that module's next sync */
+  /* the database keeps JSON keys in its own order, so compare with the keys sorted */
+  const canon = (o) => JSON.stringify(Object.keys(o || {}).sort().map((k) => [k, o[k]]));
   function mergeProgress(a, b) {
     a = a || {}; b = b || {};
-    const quiz = Object.assign({}, b.quiz || {});
-    Object.keys(a.quiz || {}).forEach((dev) => {
-      const x = a.quiz[dev], y = quiz[dev] || [0, 0];
-      quiz[dev] = [Math.max(x[0], y[0]), Math.max(x[1], y[1])];
-    });
     return {
       title: a.title || b.title || "",
       tabs: uni(a.tabs, b.tabs), tabsTotal: Math.max(a.tabsTotal || 0, b.tabsTotal || 0),
       ops: uni(a.ops, b.ops), opsTotal: Math.max(a.opsTotal || 0, b.opsTotal || 0),
-      lc: uni(a.lc, b.lc), quiz: quiz,
+      lc: uni(a.lc, b.lc),
     };
   }
-  const quizSum = (q) => Object.values(q || {}).reduce((s, x) => [s[0] + x[0], s[1] + x[1]], [0, 0]);
   const inPlayground = (p) => !!(p && p.mount && p.mount.closest && p.mount.closest("#playground"));
   const isModule = () => (D._players || []).some((p) => !inPlayground(p));
   const tabLabel = (b) => b.textContent.trim();
@@ -293,11 +288,6 @@
     if (b) setTimeout(() => record((d) => { d.tabs = uni(d.tabs, [tabLabel(b)]); }), 0);
   });
   D.on("run", (x) => { if (x.user && !inPlayground(x.player) && x.keys.length) record((d) => { d.ops = uni(d.ops, x.keys); }); });
-  D.on("quiz", (x) => record((d) => {
-    d.quiz = d.quiz || {};
-    const q = d.quiz[device] || [0, 0];
-    d.quiz[device] = [q[0] + (x.ok ? 1 : 0), q[1] + 1];
-  }));
   D.on("practice", (x) => { decoratePractice(x.mount); record((d) => { d.lc = uni(d.lc, D.practiceNumbers ? D.practiceNumbers() : []); }); });
 
   /* ================= LeetCode status ================= */
@@ -496,10 +486,10 @@
         D.el("span", { class: "pm-pct", "aria-hidden": "true", text: n ? pct + "%" : "–" }),
       ]);
     };
-    const sum = { seen: 0, all: 0, solved: 0, lcAll: 0, right: 0, total: 0, started: 0 };
+    const sum = { seen: 0, all: 0, solved: 0, lcAll: 0, started: 0 };
     const list = D.el("ul", { class: "pm-list", role: "list" });
     list.appendChild(D.el("li", { class: "pm-row pm-head", "aria-hidden": "true" }, [
-      D.el("span", {}), D.el("span", { text: "Explored" }), D.el("span", { text: "LeetCode solved" }), D.el("span", { text: "Quiz correct" }),
+      D.el("span", {}), D.el("span", { text: "Explored" }), D.el("span", { text: "LeetCode solved" }),
     ]));
     tiles.forEach((a) => {
       const page = a.getAttribute("href").replace(/\.html$/, "");
@@ -508,18 +498,16 @@
       const course = /(^|\/)index$/.test(page);
       const pages = course ? Object.keys(cache.progress) : [page];
       const row = pages.length && pages.every((p) => cache.progress[p]) ? true : null;
-      let right = 0, total = 0, solved = 0, lcAll = 0, seen = 0, all = 0, notes = 0;
+      let solved = 0, lcAll = 0, seen = 0, all = 0, notes = 0;
       pages.forEach((p) => {
         const d = (cache.progress[p] && cache.progress[p].data) || {};
-        const [r, t] = quizSum(d.quiz);
-        right += r; total += t;
         solved += (d.lc || []).filter((x) => { const s = cache.leetcode[String(x)]; return s && s.status === "solved"; }).length;
         lcAll += (d.lc || []).length;
         seen += Math.min((d.tabs || []).length + (d.ops || []).length, (d.tabsTotal || 0) + (d.opsTotal || 0));
         all += (d.tabsTotal || 0) + (d.opsTotal || 0);
         notes += liveNotes(p).length;
       });
-      Object.assign(sum, { seen: sum.seen + seen, all: sum.all + all, solved: sum.solved + solved, lcAll: sum.lcAll + lcAll, right: sum.right + right, total: sum.total + total, started: sum.started + (row ? 1 : 0) });
+      Object.assign(sum, { seen: sum.seen + seen, all: sum.all + all, solved: sum.solved + solved, lcAll: sum.lcAll + lcAll, started: sum.started + (row ? 1 : 0) });
       list.appendChild(D.el("li", { class: "pm-row" + (row ? "" : " pm-new") }, [
         D.el("div", { class: "pm-name" }, [
           D.el("a", { href: a.getAttribute("href"), text: name }),
@@ -527,11 +515,10 @@
         ]),
         bar("Explored", seen, all, "tabs and operations"),
         bar("LeetCode solved", solved, lcAll, "problems"),
-        bar("Quiz correct", right, total, "answers"),
       ]));
     });
     /* a summary on top, like the "Learning-skills-platform" template: one ring for how much is explored, then
-       three numbers. It repeats the rows below in short, so the ring is decorative and the numbers are text. */
+       two numbers. It repeats the rows below in short, so the ring is decorative and the numbers are text. */
     const pctOf = (x, n) => (n ? Math.round((100 * x) / n) : 0);
     const overall = pctOf(sum.seen, sum.all);
     const C = 2 * Math.PI * 34;
@@ -544,7 +531,6 @@
       D.el("div", { class: "pm-overall" }, [ring, D.el("p", {}, [D.el("b", { text: "Explored overall" }), D.el("span", { text: sum.started + " of " + tiles.length + (tiles.length === 1 ? " course" : " modules") + " started" })])]),
       stat("Explored", overall + "%", sum.seen + " of " + sum.all + " tabs and operations"),
       stat("LeetCode solved", String(sum.solved), "of " + sum.lcAll + " problems"),
-      stat("Quiz correct", sum.total ? pctOf(sum.right, sum.total) + "%" : "–", sum.right + " of " + sum.total + " answers"),
     ]));
     body.appendChild(list);
     const notes = liveNotes(null);

@@ -249,228 +249,6 @@ if (want("motion")) {
   await r.ctx.close();
 }
 
-/* ---------- quiz ---------- */
-if (want("quiz")) {
-  console.log("quiz");
-  for (const name of PAGES) {
-    const { page, ctx, errors } = await openPage(name);
-    const res = await page.evaluate(async () => {
-      /* find something that records a real run: try each tab's buttons until a player has frames to ask about */
-      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-      const big = () => DSA._players.find((x) => x.frames.length > 12 && x.isVisible());
-      const tabs = Array.from(document.querySelectorAll(".tabs button"));
-      search: for (let t = 0; t < Math.max(1, tabs.length); t++) {
-        if (tabs[t]) tabs[t].click();
-        await sleep(0);
-        const btns = Array.from(document.querySelectorAll(".panel.main button")).filter((b) => b.offsetParent && !b.closest(".player, .code-dock, .seg") && !b.matches(".danger, [data-tool]"));
-        for (const b of btns) { b.click(); await sleep(0); if (big()) break search; }
-      }
-      const p = big();
-      if (!p) return { skipped: true, frames: 0 };
-      p.pause();
-      p.goto(0);
-      p.showControls(true);
-      const btn = Array.from(p.tools.querySelectorAll("button")).find((b) => b.textContent === "Quiz me");
-      btn.click();
-      let asked = 0, right = 0, guard = 0, lines = 0, steps = 0;
-      const before = p.index;
-      while (p.index < p.frames.length - 1 && asked < 6 && guard++ < 400) {
-        const at = p.index;
-        p.step(1);
-        const panel = p.extra.querySelector(".quiz");
-        if (panel.hidden) continue;
-        asked++;
-        if (p.index !== at) return { error: "a question let the step through" };
-        const opts = Array.from(panel.querySelectorAll(".quiz-opt"));
-        if (opts.length < 3) return { error: "too few options: " + opts.length };
-        if (new Set(opts.map((o) => o.textContent.slice(1))).size !== opts.length) return { error: "duplicate options" };
-        if (panel.querySelector(".quiz-opt.is-code")) lines++; else steps++;
-        /* the marked answer must be what the next frame really does */
-        const kind = panel.querySelector("h3").textContent;
-        opts[0].click();
-        const correct = panel.querySelector(".quiz-opt.right");
-        if (!correct) return { error: "no correct answer revealed" };
-        if (kind === "What happens next?") {
-          const plain = (h) => { const d = document.createElement("div"); d.innerHTML = h; return d.textContent.replace(/\s+/g, " ").trim(); };
-          if (correct.querySelector("span").textContent !== plain(p.frames[at + 1].note)) return { error: "marked answer is not the next caption" };
-        }
-        panel.querySelector(".quiz-result button").click();
-        if (p.index !== at + 1) return { error: "Next step did not advance" };
-      }
-      return { asked, lines, steps, frames: p.frames.length, moved: p.index - before };
-    });
-    ok(!res.skipped, name + " has a run to quiz on", res);
-    if (!res.skipped) {
-      ok(!res.error, name + " quiz", res);
-      ok(res.asked >= 1, name + " asks at least one question", res);
-    }
-    ok(!errors.length, name + " quiz has no errors", errors);
-    await ctx.close();
-  }
-}
-
-/* ---------- the Why? button: every line of every listing has something to say ---------- */
-let whyStats = null;
-if (want("why")) {
-  console.log("why");
-  let total = 0, hand = 0;
-  const weak = [];
-  for (const name of PAGES) {
-    const { page, ctx, errors } = await openPage(name);
-    const res = await page.evaluate(async (name) => {
-      const p = DSA._players[0];
-      p.showControls(true);
-      const btn = Array.from(p.tools.querySelectorAll("button")).find((b) => b.textContent === "Why?");
-      btn.click();
-      await new Promise((r) => setTimeout(r, 200));
-      const table = (DSA.WHY && DSA.WHY[name]) || {};
-      const fallback = "This line carries the operation";
-      let total = 0, hand = 0;
-      const weak = [], stale = [];
-      const seen = new Set();
-      DSA._docks.forEach((d) => Object.keys(d.listings).forEach((k) => {
-        if (seen.has(k)) return;
-        seen.add(k);
-        const L = d.listings[k];
-        ["pseudo", "java"].forEach((lang) => (L[lang] || []).forEach((t) => {
-          const m = /\s*@@([\w-]+(?:,[\w-]+)*)\s*$/.exec(t);
-          if (!m) return;
-          m[1].split(",").forEach((a) => {
-            total++;
-            if (table[k] && table[k][a]) { hand++; return; }
-            const text = DSA.explainLine(t.slice(0, m.index).trim(), {});
-            if (!text || text.startsWith(fallback)) weak.push(k + "." + a + " (" + lang + "): " + t.slice(0, m.index).trim());
-          });
-        }));
-      }));
-      /* a saved explanation must name a real anchor of a real listing */
-      Object.keys(table).forEach((k) => {
-        const L = DSA._docks.map((d) => d.listings[k]).find(Boolean);
-        if (!L) { stale.push("no listing " + k); return; }
-        const tags = new Set(L.pseudo.concat(L.java).flatMap((t) => { const m = /@@([\w-]+(?:,[\w-]+)*)\s*$/.exec(t); return m ? m[1].split(",") : []; }));
-        Object.keys(table[k]).forEach((a) => { if (!tags.has(a.replace(/\^$/, ""))) stale.push(k + "." + a); });
-      });
-      /* and the panel really paints it on a real frame */
-      const f = p.frames.findIndex((x) => x.line != null);
-      if (f >= 0) p.goto(f);
-      const panelText = p.extra.querySelector(".why").textContent;
-      return { total, hand, weak, stale, panelText, paintedFrame: f };
-    }, name);
-    total += res.total; hand += res.hand;
-    weak.push(...res.weak.map((w) => name + ": " + w));
-    ok(!res.stale.length, name + " saved explanations match real lines", res.stale);
-    ok(res.panelText.length > 10, name + " Why? panel shows text", res.panelText);
-    ok(!errors.length, name + " why has no errors", errors);
-    await ctx.close();
-  }
-  whyStats = { total, hand };
-  console.log("  " + hand + " of " + total + " anchored lines have a hand-written explanation; " + weak.length + " fall back to the generic sentence");
-  if (weak.length) console.log("  generic: " + weak.slice(0, 60).join("\n           "));
-}
-
-/* ---------- Ask AI: off, on, and out of free answers ---------- */
-/* The AI tutor is archived (archive/ai-tutor). Without the function the Why? panel must still work and offer no
-   question box; put api/tutor.js back and the full suite below runs again. */
-const HAS_TUTOR = fs.existsSync(path.join(ROOT, "api", "tutor.js"));
-if (want("tutor") && !HAS_TUTOR) {
-  console.log("tutor (archived)");
-  const { page, ctx, errors } = await openPage("sorting");
-  await page.click("#btn-run");
-  await page.getByRole("button", { name: "Why?", exact: true }).click();
-  await page.waitForTimeout(300);
-  ok(await page.locator(".why").isVisible(), "the saved explanation shows with the tutor archived");
-  ok((await page.locator(".ask-form").count()) === 0, "no question box with the tutor archived");
-  ok(!errors.length, "no errors with the tutor archived", errors);
-  await ctx.close();
-}
-if (want("tutor") && HAS_TUTOR) {
-  console.log("tutor function");
-  /* a stand-in for the provider */
-  let upstream = "ok", lastBody = null, lastAuth = null;
-  const fake = http.createServer((req, res) => {
-    let raw = "";
-    req.on("data", (c) => (raw += c));
-    req.on("end", () => {
-      lastBody = JSON.parse(raw); lastAuth = req.headers.authorization;
-      res.setHeader("content-type", "application/json");
-      if (upstream === "limit") { res.statusCode = 429; return res.end("{}"); }
-      if (upstream === "down") { res.statusCode = 500; return res.end("{}"); }
-      res.end(JSON.stringify({ choices: [{ message: { content: "Because <b>5</b> is smaller." } }] }));
-    });
-  });
-  await new Promise((r) => fake.listen(0, "127.0.0.1", r));
-  process.env.AI_BASE_URL = "http://127.0.0.1:" + fake.address().port + "/v1";
-
-  const post = (body, headers) => fetch(BASE + "/api/tutor", { method: "POST", headers: Object.assign({ "content-type": "application/json" }, headers || {}), body: typeof body === "string" ? body : JSON.stringify(body) });
-  aiKey = null;
-  ok((await (await fetch(BASE + "/api/tutor")).json()).enabled === false, "without a key the tutor says it is off");
-  ok((await post({ question: "why?" })).status === 503, "without a key a question is refused");
-  {
-    const { page, ctx, errors } = await openPage("sorting");
-    await page.click("#btn-run");
-    await page.getByRole("button", { name: "Why?", exact: true }).click();
-    await page.waitForTimeout(200);
-    ok(await page.locator(".why").isVisible(), "the saved explanation shows without a key");
-    ok((await page.locator(".ask-form").count()) === 0, "no question box without a key");
-    ok(!errors.length, "no errors without a key", errors);
-    await ctx.close();
-  }
-
-  aiKey = "secret-test-key";
-  ok((await (await fetch(BASE + "/api/tutor")).json()).enabled === true, "with a key the tutor says it is on");
-  const good = await post({ question: "why?", step: "s", lines: "x", saved: "y", page: "p" }, { "x-forwarded-for": "10.0.0.1" });
-  const goodJson = await good.json();
-  ok(good.status === 200 && /smaller/.test(goodJson.answer), "a question gets an answer", goodJson);
-  ok(lastAuth === "Bearer secret-test-key", "the key goes to the provider");
-  ok(!JSON.stringify(goodJson).includes("secret"), "the key never reaches the browser");
-  ok(lastBody.messages[0].role === "system" && /Student's question: why\?/.test(lastBody.messages[1].content), "the question arrives as data under fixed rules");
-  await post({ question: "x".repeat(5000), step: "y".repeat(5000) }, { "x-forwarded-for": "10.0.0.2" });
-  ok(lastBody.messages[1].content.length < 3500, "long fields are cut before they cost tokens", lastBody.messages[1].content.length);
-  ok((await post({}, { "x-forwarded-for": "10.0.0.3" })).status === 400, "an empty question is refused");
-  ok((await post("not json", { "x-forwarded-for": "10.0.0.4" })).status === 400, "bad JSON is refused");
-  ok((await post("{" + '"question":"' + "x".repeat(20000) + '"}', { "x-forwarded-for": "10.0.0.5" })).status === 400, "an oversized body is refused");
-  ok((await post({ question: "q" }, { origin: "https://evil.example", "x-forwarded-for": "10.0.0.6" })).status === 403, "another site cannot spend the quota");
-  ok((await fetch(BASE + "/api/tutor", { method: "DELETE" })).status === 405, "other methods are refused");
-  {
-    const statuses = [];
-    for (let i = 0; i < 10; i++) statuses.push((await post({ question: "q" }, { "x-forwarded-for": "10.0.0.7" })).status);
-    ok(statuses.slice(0, 8).every((s) => s === 200) && statuses.slice(8).every((s) => s === 429), "one visitor is rate limited", statuses);
-  }
-  upstream = "limit";
-  const lim = await post({ question: "q" }, { "x-forwarded-for": "10.0.0.8" });
-  const limJson = await lim.json();
-  ok(lim.status === 503 && limJson.unavailable === true, "the free limit becomes a calm message", limJson);
-  upstream = "down";
-  ok((await post({ question: "q" }, { "x-forwarded-for": "10.0.0.9" })).status === 502, "a provider outage is handled");
-  upstream = "ok";
-
-  /* the real panel, in a real browser */
-  {
-    const { page, ctx, errors } = await openPage("sorting");
-    await page.click("#btn-run");
-    await page.getByRole("button", { name: "Why?", exact: true }).click();
-    await page.waitForSelector(".ask-form");
-    const saved = await page.locator(".why").innerText();
-    await page.fill(".ask-form input", "why swap?");
-    await page.click(".ask-form button");
-    await page.waitForSelector(".ask-answer");
-    const html = await page.locator(".ask-answer").innerHTML();
-    ok(html.includes("&lt;b&gt;"), "an AI answer is shown as text, never as HTML", html);
-    upstream = "limit";
-    await page.fill(".ask-form input", "again?");
-    await page.click(".ask-form button");
-    await page.waitForSelector(".ask-off");
-    const after = await page.locator(".why").innerText();
-    ok(after.includes(saved.split("\n")[1] || "Why this step?"), "the saved explanation stays when the AI runs out");
-    ok(!errors.length, "no errors in the AI panel", errors);
-    await ctx.close();
-    upstream = "ok";
-  }
-  aiKey = null;
-  delete process.env.AI_BASE_URL;
-  fake.close();
-}
-
 /* ---------- growth chart: the worker's counts equal the visualizer's ---------- */
 if (want("growth")) {
   console.log("growth");
@@ -636,20 +414,6 @@ if (want("playground")) {
   await page.click("#pg-run");
   await page.waitForFunction(() => /isn't declared/.test(document.querySelector("#pg-err").textContent), null, { timeout: 8000 });
   ok(true, "student code cannot see the page");
-  /* the Why? button explains a student's line honestly */
-  const why = await page.evaluate(() => [
-    DSA.explainLine("if (t == null) return;", {}),
-    DSA.explainLine("int t = a[j];", {}),
-    DSA.explainLine("for (int v : data) {", {}),
-    DSA.explainLine("Node(int value) {", { kind: "call" }),
-    DSA.explainLine("}", { kind: "return" }),
-    DSA.explainLine("return n * factorial(n - 1);", { fn: "factorial" }),
-  ]);
-  ok(why[0].includes("<code>t == null</code>") && !why[0].includes(") return"), "Why? reads a one-line if correctly", why[0]);
-  ok(!/trade places/.test(why[1]) && /Stores a new value in <code>t<\/code>/.test(why[1]), "Why? doesn't call a temp variable a swap", why[1]);
-  ok(/for-each/.test(why[2]), "Why? recognises for-each", why[2]);
-  ok(/method starts/.test(why[3]), "Why? recognises a constructor being entered", why[3]);
-  ok(/finished/.test(why[4]), "Why? recognises the end of a method", why[4]);
   await setCode('public class Main {\n  public static void main(String[] args) {\n    int x = 41;\n    x++;\n    System.out.println("from a link " + x);\n  }\n}\n');
   /* the student's code is still there after a reload */
   await page.reload();
@@ -696,8 +460,9 @@ if (want("scroll")) {
     await page.goto(BASE + "/cse214/" + mod + ".html", { waitUntil: "load" });
     await page.waitForFunction(() => document.documentElement.classList.contains("ready"));
     await page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; });
-    await page.locator(".code-hide:visible").first().click();
-    /* a real click at the top of the page: the code has pushed the stage below the fold */
+    /* the code is on (the dock itself appears with the first run), so the run pushes the stage down */
+    await page.evaluate(() => document.querySelector(".code-hide").click());
+    /* a real click at the top of the page */
     await page.evaluate(() => scrollTo(0, 0));
     const btn = page.locator("main button:visible").filter({ hasText: op }).first();
     const box = await btn.boundingBox();
@@ -720,18 +485,6 @@ if (want("scroll")) {
     });
     await page.waitForTimeout(1500);
     ok((await yNow(page)) === y0, mod + ": playing never moves the page", { y0, y: await yNow(page) });
-    /* a quiz question stops the run but leaves the page alone */
-    const y1 = await page.evaluate(() => {
-      const p = DSA._players.find((x) => x.isVisible());
-      p.pause();
-      [...p.tools.querySelectorAll("button")].find((b) => b.textContent === "Quiz me").click();
-      scrollTo(0, 0);
-      p.goto(0);
-      p.play();
-      return Math.round(scrollY);
-    });
-    await page.waitForFunction(() => { const q = document.querySelector(".learn-panel.quiz"); return q && !q.hidden; }, null, { timeout: 8000 });
-    ok((await yNow(page)) === y1, mod + ": a quiz question does not move the page", { y1, y: await yNow(page) });
     await page.close();
   }
 
@@ -775,42 +528,6 @@ if (want("scroll")) {
     ok(r.outside === 0 && r.editorScrolled, label + ": the running line stays in sight inside the editor", r);
     await page.close();
   }
-}
-
-/* ---------- all the code: every function of a module can be read, whichever one is running ---------- */
-if (want("fullcode")) {
-  console.log("all the code panel");
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-  await page.goto(BASE + "/cse214/trees.html", { waitUntil: "load" });
-  await page.waitForFunction(() => document.documentElement.classList.contains("ready"));
-  const box = () => page.evaluate(() => {
-    const pre = [...document.querySelectorAll(".full-code pre")].find((p) => p.offsetParent);
-    return pre ? { text: pre.textContent, shaded: [...pre.querySelectorAll(".ln.on")].map((l) => l.textContent).join("\n") } : null;
-  });
-  ok((await box()) === null, "the box stays out of the way until the code is opened");
-  await page.locator(".code-hide:visible").first().click();
-  await page.locator('.tabs button:has-text("AVL")').click();
-  ok((await box()) === null, "opening the code doesn't open all the code too: it starts hidden");
-  await page.locator(".cls-toggle:visible").first().click();
-  let b1 = await box();
-  ok(b1 && /rotateLeft\(x\)/.test(b1.text) && /bstDelete\(k\)/.test(b1.text) && /delete\(k\)/.test(b1.text), "the AVL tab shows every AVL function, helpers too");
-  ok(/rebalance\(n\)/.test(b1.shaded) && /bstInsert/.test(b1.shaded) && !/bstDelete\(k\):/.test(b1.shaded), "the running function is the one shaded");
-  ok(b1.text.split("rebalance(n):").length === 2, "a helper two listings share appears once");
-  ok(!/@@/.test(b1.text), "no line markers leak into the code");
-  const pick = page.locator(".cls-pick:visible").first();
-  await pick.selectOption({ label: "class BTree" });
-  ok(/fuseWithSibling\(\)/.test((await box()).text), "another structure can be picked");
-  await page.locator('.lang-switch button[data-lang="java"]:visible').first().click();
-  const b2 = await box();
-  ok(/^import java\.util\.\*;/.test(b2.text) && /public class BTree \{/.test(b2.text) && /}\s*$/.test(b2.text), "Java shows a whole class");
-  await pick.selectOption({ label: "class BinarySearchTree" });
-  const b3 = await box();
-  ok(/\/\/ delete\(k\) · BST, successor/.test(b3.text) && /\/\/ delete\(k\) · BST, predecessor/.test(b3.text), "two versions of a method are both shown, each named");
-  await page.locator(".cls-toggle:visible").first().click();
-  ok((await box()) === null, "it can be hidden");
-  await page.locator(".cls-toggle:visible").first().click();
-  ok((await box()) !== null, "and shown again");
-  await page.close();
 }
 
 /* ---------- the real JVM: the playground must print exactly what Java prints ---------- */
@@ -1057,7 +774,7 @@ if (want("a11y")) {
   for (const name of PAGES) {
     const { g, c } = await open("/cse214/" + name + ".html");
     await scan(g, name);
-    /* a running visualizer with the Why? panel and the code open */
+    /* a running visualizer with the code open */
     await g.evaluate(async () => {
       const b = Array.from(document.querySelectorAll(".panel.main .toolbar button")).find((x) => x.offsetParent && !x.matches(".danger, [data-tool]"));
       if (b) b.click();
@@ -1066,10 +783,9 @@ if (want("a11y")) {
       p.pause();
       p.showControls(true);
       const h = document.querySelector(".code-hide"); if (h) h.click();
-      Array.from(p.tools.querySelectorAll("button")).find((x) => x.textContent === "Why?").click();
       await new Promise((r) => setTimeout(r, 200));
     });
-    await scan(g, name + " with code and Why? open");
+    await scan(g, name + " with the code open");
     await g.click("#pg-open");
     await g.waitForSelector("#pg-run");
     await g.click("#pg-run");
@@ -1084,25 +800,12 @@ if (want("a11y")) {
   const { page, ctx } = await openPage("sorting");
   await page.click("#btn-run");
   await page.evaluate(() => DSA._players[0].pause());
-  await page.getByRole("button", { name: "Why?", exact: true }).focus();
+  await page.evaluate(() => DSA._players[0].goto(0));
+  await page.locator("[data-a=next]").first().focus();
   await page.keyboard.press("Space");
-  ok(await page.locator(".why").isVisible(), "Space activates a focused button instead of playing");
-  const playing = await page.evaluate(() => DSA._players[0].playing);
-  ok(!playing, "Space on a button doesn't start the player");
-  await page.getByRole("button", { name: "Why?", exact: true }).click();
-  await page.getByRole("button", { name: "Quiz me" }).click();
-  await page.evaluate(() => { const p = DSA._players[0]; p.pause(); p.goto(0); });
-  await page.locator("[data-a=next]").first().click();
-  await page.waitForSelector(".quiz:not([hidden])");
-  await page.waitForTimeout(50);
-  const quizFocus = await page.evaluate(() => { const a = document.activeElement; return !!(a && a.closest(".quiz")); });
-  ok(quizFocus, "a quiz question takes the keyboard focus");
-  await page.keyboard.press("1");
-  ok(await page.locator(".quiz-result button").isVisible(), "a number key answers the quiz");
-  await page.keyboard.press("Enter");
-  await page.waitForTimeout(50);
-  const afterQuiz = await page.evaluate(() => { const a = document.activeElement; return !!(a && a.closest(".player")); });
-  ok(afterQuiz, "focus returns to the player after a question");
+  const kb = await page.evaluate(() => ({ index: DSA._players[0].index, playing: DSA._players[0].playing }));
+  ok(kb.index === 1, "Space activates a focused button instead of playing", kb);
+  ok(!kb.playing, "Space on a button doesn't start the player", kb);
   /* the editor must not trap the Tab key */
   await page.click("#pg-open");
   await page.waitForSelector("#pg-run");
@@ -1150,6 +853,18 @@ if (want("prod")) {
     const html = fs.readFileSync(path.join(ROOT, f), "utf8");
     ok(/href="(\.\.\/)?privacy\.html"/.test(html) && /href="(\.\.\/)?terms\.html"/.test(html), f + " links to the privacy policy and terms");
     ok(/href="(\.\.\/|\/)?credits\.html">Credits</.test(html), f + " links to the credits");
+  }
+  /* the code bar waits for an operation, and "show code" shows only the function that runs */
+  {
+    const { page: g, ctx: c } = await openPage("trees");
+    ok(!(await g.locator(".code-dock").first().isVisible()), "the code bar waits until an operation runs");
+    await g.getByRole("button", { name: "pre-order", exact: true }).click();
+    await g.evaluate(() => DSA._players[0].pause());
+    ok(await g.locator(".code-dock").first().isVisible(), "running an operation shows the code bar");
+    await g.locator(".code-hide:visible").first().click();
+    const shown = await g.evaluate(() => ({ blocks: [...document.querySelectorAll(".code-dock pre")].filter((p) => p.offsetParent).length, extra: document.querySelectorAll(".code-class, .cls-toggle, .full-code").length }));
+    ok(shown.blocks === 1 && shown.extra === 0, "show code shows one function's listing and nothing else", shown);
+    await c.close();
   }
   /* CSE 373 is a notice on the home page, not somewhere to go */
   {
@@ -1211,7 +926,6 @@ if (want("prod")) {
     await page.waitForSelector("#pg-run");
     await page.click("#pg-run");
     await page.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 3 && !document.querySelector("#pg-run").disabled; }, null, { timeout: 8000 });
-    await page.getByRole("button", { name: "Why?", exact: true }).last().click();
     await page.waitForTimeout(150);
     if (name === "sorting") {
       await openBox(page, "#growth");
@@ -1251,7 +965,7 @@ if (want("prod")) {
     ok(await page.locator("#pg-run").isEnabled(), "closing the panel mid-run leaves Run code usable");
     await ctx.close();
   }
-  /* a slow or failing network never leaves the tutor stuck, and the playground says when it can't load */
+  /* the playground says when it can't load */
   {
     const { page, ctx } = await openPage("sorting");
     await page.route("**/assets/vendor/editor.js*", (r) => r.abort());
@@ -1297,7 +1011,7 @@ if (want("notes")) {
     ["arrays", tab(2), "grid", /linked|dynamic array|fixed array/i],
     ["arrays", tab(3), "single", /fixed array|dynamic array|doubly|circular/i],
     ["stacks-queues", tab(0), "stack", /queue|deque|FIFO/i],
-    ["stacks-queues", tab(3), "deque", /stack \(array\)|LIFO|FIFO/i],
+    ["stacks-queues", tab(2), "deque", /stack \(array\)|LIFO|FIFO/i],
     ["trees", tab(1), "bst", /AVL|\(2,4\)|B-tree|rotation/i],
     ["trees", tab(2), "avl", /\(2,4\)|B-tree|overflow|binary search tree/i],
     ["priority-queues", tab(0), "unsorted", /heap|\bsorted list|insertion sort/i],
@@ -1419,7 +1133,7 @@ if (want("account")) {
     await page.waitForLoadState("load");
     return page.waitForFunction(() => window.DSA && DSA.account && DSA.account.user, null, { timeout: 8000 }).then(() => true, () => false);
   };
-  /* start a real run on this page, the way the quiz suite does */
+  /* start a real run on this page */
   const startRun = (page) => page.evaluate(async () => {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const big = () => DSA._players.find((x) => x.frames.length > 6 && x.isVisible() && !x.mount.closest("#playground"));
@@ -1494,7 +1208,7 @@ if (want("account")) {
   await B.page.waitForFunction(() => document.querySelector("#my-progress"), null, { timeout: 8000 }).catch(() => {});
   await openBox(B.page, "#my-progress");
   const treesRow = await B.page.locator("#my-progress .pm-row", { hasText: "Trees" }).evaluate((r) => ({ text: r.innerText, bars: [...r.querySelectorAll("[role=progressbar]")].map((b) => b.getAttribute("aria-label") + ": " + b.getAttribute("aria-valuetext") + " (" + b.getAttribute("aria-valuenow") + "%)") }));
-  ok(treesRow.bars.length === 3 && /LeetCode solved: 1 of \d+ problems/.test(treesRow.bars.join()) && /Explored: [1-9]/.test(treesRow.bars.join()) && !/Not started/.test(treesRow.text), "the progress map shows the laptop's work as bars", treesRow);
+  ok(treesRow.bars.length === 2 && /LeetCode solved: 1 of \d+ problems/.test(treesRow.bars.join()) && /Explored: [1-9]/.test(treesRow.bars.join()) && !/Not started/.test(treesRow.text), "the progress map shows the laptop's work as bars", treesRow);
   ok(/Not started/.test(await B.page.locator("#my-progress .pm-row", { hasText: "Sorting" }).innerText()), "and modules never opened as not started");
   await Promise.all([B.page.waitForURL(/trees\.html#note=/), B.page.locator("#my-progress .note-list a").first().click()]);
   await B.page.waitForFunction((cap) => DSA._players.some((p) => p.frames.some((f) => f.note === cap) && p.frames[p.index].note === cap), run.caption, { timeout: 8000 }).catch(() => {});
@@ -1683,15 +1397,6 @@ if (want("shots")) {
     await page.screenshot({ path: path.join(SHOTS, (opts && opts.as || name) + ".png"), fullPage: !!(opts && opts.full) });
     await ctx.close();
   };
-  const quiz = async (page) => {
-    await page.click("#btn-run");
-    await page.evaluate(() => { const p = DSA._players[0]; p.pause(); p.goto(0); });
-    await page.getByRole("button", { name: "Quiz me" }).click();
-    await page.getByRole("button", { name: "Show code" }).first().click().catch(() => {});
-    await page.evaluate(() => { const p = DSA._players[0]; for (let i = 0; i < 40 && p.extra.querySelector(".quiz").hidden; i++) p.step(1); });
-  };
-  await shot("sorting", quiz, { as: "quiz" });
-  await shot("sorting", async (page) => { await page.click("#btn-run"); await page.evaluate(() => { const p = DSA._players[0]; p.pause(); p.goto(6); }); await page.getByRole("button", { name: "Why?", exact: true }).click(); }, { as: "why" });
   await shot("sorting", async (page) => { await openBox(page, "#growth"); await page.waitForFunction(() => /Stopped early|Measured every/.test(document.querySelector(".growth-status").textContent), null, { timeout: 40000 }); await openBox(page, "#growth"); }, { as: "growth" });
   const inPanel = (example, back) => async (page) => {
     await page.click("#pg-open");
@@ -1756,19 +1461,18 @@ if (want("shots")) {
   });
   await midAir("stacks-queues", "fly-queue", async () => {
     const tabs = Array.from(document.querySelectorAll(".tabs button"));
-    const t = tabs.find((b) => /plain|array queue/i.test(b.textContent)) || tabs[1];
+    const t = tabs.find((b) => /Queue \(circular/i.test(b.textContent)) || tabs[1];
     t.click();
     const deq = Array.from(document.querySelectorAll(".toolbar button")).find((b) => /dequeue/i.test(b.textContent) && b.offsetParent);
     deq.click();
     const p = DSA._players[0];
-    p.pause(); p.noMotion = true; p.goto(p.frames.findIndex((f) => /shift/.test(JSON.stringify(f.line))) || 0); p.noMotion = false;
+    p.pause(); p.noMotion = true; p.goto(Math.max(0, p.frames.length - 3)); p.noMotion = false;
   });
 }
 
 await browser.close();
 server.close();
 console.log("\n" + passed + " passed, " + failures.length + " failed");
-if (whyStats) console.log("hand-written explanations: " + whyStats.hand + " of " + whyStats.total);
 if (reached.size) {
   /* coverage is reported, not enforced: the fuzzer presses every control but does not plan scenarios */
   let tot = 0, hit = 0;

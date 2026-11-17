@@ -22,7 +22,7 @@
   DSA.VERSION = (function () {
     try { return new URL(document.currentScript.src).searchParams.get("v") || ""; } catch (e) { return ""; }
   })();
-  /** DSA.asset("assets/js/why-data.js") → its URL with this page's version. Browsers keep assets for two
+  /** DSA.asset("assets/vendor/editor.js") → its URL with this page's version. Browsers keep assets for two
       weeks, so anything loaded later (scripts, workers) must carry the version too or it would go stale. */
   DSA.asset = (p) => DSA.ROOT + p + (DSA.VERSION ? "?v=" + DSA.VERSION : "");
 
@@ -33,7 +33,7 @@
       navigator.serviceWorker.register(DSA.ROOT + "sw.js?v=" + DSA.VERSION).catch(() => {});
     });
   }
-  /* Features in their own files (motion, quiz, why) add themselves to every Player through this list. */
+  /* Features in their own files (motion, notes) add themselves to every Player through this list. */
   DSA.playerAddons = [];
 
   /* ---------------- feedback ----------------
@@ -58,7 +58,6 @@
        tab       { label }                      a tab was opened
        run       { player, user, keys }         a player loaded a run of several steps (keys: listings it ran;
                                                 user: the student started it, not the page loading)
-       quiz      { ok }                         a quiz question was answered
        practice  { mount }                      the LeetCode list was drawn */
   DSA.events = new EventTarget();
   DSA.emit = (type, detail) => { try { DSA.events.dispatchEvent(new CustomEvent(type, { detail: detail || {} })); } catch (e) { console.error(e); } };
@@ -144,16 +143,6 @@
     toastEl.className = "toast show" + (isErr ? " err" : "");
     clearTimeout(toastT);
     toastT = setTimeout(() => (toastEl.className = "toast"), 2200);
-  };
-
-  /* ---------------- legend ---------------- */
-  DSA.legend = function (mount, items) {
-    const m = typeof mount === "string" ? DSA.$(mount) : mount;
-    if (!m) return;
-    m.className = "legend";
-    m.innerHTML = items
-      .map((it) => `<span><i style="background:${it.color}"></i>${it.label}</span>`)
-      .join("");
   };
 
   /* ============================================================
@@ -449,18 +438,12 @@
     if (sp.does) box.appendChild(DSA.el("div", { class: "spec-does", html: sp.does }));
     const callRow = DSA.el("div", { class: "spec-row" }, [DSA.el("span", { class: "spec-k", text: "call" }), callEl]);
     box.appendChild(callRow);
-    /* the rest waits behind "Details": a page with the code open was a wall of text before the picture */
-    const rows = [["params", sp.params], ["returns", sp.returns], ["errors", sp.errors], ["time", sp.time], ["space", sp.space]].filter(([, v]) => v);
-    if (rows.length) {
-      const more = DSA.el("details", { class: "spec-more" }, [DSA.el("summary", { text: "Details: " + rows.map(([k]) => k).join(", ") })]);
-      rows.forEach(([k, v]) => more.appendChild(DSA.el("div", { class: "spec-row" }, [DSA.el("span", { class: "spec-k", text: k }), DSA.el("span", { class: "spec-v", html: v })])));
-      box.appendChild(more);
-    }
+    /* only what it does and the call; time and space are in the bar's badge */
     paintCall();
     return { node: box, setArgs(a) { if (a !== vals || argsHook) { vals = a || null; paintCall(); } }, repaint: paintCall };
   }
   /** specs(listings, { key: { does, params, returns, errors, time, space, callVals? } }): attach specs to listings.
-      time / space are WORST-CASE bounds written with O; space is the extra memory the call uses. */
+      time / space are WORST-CASE bounds written with Θ (tight); space is the extra memory the call uses. */
   DSA.specs = function (listings, map) {
     Object.keys(map).forEach((k) => {
       const L = listings[k];
@@ -474,10 +457,8 @@
 
   /* The code is HIDDEN on every page load so a newcomer first sees only the picture and the caption.
      "show code" opens every dock on the page, but it is not remembered: the next load starts hidden again. */
-  const LS_CLS = "dsa.classHidden.v2";
-  /* "all the code" starts hidden (it's long); a reader who opened it once gets it open again */
-  let codeHidden = true, classHidden = true;
-  try { localStorage.removeItem("dsa.codeHidden.v3"); classHidden = localStorage.getItem(LS_CLS) !== "0"; } catch (e) {}
+  let codeHidden = true;
+  try { localStorage.removeItem("dsa.codeHidden.v3"); localStorage.removeItem("dsa.classHidden.v2"); } catch (e) {}
 
   /* ------------------------------------------------------------
      Classes. A method listing such as push(x) uses fields (data, t)
@@ -498,8 +479,8 @@
   };
 
   /* ------------------------------------------------------------
-     Full code. The dock's lower box holds the whole source of one
-     structure: its fields and constructor, every method the module
+     Full code. DSA.fullSource puts together the whole source of one
+     structure (not shown on the page; the tests compile it with javac): its fields and constructor, every method the module
      uses, and the helpers those methods call.
        D.CodeDock(mount, listings, { full: [group, ...] })
        group = a class from D.classes, or a plain { name, keys }, plus
@@ -580,10 +561,10 @@
       out.unshift("import java.util.*;", "");
     return out;
   };
-  /* "O(1) time · O(1) space" for the dock header, from a listing's spec */
+  /* "Θ(1) time · Θ(1) space" for the dock header, from a listing's spec */
   function costBadge(L) {
     const sp = (L && L.spec) || {};
-    const strip = (h) => String(h || "").replace(/<[^>]*>/g, "").split(/: |; /)[0].trim();   /* "O(n): why" → "O(n)" */
+    const strip = (h) => String(h || "").replace(/<[^>]*>/g, "").split(/: |; /)[0].trim();   /* "Θ(n): why" → "Θ(n)" */
     const t = strip(sp.time), sMem = strip(sp.space);
     if (!t && !sMem) return "";
     return '<span class="cost-badge" title="worst case">' + (t ? "<b>" + t + "</b> time" : "") + (t && sMem ? " · " : "") + (sMem ? "<b>" + sMem + "</b> space" : "") + "</span>";
@@ -592,7 +573,8 @@
   DSA.CodeDock = function (mount, listings, opts) {
     const o = opts || {};
     const m = typeof mount === "string" ? DSA.$(mount) : mount;
-    m.classList.add("code-dock");
+    /* the dock stays out of sight until the reader runs an operation (see Player.showControls) */
+    m.classList.add("code-dock", "waiting");
     m.innerHTML = "";
     const head = DSA.el("div", { class: "code-head" });
     const title = DSA.el("div", { class: "code-title" });
@@ -611,7 +593,6 @@
       m.classList.toggle("collapsed", hidden);
       hide.textContent = hidden ? "show code" : "hide code";
       hide.classList.toggle("primary", hidden);
-      if (api.paintClass) api.paintClass();
     };
     hide.addEventListener("click", () => {
       codeHidden = !codeHidden;
@@ -620,99 +601,23 @@
 
     let key = null, block = null, spec = null;
     const specMount = DSA.el("div", { class: "code-spec-wrap" });
-    const clsMount = DSA.el("div", { class: "code-class" });
     const codeMount = DSA.el("div");
     body.appendChild(specMount);
     body.appendChild(codeMount);
-    body.appendChild(clsMount);
 
-    /* ---------- the full code of the structure on screen ---------- */
+    /* every function of each structure, for the Java tests that compile it (DSA.fullSource); not shown */
     const groups = o.full || [];
-    const fullBlocks = new Map();      /* group index → its code block, built when first needed */
-    let shown = -1, followedKey = null, followed = -1, fullUi = null;
-    const groupLabel = (g) => (g.title || (g.pseudo || g.java ? "class " + g.name : g.name));
-    function groupFor(k) {
-      const c = listings[k] && listings[k].cls;
-      let i = c ? groups.findIndex((g) => g === c) : -1;
-      if (i < 0 && c) i = groups.findIndex((g) => g.name === c.name && groupHas(g, k));
-      if (i < 0) i = groups.findIndex((g) => groupHas(g, k));
-      return i;
-    }
-    function buildFullUi() {
-      const tog = DSA.el("button", { class: "ghost cls-toggle", type: "button" });
-      const head = DSA.el("div", { class: "cls-head" }, [DSA.el("span", { class: "lang-label", text: "all the code" })]);
-      let pick = null;
-      if (groups.length > 1) {
-        pick = DSA.el("select", { class: "cls-pick", "aria-label": "Which structure's code to read" });
-        groups.forEach((g, i) => pick.appendChild(DSA.el("option", { value: String(i), text: groupLabel(g) })));
-        pick.addEventListener("change", () => showGroup(Number(pick.value)));
-        head.appendChild(pick);
-      } else if (groups.length) head.appendChild(DSA.el("span", { class: "mono", text: groupLabel(groups[0]) }));
-      head.appendChild(DSA.el("span", { class: "cls-sub", text: "every function, with the running one shaded" }));
-      head.appendChild(tog);
-      const inner = DSA.el("div", { class: "cls-body" });
-      const codeEl = DSA.el("div", { class: "full-code" });
-      const note = DSA.el("p", { class: "cls-note" });
-      inner.appendChild(codeEl);
-      inner.appendChild(note);
-      clsMount.appendChild(head);
-      clsMount.appendChild(inner);
-      tog.addEventListener("click", () => {
-        classHidden = !classHidden;
-        try { localStorage.setItem(LS_CLS, classHidden ? "1" : "0"); } catch (e) {}
-        docks.forEach((d) => d.paintClass && d.paintClass());
-      });
-      api.paintClass = () => {
-        inner.style.display = classHidden ? "none" : "";
-        tog.textContent = classHidden ? "show all the code" : "hide all the code";
-        if (!classHidden) showGroup(shown);
-      };
-      fullUi = { pick: pick, codeEl: codeEl, note: note, tog: tog };
-    }
-    /* Building waits until the code can be seen, so a page whose code stays hidden pays nothing. */
-    function showGroup(i) {
-      if (i < 0 || !groups[i]) return;
-      shown = i;
-      if (!fullUi) return;
-      if (fullUi.pick) fullUi.pick.value = String(i);
-      if (m.classList.contains("collapsed") || classHidden) return;
-      const g = groups[i];
-      if (!fullBlocks.has(i)) {
-        const holder = DSA.el("div");
-        fullUi.codeEl.appendChild(holder);
-        const variants = {};
-        ["pseudo", "java"].forEach((l) => { const src = DSA.fullSource(g, listings, l); if (src.length) variants[l] = src; });
-        const block = DSA.CodeBlock(holder, variants, { switcher: false });
-        block.node.tabIndex = 0;
-        block.node.setAttribute("aria-label", "All the code: " + groupLabel(g));
-        fullBlocks.set(i, { holder: holder, block: block });
-      }
-      fullBlocks.forEach((b, j) => { b.holder.hidden = j !== i; });
-      const isClass = !!(g.pseudo || g.java);
-      fullUi.note.innerHTML = (g.note ? g.note + (isClass ? "<br>" : "") : "") + (isClass ? oopNote(g, key) : "");
-      fullUi.note.hidden = !fullUi.note.innerHTML;
-      fullBlocks.get(i).block.highlight(key && groupHas(g, key) ? "m_" + key : null);
-    }
-    /* follow the running listing; a structure the reader picked stays until the listing changes */
-    function followGroup(k) {
-      if (!groups.length) return;
-      if (!fullUi) buildFullUi();
-      const want = groupFor(k);
-      if (want < 0 || (want === followed && k === followedKey)) return;
-      followed = want;
-      followedKey = k;
-      showGroup(want);
-    }
     DSA.onLang(() => { if (spec && specMount.isConnected) spec.repaint(); });
     const api = {
       listings: listings,
       paintHidden: paintHidden,
+      setWaiting(on) { m.classList.toggle("waiting", !!on); },
       groups: groups,
       recvOf: (k) => (typeof o.recv === "function" ? o.recv(k) : o.recv || null),
       get current() { return key; },
       /** Switch to listing `k` (no-op if already showing it). */
       show(k) {
-        if (k === key && block) { followGroup(k); return api; }
+        if (k === key && block) return api;
         const L = listings[k];
         if (!L) return api;
         key = k;
@@ -722,7 +627,6 @@
         spec = specBox(L, k, o.recv || null, o.args || null);
         specMount.appendChild(spec.node);
         block = DSA.CodeBlock(codeMount, L, { switcherMount: sw });
-        followGroup(k);
         return api;
       },
       highlight(line) { if (block) block.highlight(line == null ? null : line); },
@@ -738,25 +642,10 @@
     paintHidden();
     if (o.initial) api.show(o.initial);
     else { const first = Object.keys(listings)[0]; if (first) api.show(first); }
-    if (api.paintClass) api.paintClass();
     return api;
   };
   const docks = [];
   DSA._docks = docks;   /* exposed for the headless test harness */
-  /* the "how objects work" reminder, written with this page's own names (list.addFirst, head, …) */
-  function oopNote(c, key) {
-    const d = docks.find((x) => x.listings[key]);
-    const L = d && d.listings[key];
-    const recv = (d && d.recvOf(key)) || "obj";
-    const sig = L ? sigOf(L, "java") : null;
-    const m = (c.java || []).map((t) => /^\s*private\s+(?!static)[\w<>\[\]]+\s+(\w+)\s*[;=]/.exec(t)).find(Boolean);
-    const field = m ? m[1] : "size";
-    const call = recv + "." + (sig ? sig.name : "method") + "(…)";
-    const M = (t) => "<span class='mono'>" + t + "</span>";
-    return "<b>How objects work:</b> a class is a blueprint. Every object you make from it with " + M("new") + " gets its own copy of the fields.<br>" +
-      "A call such as " + M(call) + " runs " + M(sig ? sig.name : "the method") + " on the object " + M(recv) + ". Inside the method, a field name like " +
-      M(field) + " means <em>that object's</em> field. In Java you can write it in full as " + M("this." + field) + ".";
-  }
 
   /* ---------------- per-tab visibility ---------------- */
   /** Show every [data-tab] element whose space-separated list names `id`; hide the rest. */
@@ -840,7 +729,7 @@
      Every box on a page except the visualizer itself gets a "show / hide" button in its heading row. Boxes start
      hidden, so a newcomer sees the visualizer and a list of headings, and opens what they want; the boxes a
      student opens are remembered per page. A hidden box keeps its heading. Boxes with their own toggle (the code
-     dock, Why?, Quiz me, the playground's Close) are left alone. Printing shows every box. */
+     dock, the step note, the playground's Close) are left alone. Printing shows every box. */
   const LS_BOXES = "dsa.shownBoxes.v1";
   const PAGE_KEY = (location.pathname.split("/").pop() || "index.html").replace(/\.html$/, "");
   try { localStorage.removeItem("dsa.hiddenBoxes.v1"); } catch (e) {}  /* the old "hidden" list, from before boxes started hidden */
@@ -893,28 +782,6 @@
     DSA.$$("main > .panel, main > .about, .about-body .panel").forEach(DSA.collapsible);
   });
 
-  /* ---------------- module sidebar (from the "Documentation Website" template) ----------------
-     Every module page gets a list of all eight on the left. CSS shows it only on screens wide enough to keep
-     the visualizer at full width; narrower screens use the breadcrumb and the course page instead. */
-  DSA.MODULES = [
-    ["arrays", "Arrays & Lists"], ["recursion", "Recursion"], ["stacks-queues", "Stacks, Queues & Deques"],
-    ["trees", "Trees"], ["priority-queues", "Priority Queues"], ["hashtables", "Hash Tables"],
-    ["graphs", "Graphs"], ["sorting", "Sorting"],
-  ].map(([page, title], i) => ({ page, title, n: i + 1 }));
-  document.addEventListener("DOMContentLoaded", () => {
-    const here = location.pathname.split("/").pop().replace(/\.html$/, "");
-    if (!/\/cse214\//.test(location.pathname) || !DSA.MODULES.some((m) => m.page === here)) return;
-    const link = (href, text, cur) => DSA.el("a", Object.assign({ href, text }, cur ? { "aria-current": "page" } : {}));
-    const nav = DSA.el("nav", { class: "side-nav", "aria-label": "Modules" }, [
-      DSA.el("p", { class: "side-head", text: "CSE 214" }),
-      link(DSA.ROOT + "cse214/index.html", "Course overview"),
-      DSA.el("p", { class: "side-head", text: "Modules" }),
-      DSA.el("ol", {}, DSA.MODULES.map((m) => DSA.el("li", {}, [link(DSA.ROOT + "cse214/" + m.page + ".html", m.title, m.page === here)]))),
-    ]);
-    document.body.classList.add("has-side");
-    const bar = DSA.$("header.topbar");
-    if (bar) bar.after(nav);
-  });
   DSA.practiceShow = function (key) { pKey = key; practiceRender(); };
   /** every problem number this page lists, in any part (account.js counts them for the progress map) */
   DSA.practiceNumbers = () => (pData ? Array.from(new Set(Object.values(pData).flatMap((d) => (d.items || []).map((it) => it[0])))) : []);
@@ -1050,21 +917,6 @@
     return svg;
   };
 
-  /* ---------------- side-by-side comparisons ---------------- */
-  /** Zip two frame lists into { L, R, note } frames, holding whichever finishes first on its last frame. */
-  DSA.zip = function (a, b, note) {
-    const n = Math.max(a.length, b.length);
-    const out = [];
-    for (let i = 0; i < n; i++) {
-      const L = a[Math.min(i, a.length - 1)], R = b[Math.min(i, b.length - 1)];
-      out.push({
-        L: L, R: R, done: [i >= a.length - 1, i >= b.length - 1],
-        note: typeof note === "function" ? note(L, R, i, a.length, b.length) : note || "",
-      });
-    }
-    return out;
-  };
-
   /* ---------------- tab strip ---------------- */
   DSA.Tabs = function (mount, items, onChange) {
     const m = typeof mount === "string" ? DSA.$(mount) : mount;
@@ -1172,7 +1024,7 @@
     this.ctlShown = false;
     this.tools = q("tools");            /* addons put their controls here */
     this.extra = q("extra");            /* and their panels here, under the caption */
-    this.gate = null;                   /* gate(index) → true holds the player on this frame (the quiz) */
+    this.gate = null;                   /* gate(index) → true holds the player on this frame (unused since the quiz was archived) */
     this.frameHooks = [];               /* run after every painted frame */
     this.loadHooks = [];                /* run when a new frame list is loaded */
     this.noMotion = false;
@@ -1189,7 +1041,11 @@
         if (h > noteMax + 0.5) { noteMax = h; note.style.minHeight = h + "px"; }
       }).observe(note);
     }
-    this.showControls = function (on) { this.ctlShown = !!on; ctl.hidden = !on; };
+    /* the code docks appear and disappear with a module's step controls: only once an operation has run */
+    this.showControls = function (on) {
+      this.ctlShown = !!on; ctl.hidden = !on;
+      if (opts.code) docks.forEach((d) => d.setWaiting(!on));
+    };
 
     mount.addEventListener("click", (e) => {
       const a = e.target.closest("button[data-a]");
