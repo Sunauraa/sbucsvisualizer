@@ -883,7 +883,7 @@ html:not(.ready) main:has(.panel.main) { visibility: hidden; animation: show-any
 .chain-col { display: flex; flex-direction: column; align-items: center; }
 .chain-arrow { font-family: var(--mono); font-size: .8rem; line-height: 1.1rem; color: var(--muted); }
 
-/* ---------- toolbars: one line; settings live in a "⚙ Options" menu (core.js optionsMenus) ---------- */
+/* ---------- toolbars: one line; settings live in a "⋯ More" menu (core.js optionsMenus) ---------- */
 .panel.main .toolbar { flex-wrap: nowrap; }
 .panel.main > .toolbar:first-child { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
 .panel.main .toolbar > * { flex-shrink: 0; }
@@ -902,3 +902,22 @@ html:not(.ready) main:has(.panel.main) { visibility: hidden; animation: show-any
 .tb-more-menu > .field { justify-content: space-between; }
 .tb-more-menu > button { justify-content: flex-start; text-align: left; }
 .tb-more-menu input.wide { min-width: 0; flex: 1 1 auto; }
+
+/* function pickers (core.js opsPickers): the real buttons stay in the page but hidden; a field the chosen function does not read hides */
+.ops-hidden, .field.need-off { display: none !important; }
+
+/* one control size across every page's toolbar: buttons, menus, boxes and the More button share a height and a type size.
+   Sizes are in rem, so they follow the reader's text size; the bar still scrolls or wraps on a narrow screen. */
+.panel.main .toolbar { --ctl-h: 2.1rem; }
+.panel.main .toolbar button, .panel.main .toolbar select, .panel.main .toolbar input[type="text"], .panel.main .toolbar input[type="number"],
+.panel.main .toolbar .seg button { box-sizing: border-box; min-height: var(--ctl-h); padding-top: 0; padding-bottom: 0; font-size: .86rem; line-height: 1.2; display: inline-flex; align-items: center; justify-content: center; }
+.panel.main .toolbar select, .panel.main .toolbar input[type="text"], .panel.main .toolbar input[type="number"] { padding-left: .55rem; padding-right: .55rem; justify-content: flex-start; }
+.panel.main .toolbar input[type="number"] { display: inline-block; }
+.panel.main .toolbar .field label { font-size: .82rem; }
+/* the More button: a square "⋯" at the end of every bar, as tall as the controls beside it */
+.tb-more > summary { box-sizing: border-box; display: grid; place-items: center; width: var(--ctl-h, 2.1rem); height: var(--ctl-h, 2.1rem); min-height: 0; padding: 0; font-size: 1.15rem; font-weight: 700; line-height: 1; }
+.tb-more > summary::after { content: none; }
+/* a button that is not there yet (Run, before a function is chosen) must stay hidden: the flex display above would otherwise win */
+.panel.main .toolbar button[hidden] { display: none !important; }
+/* a function bar fills the rest of the row, so its "⋯" ends up at the far end, as it does on pages with no function menu */
+.panel.main .toolbar[data-ops] { flex: 1 1 auto; }

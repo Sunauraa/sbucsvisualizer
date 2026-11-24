@@ -136,7 +136,7 @@ if (want("fuzz")) {
         });
       };
       const fields = () => Array.from(document.querySelectorAll(".panel.main .toolbar input:not([type=range]):not([type=checkbox]), #inputs input")).filter((x) => x.offsetParent);
-      /* settings live in "⚙ Options" menus: keep them open so their controls get pressed too */
+      /* settings live in "⋯ More" menus: keep them open so their controls get pressed too */
       const openMenus = () => document.querySelectorAll(".tb-more").forEach((d) => { if (!d.open) d.open = true; });
       const pressAll = async (where) => {
         openMenus();
@@ -154,7 +154,21 @@ if (want("fuzz")) {
           }
         }
         openMenus();
+        /* a function menu: choose each function in turn and press Run */
+        const menu = Array.from(document.querySelectorAll(".panel.main select[aria-label='Function']")).find((x) => x.offsetParent);
+        if (menu) for (const o of Array.from(menu.options).filter((x) => x.value)) {
+          for (const v of INPUTS) {
+            menu.value = o.value; menu.dispatchEvent(new Event("change", { bubbles: true }));
+            fields().forEach((f) => { f.value = v; f.dispatchEvent(new Event("input", { bubbles: true })); });
+            const run = Array.from(document.querySelectorAll(".panel.main button.primary")).find((b) => b.offsetParent && b.textContent.includes("Run"));
+            if (run) run.click();
+            await sleep(0);
+            walk(where + " / " + o.text.trim() + " with " + JSON.stringify(v));
+          }
+        }
+        openMenus();
         document.querySelectorAll(".panel.main .toolbar select").forEach((s) => {
+          if (s.getAttribute("aria-label") === "Function") return;
           if (!s.offsetParent) return;
           Array.from(s.options).forEach((o) => { s.value = o.value; s.dispatchEvent(new Event("change", { bubbles: true })); walk(where + " / select " + o.value); });
         });
@@ -219,9 +233,10 @@ if (want("motion")) {
   const rot = await t.page.evaluate(async () => {
     const tabBtn = Array.from(document.querySelectorAll(".tabs button")).find((b) => /AVL/.test(b.textContent));
     tabBtn.click();
+    await new Promise((r) => setTimeout(r, 0));   /* a tab's function menu follows its toolbar a moment later */
     const p = DSA._players[0];
+    const insert = DSA._pickOp(/insert/i);
     const input = Array.from(document.querySelectorAll(".toolbar input")).find((x) => x.offsetParent);
-    const insert = Array.from(document.querySelectorAll(".toolbar button")).find((b) => /insert/i.test(b.textContent) && b.offsetParent);
     const clear = Array.from(document.querySelectorAll(".toolbar button")).find((b) => /clear|empty/i.test(b.textContent) && b.offsetParent);
     if (clear) clear.click();
     for (const v of [10, 20, 30]) { input.value = v; input.dispatchEvent(new Event("input", { bubbles: true })); insert.click(); }
@@ -478,7 +493,7 @@ if (want("playground")) {
     const t = await openPage("hashtables");
     const res = await t.page.evaluate(async () => {
       Array.from(document.querySelectorAll(".tabs button")).find((b) => /Linear/.test(b.textContent)).click();
-      const btn = (re) => Array.from(document.querySelectorAll(".panel.main .toolbar button")).find((b) => b.offsetParent && re.test(b.textContent));
+      const btn = (re) => DSA._pickOp(re) || Array.from(document.querySelectorAll(".panel.main .toolbar button")).find((b) => b.offsetParent && re.test(b.textContent));
       const clear = btn(/clear|reset/i);
       if (clear) clear.click();
       const input = Array.from(document.querySelectorAll(".panel.main .toolbar input")).find((x) => x.offsetParent);
@@ -512,7 +527,13 @@ if (want("scroll")) {
     await page.evaluate(() => document.querySelector(".code-hide").click());
     /* a real click at the top of the page */
     await page.evaluate(() => scrollTo(0, 0));
-    const btn = page.locator("main button:visible").filter({ hasText: op }).first();
+    let btn = page.locator("main button:visible").filter({ hasText: op }).first();
+    /* a page with a function menu: choose the function there, and press Run */
+    const menu = page.locator("select[aria-label=Function]:visible").first();
+    if (await menu.count()) {
+      const value = await page.evaluate((src) => { const m = Array.from(document.querySelectorAll("select[aria-label=Function]")).find((x) => x.offsetParent); const o = Array.from(m.options).find((x) => x.value && new RegExp(src).test(x.text)); return o && o.value; }, op.source);
+      if (value) { await menu.selectOption(value); btn = page.locator("main button.primary:visible").filter({ hasText: /Run/ }).first(); }
+    }
     const box = await btn.boundingBox();
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     await page.waitForTimeout(150);
@@ -910,7 +931,8 @@ if (want("prod")) {
   {
     const { page: g, ctx: c } = await openPage("trees");
     ok(!(await g.locator(".code-dock").first().isVisible()), "the code bar waits until an operation runs");
-    await g.getByRole("button", { name: "pre-order", exact: true }).click();
+    await g.locator("select[aria-label=Function]:visible").first().selectOption({ label: "pre-order" });
+    await g.getByRole("button", { name: "▶ Run" }).click();
     await g.evaluate(() => DSA._players[0].pause());
     ok(await g.locator(".code-dock").first().isVisible(), "running an operation shows the code bar");
     await g.locator(".code-hide:visible").first().click();
@@ -1195,6 +1217,13 @@ if (want("account")) {
       await sleep(0);
       const btns = Array.from(document.querySelectorAll(".panel.main button")).filter((b) => b.offsetParent && !b.closest(".player, .code-dock, .seg") && !b.matches(".danger, [data-tool]"));
       for (const b of btns) { b.click(); await sleep(0); if (big()) break search; }
+      /* a function picker: choose each function in turn, then press Run */
+      const pick = Array.from(document.querySelectorAll(".panel.main select[aria-label='Function']")).find((x) => x.offsetParent);
+      if (pick) for (const o of Array.from(pick.options).filter((x) => x.value)) {
+        pick.value = o.value; pick.dispatchEvent(new Event("change", { bubbles: true }));
+        Array.from(document.querySelectorAll(".panel.main button.primary")).find((b) => b.offsetParent && b.textContent.includes("Run")).click();
+        await sleep(0); if (big()) break search;
+      }
     }
     const p = big();
     if (!p) return null;
@@ -1487,8 +1516,9 @@ if (want("shots")) {
   };
   await midAir("trees", "fly-avl", async () => {
     Array.from(document.querySelectorAll(".tabs button")).find((b) => /AVL/.test(b.textContent)).click();
+    await new Promise((r) => setTimeout(r, 0));
+    const insert = DSA._pickOp(/insert/i);
     const input = Array.from(document.querySelectorAll(".toolbar input")).find((x) => x.offsetParent);
-    const insert = Array.from(document.querySelectorAll(".toolbar button")).find((b) => /insert/i.test(b.textContent) && b.offsetParent);
     const clear = Array.from(document.querySelectorAll(".toolbar button")).find((b) => /clear|empty/i.test(b.textContent) && b.offsetParent);
     if (clear) clear.click();
     for (const v of [50, 30, 70, 20, 40, 10]) { input.value = v; input.dispatchEvent(new Event("input", { bubbles: true })); insert.click(); }
@@ -1505,7 +1535,7 @@ if (want("shots")) {
     p.pause(); p.noMotion = true; p.goto(p.frames.findIndex((f) => f.line === "take" && f.rows) + 1); p.noMotion = false;
   });
   await midAir("hashtables", "fly-hash", async () => {
-    const big = Array.from(document.querySelectorAll(".toolbar button")).find((b) => /put|insert/i.test(b.textContent) && b.offsetParent);
+    const big = DSA._pickOp(/put|insert/i);
     const input = Array.from(document.querySelectorAll(".toolbar input")).find((x) => x.offsetParent);
     input.value = 23; input.dispatchEvent(new Event("input", { bubbles: true })); big.click();
     const p = DSA._players[0];
@@ -1515,8 +1545,8 @@ if (want("shots")) {
     const tabs = Array.from(document.querySelectorAll(".tabs button"));
     const t = tabs.find((b) => /Queue \(circular/i.test(b.textContent)) || tabs[1];
     t.click();
-    const deq = Array.from(document.querySelectorAll(".toolbar button")).find((b) => /dequeue/i.test(b.textContent) && b.offsetParent);
-    deq.click();
+    await new Promise((r) => setTimeout(r, 0));
+    DSA._pickOp(/dequeue/i).click();
     const p = DSA._players[0];
     p.pause(); p.noMotion = true; p.goto(Math.max(0, p.frames.length - 3)); p.noMotion = false;
   });

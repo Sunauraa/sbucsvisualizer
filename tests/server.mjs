@@ -29,6 +29,8 @@ export function startServer(port, opts) {
       if (r.re.test(url.pathname)) r.headers.forEach((h) => { if (!(o.dev && h.key === "Cache-Control")) res.setHeader(h.key, h.value); });
     });
     if (o.fake && url.pathname.startsWith("/__supabase/")) return o.fake.handle(req, res, url.pathname.slice("/__supabase".length));
+    /* Vercel serves its analytics script itself; here it is an empty stand-in */
+    if (url.pathname === "/_vercel/insights/script.js") { res.setHeader("Content-Type", "text/javascript"); return res.end(""); }
     const fn = /^\/api\/([\w-]+)$/.exec(url.pathname);
     if (fn && fs.existsSync(fnFile(fn[1]))) {
       if (fn[1] === "tutor") { if (o.key && o.key()) process.env.AI_API_KEY = o.key(); else delete process.env.AI_API_KEY; }

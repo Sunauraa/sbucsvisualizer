@@ -697,9 +697,76 @@
   document.addEventListener("DOMContentLoaded", () => setTimeout(() => docks.forEach(sideWrap), 0));
 
   /* ------------------------------------------------------------
+     Function pickers. A toolbar marked data-ops does not lay out every
+     operation as a button. It shows one "function" menu; the buttons stay
+     in the page, hidden, and Run clicks the chosen one. Each button says
+     which inputs it reads (data-needs="val idx"), and an input field
+     (data-in="val") shows only while the chosen function needs it. A bar
+     shared by several tabs (data-tab="single double") gets one menu per tab,
+     and a button with its own data-tab only appears in those tabs' menus.
+     ------------------------------------------------------------ */
+  function opsPickers() {
+    DSA.$$(".panel.main [data-ops]").forEach((bar) => {
+      const main = bar.parentElement;
+      const ids = bar.dataset.tab ? bar.dataset.tab.split(/\s+/) : [""];
+      const btns = Array.from(bar.children).filter((b) => b.tagName === "BUTTON" && !b.hasAttribute("data-more"));
+      if (!btns.length) return;
+      const firstField = main.firstElementChild;
+      ids.forEach((id) => {
+        const mine = btns.filter((b) => !b.dataset.tab || b.dataset.tab.split(/\s+/).indexOf(id) >= 0);
+        const sel = DSA.el("select", { "aria-label": "Function", style: "width:auto" });
+        sel.appendChild(DSA.el("option", { value: "", text: "Choose a function…" }));
+        mine.forEach((b) => sel.appendChild(DSA.el("option", { value: b.id, text: b.textContent.trim() })));
+        const pick = DSA.el("div", { class: "field" });
+        pick.appendChild(DSA.el("label", { text: "function" }));
+        pick.appendChild(sel);
+        const run = DSA.el("button", { type: "button", class: "primary", text: "▶ Run", hidden: "" });
+        [pick, run].forEach((n) => { if (id) n.dataset.tab = id; });
+        main.insertBefore(pick, firstField);
+        main.insertBefore(run, bar);
+        /* the inputs this menu's tab shows, and which of them the chosen function reads */
+        const inputs = DSA.$$("[data-in]", main).filter((f) => !f.dataset.tab || f.dataset.tab.split(/\s+/).indexOf(id) >= 0);
+        const chosen = () => (sel.value ? document.getElementById(sel.value) : null);
+        const update = () => {
+          const b = chosen();
+          const need = b ? (b.dataset.needs || "").split(/\s+/) : [];
+          inputs.forEach((f) => f.classList.toggle("need-off", need.indexOf(f.dataset.in) < 0));
+          run.hidden = !b;
+        };
+        sel.addEventListener("change", update);
+        run.addEventListener("click", () => { const b = chosen(); if (b) b.click(); });
+        update();
+        /* a bar with no data-tab is shown by the page's own script (display none / flex): its menu follows it,
+           and the inputs it shares with the other bars are re-set for it when it comes back */
+        if (!id) {
+          const follow = () => {
+            const on = bar.style.display !== "none";
+            pick.style.display = on ? "" : "none";
+            run.style.display = on ? "" : "none";
+            if (on) update();
+          };
+          new MutationObserver(follow).observe(bar, { attributes: true, attributeFilter: ["style"] });
+          follow();
+        }
+      });
+      btns.forEach((b) => b.classList.add("ops-hidden"));
+    });
+  }
+  document.addEventListener("DOMContentLoaded", opsPickers);
+  /** for the headless tests: choose, in the visible function menu, the function whose label matches `re`,
+      and return the Run button that now runs it (null when no visible menu has one) */
+  DSA._pickOp = function (re) {
+    const sel = DSA.$$(".panel.main select[aria-label='Function']").find((x) => x.offsetParent && Array.from(x.options).some((o) => o.value && re.test(o.text)));
+    if (!sel) return null;
+    sel.value = Array.from(sel.options).find((o) => o.value && re.test(o.text)).value;
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+    return DSA.$$(".panel.main button.primary").find((b) => b.offsetParent && b.textContent.includes("Run")) || null;
+  };
+
+  /* ------------------------------------------------------------
      Options menus. A toolbar keeps its operations on one line; the
      controls marked data-more (sizes, presets, random, clear...) go into
-     a "⚙ Options" menu at the end of the toolbar they sit in, so a tab
+     a "⋯ More" menu at the end of the toolbar they sit in, so a tab
      only ever shows its own. A bar still too wide scrolls sideways.
      The menu floats (position: fixed), so the scrolling bar can't clip it.
      ------------------------------------------------------------ */
@@ -713,8 +780,8 @@
     });
     bars.forEach((items, bar) => {
       const det = DSA.el("details", { class: "tb-more" });
-      const sum = DSA.el("summary", { text: "⚙ Options", title: "Settings, presets, random and clear" });
-      const menu = DSA.el("div", { class: "tb-more-menu", role: "group", "aria-label": "Options" });
+      const sum = DSA.el("summary", { text: "⋯", title: "More: settings, presets, random and clear", "aria-label": "More" });
+      const menu = DSA.el("div", { class: "tb-more-menu", role: "group", "aria-label": "More" });
       items.forEach((el) => menu.appendChild(el));
       det.appendChild(sum);
       det.appendChild(menu);

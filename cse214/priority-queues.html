@@ -6,8 +6,8 @@
 <title>Priority Queues</title>
 <meta name="description" content="Compare priority queues built on lists and heaps, watch up-heap and down-heap, and see PQ-sort become selection, insertion or heap sort.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=80c5bdaa18ea">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=80c5bdaa18ea">
+<link rel="stylesheet" href="../assets/css/style.css?v=8beaa1b1566f">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=8beaa1b1566f">
 </head>
 <body>
 
@@ -35,20 +35,16 @@
 
   <div class="panel main">
     <div class="toolbar">
-      <div class="toolbar" data-tab="unsorted sorted aheap theap" style="margin:0">
-        <div class="field"><label for="val">key</label><input type="number" step="any" id="val" placeholder="random"></div>
-        <div class="sep"></div>
-        <button id="op-insert">insert(k)</button>
-        <button id="op-remove">removeMin()</button>
-        <button id="op-min">min()</button>
+      <div class="field" data-in="val" data-tab="unsorted sorted aheap theap"><label for="val">key</label><input type="number" step="any" id="val" placeholder="random"></div>
+      <div class="field" data-in="keys" data-tab="aheap"><input type="text" id="heap-input" class="wide" placeholder="37, 12, 55, … (blank = random)" aria-label="keys to build from"></div>
+      <div class="toolbar" data-ops data-tab="unsorted sorted aheap theap" style="margin:0">
+        <button id="op-insert" data-needs="val">insert(k)</button>
+        <button id="op-remove" data-needs="">removeMin()</button>
+        <button id="op-min" data-needs="">min()</button>
+        <button id="op-heapify" data-needs="keys" data-tab="aheap" title="bottom-up heapify: Θ(n)">heapify Θ(n)</button>
+        <button id="op-build" data-needs="keys" data-tab="aheap" title="build by inserting the keys one at a time: Θ(n log n)">insert all Θ(n log n)</button>
         <button id="op-rand" data-more>↻ random</button>
         <button class="danger" id="op-clear" data-more>clear</button>
-      </div>
-      <div class="toolbar" data-tab="aheap" style="margin:0">
-        <div class="sep"></div>
-        <input type="text" id="heap-input" class="wide" placeholder="37, 12, 55, … (blank = random)" aria-label="keys to build from">
-        <button id="op-heapify" title="bottom-up heapify: Θ(n)">heapify Θ(n)</button>
-        <button id="op-build" title="build by inserting the keys one at a time: Θ(n log n)">insert all Θ(n log n)</button>
       </div>
       <div class="toolbar" data-tab="sort" style="margin:0">
         <div class="field"><label for="sort-algo">sort</label>
@@ -125,10 +121,11 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../credits.html">Credits</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=80c5bdaa18ea"></script>
-<script src="../assets/js/account.js?v=80c5bdaa18ea"></script>
-<script src="../assets/js/motion.js?v=80c5bdaa18ea"></script>
-<script src="../assets/js/playground.js?v=80c5bdaa18ea"></script>
-<script src="../assets/js/pq.js?v=80c5bdaa18ea"></script>
+<script src="../assets/js/core.js?v=8beaa1b1566f"></script>
+<script src="../assets/js/account.js?v=8beaa1b1566f"></script>
+<script src="../assets/js/motion.js?v=8beaa1b1566f"></script>
+<script src="../assets/js/playground.js?v=8beaa1b1566f"></script>
+<script src="../assets/js/pq.js?v=8beaa1b1566f"></script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
