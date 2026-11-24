@@ -12,7 +12,8 @@
     m: 11,
     slots: [],          /* chain: array of arrays. open: {k} | null | TOMB */
     n: 0,
-    auto: true,
+    atEnd: false,       /* chaining: a new key goes at the front of its chain (addFirst), or at the end (addLast) */
+    auto: false,        /* off until the student ticks it: the table keeps its size, so collisions pile up where you can see them */
     keyType: "int",          /* "int" or "str": a table holds one kind of key */
     probesTotal: 0,
     opsTotal: 0,
@@ -38,15 +39,15 @@
     return base;
   }
   function probeFormula(k, i) {
-    const base = h1(k, T.m);
-    if (T.mode === "linear") return "(h(k) + " + i + ") mod " + T.m + " = (" + base + " + " + i + ") mod " + T.m + " = " + probeAt(k, i);
-    if (T.mode === "quad") return "(h(k) + " + i + "²) mod " + T.m + " = (" + base + " + " + i * i + ") mod " + T.m + " = " + probeAt(k, i);
-    return String(base);
+    const hk = hashCode(k);   /* h(k) is the raw hash; the mod m comes after */
+    if (T.mode === "linear") return "(h(k) + " + i + ") mod " + T.m + " = (" + hk + " + " + i + ") mod " + T.m + " = " + probeAt(k, i);
+    if (T.mode === "quad") return "(h(k) + " + i + "²) mod " + T.m + " = (" + hk + " + " + i * i + ") mod " + T.m + " = " + probeAt(k, i);
+    return String(h1(k, T.m));
   }
   const hashNote = (k) =>
     typeof k === "number"
-      ? "<span class='mono'>h(" + k + ") = " + k + " mod " + T.m + " = " + h1(k, T.m) + "</span>"
-      : "<span class='mono'>h(\"" + k + "\") = " + hashCode(k) + " mod " + T.m + " = " + h1(k, T.m) + "</span>";
+      ? "<span class='mono'>h(" + k + ") = " + k + ", and " + k + " mod " + T.m + " = " + h1(k, T.m) + "</span>"
+      : "<span class='mono'>h(\"" + k + "\") = " + hashCode(k) + ", and " + hashCode(k) + " mod " + T.m + " = " + h1(k, T.m) + "</span>";
 
   /* a String's hash is only known once hash(s) has run, so the intro of a probing operation doesn't give it away */
   const introHash = (k) => (typeof k === "string" ? "its home slot comes from hash(k), computed at the first probe" : hashNote(k));
@@ -81,6 +82,30 @@
         "  for (int x : table[b]) @@loop",
         "    if (x == k) return; @@dup",
         "  table[b].addFirst(k); @@add",
+        "  n++; @@add",
+        "  if ((double) n / m > MAX_LOAD) rehash(); @@rehash",
+        "}",
+      ],
+    },
+    /* the same put, adding the new key at the END of its chain: the walk that checks for a duplicate has
+       just reached the last node, so linking after it costs nothing extra */
+    ch_put_last: {
+      title: "put(k) · separate chaining, at the end",
+      pseudo: [
+        "put(k):",
+        "  b ← h(k) mod m                     // which bucket @@hash",
+        "  for each key x in bucket[b]:       // walk the chain @@loop",
+        "    if x == k: return                // already present @@dup",
+        "  bucket[b].addLast(k)               // the walk already reached the end @@add",
+        "  n ← n + 1 @@add",
+        "  if n / m > maxLoad: rehash() @@rehash",
+      ],
+      java: [
+        "void put(int k) {",
+        "  int b = Math.floorMod(hash(k), m); @@hash",
+        "  for (int x : table[b]) @@loop",
+        "    if (x == k) return; @@dup",
+        "  table[b].addLast(k); @@add",
         "  n++; @@add",
         "  if ((double) n / m > MAX_LOAD) rehash(); @@rehash",
         "}",
@@ -223,7 +248,7 @@
       "}",
     ],
   };
-  const listing = (op) => (op === "rehash" ? "rehash" : T.mode === "chain" ? "ch_" + op : "oa_" + op + "_" + T.mode) + (T.keyType === "str" ? "_s" : "");
+  const listing = (op) => (op === "rehash" ? "rehash" : T.mode === "chain" ? "ch_" + op + (op === "put" && T.atEnd ? "_last" : "") : "oa_" + op + "_" + T.mode) + (T.keyType === "str" ? "_s" : "");
 
   /* ---- specs ---- */
   {
@@ -236,6 +261,7 @@
       const h = str ? "the polynomial hash of k" : "k itself";
       const L = str ? " (+ Θ(|k|) to hash)" : "";
       specs["ch_put" + sfx] = { does: "Adds k to bucket " + M("h(k) mod m") + "'s list if absent, then rehashes if α is too high. h(k) is " + h + "." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "none", time: "Θ(n): if every key lands in the same bucket, or when the put triggers a rehash; Θ(1 + α) expected" + L, space: "Θ(1): one list node (Θ(n + m) during a rehash)" };
+      specs["ch_put_last" + sfx] = { does: "Adds k at the end of bucket " + M("h(k) mod m") + "'s list if absent, then rehashes if α is too high. h(k) is " + h + "." + eq(str), params: keyP(str), returns: "nothing (a duplicate is ignored)", errors: "none", time: "Θ(n): if every key lands in the same bucket, or when the put triggers a rehash; Θ(1 + α) expected" + L, space: "Θ(1): one list node (Θ(n + m) during a rehash)" };
       specs["ch_get" + sfx] = { does: "Walks bucket " + M("h(k) mod m") + "'s list looking for k." + eq(str), params: keyP(str), returns: "true if k is in the table", errors: "none", time: "Θ(n): if every key collides into one chain; Θ(1 + α) expected" + L, space: "Θ(1)" };
       specs["ch_remove" + sfx] = { does: "Unlinks k from its bucket's list, if present. No tombstones are needed." + eq(str), params: keyP(str), returns: "nothing (a missing key is ignored)", errors: "none", time: "Θ(n): if every key collides into one chain; Θ(1 + α) expected" + L, space: "Θ(1)" };
       specs["rehash" + sfx] = { does: "Allocates a table of the next prime size above 2m and re-inserts every key; tombstones are dropped.", params: "none", returns: "nothing", errors: "none", time: "Θ(n + m): every key is re-inserted", space: "Θ(n + m): the new table" };
@@ -380,7 +406,7 @@
     const tail = mode === "chain" ? "" : mode === "linear" ? "_linear" : "_quad";
     const sfx = str ? "_s" : "";
     c.title = "class " + c.name + (str ? " · String keys" : " · integer keys");
-    c.methods = ["put", "get", "remove"].map((m) => pre + m + tail + sfx).concat(["rehash" + sfx], str ? ["hash_s"] : []);
+    c.methods = ["put", "get", "remove"].map((m) => pre + m + tail + sfx).concat(mode === "chain" ? ["ch_put_last" + sfx] : [], ["rehash" + sfx], str ? ["hash_s"] : []);
     c.helpers = [tableHelpers(mode, str ? "String" : "Integer"), PRIMES].concat(str ? [] : [INT_HASH]);
     FULL.push(c);
   }));
@@ -448,10 +474,12 @@
       c.at("dup^").snap({ [i]: "cmp" }, fmtk(chain[j]) + " ≠ " + fmtk(k) + ".", { chainMark: { b: i, j: j, cls: "cmp" } });
     }
     c.at("loop").snap({ [i]: "cmp" }, chain.length ? "No more nodes in the chain, so " + fmtk(k) + " is not there yet." : "Bucket " + i + " is empty, so the loop body never runs.");
-    chain.unshift(k);
+    if (T.atEnd) chain.push(k); else chain.unshift(k);
     T.n++;
     c.probes++;
-    c.at("add").snap({ [i]: "done" }, "Add it at the <b>front</b> of bucket " + i + "'s list: Θ(1). Chain length " + chain.length + ", load factor α = n/m = " + T.n + "/" + T.m + " = " + alpha().toFixed(2) + ".", { chainMark: { b: i, j: 0, cls: "done" } });
+    c.at("add").snap({ [i]: "done" }, (T.atEnd
+      ? "Add it at the <b>end</b> of bucket " + i + "'s list: the walk already reached the last node, so linking after it is Θ(1) more."
+      : "Add it at the <b>front</b> of bucket " + i + "'s list: Θ(1).") + " Chain length " + chain.length + ", load factor α = n/m = " + T.n + "/" + T.m + " = " + alpha().toFixed(2) + ".", { chainMark: { b: i, j: T.atEnd ? chain.length - 1 : 0, cls: "done" } });
     c.at(alpha() > threshold() ? "rehash" : "rehash^").snap({}, "α = " + alpha().toFixed(2) + (alpha() > threshold() ? " is above " : " ≤ ") + "maxLoad = " + threshold() + (alpha() > threshold() ? (T.auto ? ": time to rehash." : ", but auto-rehash is off.") : ": no rehash needed."));
   }
   function chainSearch(c, k) {
@@ -577,7 +605,7 @@
     fresh(nm);
     keys.forEach((k) => {
       c.at("loop").snap({}, "Next old key: " + fmtk(k) + ".");
-      if (T.mode === "chain") { T.slots[h1(k, T.m)].unshift(k); T.n++; }
+      if (T.mode === "chain") { const ch = T.slots[h1(k, T.m)]; if (T.atEnd) ch.push(k); else ch.unshift(k); T.n++; }
       else { for (let i = 0; i < T.m; i++) { const p = probeAt(k, i); if (T.slots[p] === null) { T.slots[p] = k; T.n++; break; } } }
       c.at("put").snap({ [h1(k, T.m)]: "done" }, "put(" + fmtk(k) + "): h(k) mod " + T.m + " = " + h1(k, T.m) + ". Changing m changes every hash, so every key moves: Θ(n + m).");
     });
@@ -642,20 +670,24 @@
     }
 
     if (f.mode === "chain") {
-      const wrap = D.el("div", { style: "display:flex;flex-direction:column;gap:5px" });
+      /* the table is one row of buckets, indexed like the probing tables, and each bucket's chain hangs
+         straight down under it, as in the textbook picture */
+      const wrap = D.el("div", { class: "chain-h" });
       f.slots.forEach((chain, i) => {
-        const row = D.el("div", { style: "display:flex;align-items:center;gap:6px" });
-        row.appendChild(D.el("div", {
+        const col = D.el("div", { class: "chain-col" });
+        const head = D.el("div", {
           class: "cell " + (f.marks[i] || "") + (chain.length ? " filled" : " empty"),
-          text: i, style: "min-width:34px;height:32px;font-size:.76rem", "data-motion": "off",
-        }));
-        row.appendChild(D.el("span", { class: "muted mono", text: chain.length ? "→" : "→ ∅", style: "font-size:.8rem" }));
+          text: chain.length ? "•" : "∅", title: "bucket " + i + (chain.length ? "" : ": empty"),
+          style: "--cw:44px;--ch:34px;--cf:.8rem", "data-motion": "off",
+        });
+        head.appendChild(D.el("span", { class: "idx", text: i }));
+        col.appendChild(head);
         chain.forEach((k, j) => {
           const mk = f.chainMark && f.chainMark.b === i && f.chainMark.j === j ? f.chainMark.cls : "";
-          row.appendChild(D.el("div", { class: "cell filled " + mk, text: fmtk(k), style: "min-width:44px;height:32px;font-size:.76rem" }));
-          if (j < chain.length - 1) row.appendChild(D.el("span", { class: "muted mono", text: "→", style: "font-size:.8rem" }));
+          col.appendChild(D.el("span", { class: "chain-arrow", text: "↓", "aria-hidden": "true" }));
+          col.appendChild(D.el("div", { class: "cell filled " + mk, text: fmtk(k), style: "--cw:44px;--ch:32px;--cf:.76rem" }));
         });
-        wrap.appendChild(row);
+        wrap.appendChild(col);
       });
       view.appendChild(wrap);
     } else {
@@ -666,7 +698,7 @@
         const c = D.el("div", {
           class: "cell " + (f.marks[i] || "") + (empty ? " empty" : " filled") + (tomb ? " visit" : ""),
           text: empty ? "·" : tomb ? TOMB : fmtk(s),
-          style: "min-width:48px;height:42px;font-size:.78rem",
+          style: "--cw:48px;--ch:42px;--cf:.78rem",
         });
         c.appendChild(D.el("span", { class: "idx", text: i }));
         row.appendChild(c);
@@ -777,7 +809,7 @@
       "Contains Duplicate",
       "contains-duplicate",
       "Easy",
-      "Membership tests in Î(1) expected."
+      "Membership tests in Θ(1) expected."
      ],
      [
       387,
@@ -791,7 +823,7 @@
       "Longest Consecutive Sequence",
       "longest-consecutive-sequence",
       "Medium",
-      "Î(n) only because lookups are Î(1)."
+      "Θ(n) only because lookups are Θ(1)."
      ],
      [
       219,
@@ -860,6 +892,7 @@
       const keys = [];
       T.slots.forEach((s) => { if (Array.isArray(s)) s.forEach((k) => keys.push(k)); else if (s !== null && s !== TOMB) keys.push(s); });
       T.mode = id;
+      q("ch-at-field").style.display = id === "chain" ? "" : "none";
       fresh(T.m);
       keys.forEach((k) => {
         if (id === "chain") { T.slots[h1(k, T.m)].unshift(k); T.n++; }
@@ -892,7 +925,11 @@
     q("op-search").addEventListener("click", () => doOp("search", parseKey(q("key").value)));
     q("op-delete").addEventListener("click", () => doOp("delete", parseKey(q("key").value)));
     q("op-rehash").addEventListener("click", () => doOp("rehash"));
+    T.auto = q("auto").checked;
     q("auto").addEventListener("change", (e) => { T.auto = e.target.checked; });
+    /* where put adds a new key in its chain; only separate chaining has chains */
+    T.atEnd = q("ch-at").value === "last";
+    q("ch-at").addEventListener("change", (e) => { T.atEnd = e.target.value === "last"; });
     q("msize").addEventListener("change", (e) => {
       const m = D.clamp(D.readInt(e.target) || 11, 3, 31);
       e.target.value = m;

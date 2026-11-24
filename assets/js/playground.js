@@ -1,10 +1,12 @@
 /* ============================================================
-   playground.js: the "Code playground" button on every module.
+   playground.js: edit the code of every visualizer, and run it.
 
-   The button opens a panel right under the visualizer, where a student
-   types Java and steps through it. The panel starts on a program for the
-   tab they are looking at. The editor and the starter programs load the
-   first time it opens, so a page that never uses them doesn't pay for them.
+   The code box above each visualizer has an "Edit & run" button. It turns
+   that box into an editor holding a whole Java program for the tab the
+   student is on; Run code steps through it right there, in place of the
+   module's own picture, until "Back to the animation" puts it back. The
+   editor and the starter programs load the first time it opens, so a page
+   that never uses them doesn't pay for them.
 
    The interpreter runs in a Web Worker (java-interp.js) and returns
    frames, exactly like a module records its own, so the same Player,
@@ -23,6 +25,7 @@
 
   const q = (id) => D.$("#" + id);
   let editor = null, player = null, worker = null, timer = 0, output = "", panel = null, openBtn = null, examples = [], building = null;
+  let dock = null, main = null, away = [];
   let edited = false, programmatic = false;
 
   /* ---------- editor, or a plain box if the vendored editor fails to load ---------- */
@@ -91,6 +94,9 @@
 
   function drawChains(f, parent, prev) {
     const links = linkInfo(f);
+    /* the nodes the running call's variables point at (n, cur, node...): blue, with the variable's name under them */
+    const top = f.stack[f.stack.length - 1], pointedBy = {};
+    if (top) Object.keys(top.vars).forEach((k) => { const v = top.vars[k]; if (k !== "this" && isRef(v)) pointedBy[v.ref] = (pointedBy[v.ref] ? pointedBy[v.ref] + ", " : "") + k; });
     const objs = Object.keys(f.heap).map(Number).filter((id) => f.heap[id].kind === "obj");
     const linked = objs.filter((id) => links[f.heap[id].cls] && (links[f.heap[id].cls].size || isChainField(f, f.heap[id])));
     /* a node class is one with a null-or-self field; Node with next == null still counts once any Node links */
@@ -128,9 +134,11 @@
         const g = D.svg("g", {});
         const before = prev && prev.heap[n.id];
         const changed = before && JSON.stringify(before.fields) !== JSON.stringify(n.h.fields);
-        g.appendChild(D.svg("circle", { cx: n._x, cy: n._y, r: 17, class: "node-c " + (changed || !before ? "swap" : "") }));
+        const ptr = pointedBy[n.id];
+        g.appendChild(D.svg("circle", { cx: n._x, cy: n._y, r: 17, class: "node-c " + (ptr ? "active" : changed || !before ? "swap" : "") }));
         const label = nodeLabel(f, n.h, links[n.h.cls]);
         g.appendChild(D.sText(n._x, n._y, label, { "font-size": label.length > 3 ? 9 : 12 }));
+        if (ptr) g.appendChild(D.sText(n._x, n._y + 28, ptr, { class: "lbl-s", fill: "#2563eb", "font-size": 10.5 }));
         svg.appendChild(g);
         nodes(n.left); nodes(n.right);
       })(tree);
@@ -147,14 +155,16 @@
         id = isRef(nx) ? nx.ref : null;
       }
       const NW = 56, GAP = 34, Y = 12;
-      const w = 20 + ids.length * (NW + GAP) + 44, h = 60;
+      const w = 20 + ids.length * (NW + GAP) + 44, h = 68;
       const svg = D.svg("svg", { class: "canvas", viewBox: "0 0 " + w + " " + h, width: w, height: h, style: "margin:0" });
       svg.appendChild(D.svg("defs", {}, [D.svg("marker", { id: "pgArw", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: "auto" }, [D.svg("path", { d: "M0 0L10 5L0 10z", fill: "#666" })])]));
       ids.forEach((id, i) => {
         const x = 10 + i * (NW + GAP);
         const before = prev && prev.heap[id];
         const changed = !before || JSON.stringify(before.fields) !== JSON.stringify(f.heap[id].fields);
-        svg.appendChild(D.svg("rect", { x, y: Y, width: NW, height: 34, rx: 7, class: "node-c " + (changed ? "swap" : "") }));
+        const ptr = pointedBy[id];
+        svg.appendChild(D.svg("rect", { x, y: Y, width: NW, height: 34, rx: 7, class: "node-c " + (ptr ? "active" : changed ? "swap" : "") }));
+        if (ptr) svg.appendChild(D.sText(x + NW / 2, Y + 46, ptr, { class: "lbl-s", fill: "#2563eb", "font-size": 10.5 }));
         svg.appendChild(D.sText(x + NW / 2, Y + 17, nodeLabel(f, f.heap[id], links[h0.cls]), { "font-size": 13 }));
         const line = D.sLine(x + NW, Y + 17, x + NW + GAP - 3, Y + 17, "edge");
         if (i < ids.length - 1) { line.setAttribute("marker-end", "url(#pgArw)"); svg.appendChild(line); }
@@ -172,6 +182,213 @@
   function section(parent, title, node) {
     parent.appendChild(D.el("h3", { text: title }));
     parent.appendChild(node);
+  }
+
+  /* ---------- what a step did: the pictures a module draws, rebuilt from the raw run ----------
+     The interpreter knows only variables, arrays, objects, calls and returns, so these are guesses
+     from shape and names: an array of numbers can be bars; a small int named like an index (i, j, lo,
+     hi, mid...) is a pointer under the slot it names; the slots a line read light up amber and the
+     ones it wrote red; recursive calls grow a call tree; and lists of vertex numbers become a graph. */
+  const ARR_LS = "dsa.playground.arrays." + PAGE;
+  const arrMode = () => { let v = null; try { v = localStorage.getItem(ARR_LS); } catch (e) {} return v || (PAGE === "sorting" ? "bars" : "boxes"); };
+  const IDX_NAME = /^([ijkpqrs]|lo|hi|low|high|mid|left|right|l|r|m|start|end|first|last|front|rear|top|head|tail|pos|idx|index|child|parent|largest|smallest)$|(Idx|Index|Pos)$/;
+  const asInt = (v) => (typeof v === "string" && /^-?\d+$/.test(v) ? +v : null);
+  const isNumText = (v) => typeof v === "string" && /^-?\d+(\.\d+)?(E-?\d+)?$/.test(v);
+  /* index-like ints of the running call and of the object it runs on, and the arrays they can point into */
+  function pointerVars(f) {
+    const top = f.stack[f.stack.length - 1], list = [], refs = new Set();
+    if (!top) return { list, refs };
+    const take = (name, v) => {
+      if (isRef(v)) { refs.add(v.ref); return; }
+      const n = asInt(v);
+      if (n != null && IDX_NAME.test(name)) list.push({ name, v: n });
+    };
+    Object.keys(top.vars).forEach((k) => { if (k !== "this") take(k, top.vars[k]); });
+    const self = top.vars.this;
+    if (isRef(self) && f.heap[self.ref] && f.heap[self.ref].kind === "obj") { const fl = f.heap[self.ref].fields; Object.keys(fl).forEach((k) => take(k, fl[k])); }
+    return { list, refs };
+  }
+  /* amber: read by the last step (a comparison); red: written by it */
+  function stepMarks(f, prev, id, h) {
+    const marks = {};
+    (f.rd || []).forEach((r) => { if (r[0] === id && r[1] < h.data.length) marks[r[1]] = "cmp"; });
+    const before = prev && prev.heap[id];
+    h.data.forEach((v, j) => { if (before && before.data && JSON.stringify(before.data[j]) !== JSON.stringify(v)) marks[j] = "swap"; });
+    return marks;
+  }
+  function ptrMap(pv, id, len) {
+    const out = {};
+    if (!pv.refs.has(id)) return out;
+    pv.list.forEach((p) => { if (p.v >= 0 && p.v < len) out[p.v] = out[p.v] ? out[p.v] + " " + p.name : p.name; });
+    return out;
+  }
+  function barsView(vals, marks, ptrs) {
+    const nums = vals.map(Number);
+    const hi = Math.max(0, ...nums), lo = Math.min(0, ...nums), span = hi - lo || 1;
+    const wrap = D.el("div", { class: "pg-barwrap" });
+    const bars = D.el("div", { class: "bars labeled pg-bars" });
+    nums.forEach((v, k) => {
+      const b = D.el("div", { class: "bar " + (v < 0 ? "neg " : "") + (marks[k] || "") }, [D.el("span", { class: "lbl", text: vals.length <= 40 ? vals[k] : "" })]);
+      b.style.height = Math.max(0.7, (Math.abs(v) / span) * 100) + "%";
+      b.style.bottom = ((Math.min(v, 0) - lo) / span) * 100 + "%";
+      b.dataset.v = vals[k];
+      bars.appendChild(b);
+    });
+    if (lo < 0) bars.appendChild(D.el("div", { class: "zero-line", style: "bottom:" + (-lo / span) * 100 + "%" }));
+    wrap.appendChild(bars);
+    if (Object.keys(ptrs).length) {
+      const row = D.el("div", { class: "pg-ptrs", "data-motion": "off", "aria-hidden": "true" });
+      vals.forEach((v, k) => row.appendChild(D.el("span", { text: ptrs[k] || "" })));
+      wrap.appendChild(row);
+    }
+    return wrap;
+  }
+
+  /* ---------- the call tree of a recursive program (one box per call, as on the Recursion page) ---------- */
+  const callsCache = new WeakMap();
+  function buildCalls(frames) {
+    if (callsCache.has(frames)) return callsCache.get(frames);
+    const nodes = [], byId = {};
+    frames.forEach((f, idx) => {
+      const top = f.stack && f.stack[f.stack.length - 1];
+      if (!top) return;
+      if (f.event === "call" && !byId[top.id]) {
+        if (/^main\(/.test(top.label) || /^new /.test(top.label)) return;   /* where it starts, and constructors, are not calls worth a box */
+        const below = f.stack[f.stack.length - 2];
+        const parent = below && byId[below.id] ? byId[below.id] : null;
+        const nd = { id: top.id, label: top.label, fn: (/^([\w$]+)/.exec(top.label) || [])[1], parent: parent, kids: [], born: idx, doneAt: Infinity, ret: null };
+        if (parent) parent.kids.push(nd);
+        byId[top.id] = nd;
+        nodes.push(nd);
+      } else if (f.event === "return" && byId[top.id] && byId[top.id].doneAt === Infinity) {
+        byId[top.id].doneAt = idx;
+        byId[top.id].ret = f.retVal;
+      }
+    });
+    const out = nodes.some((n) => n.parent && n.parent.fn === n.fn) ? nodes : null;
+    if (out) {
+      /* sideways, like the Recursion page: each call's calls to its right, siblings stacked; the whole
+         run's tree, so the picture keeps its size */
+      const NW = Math.min(160, Math.max(56, ...nodes.map((n) => n.label.length * 6.7 + 16))), gapX = NW + 30, gapY = 50;
+      let leaf = 0, maxD = 0;
+      const walk = (n, d) => {
+        n.d = d; maxD = Math.max(maxD, d); n.x = 8 + NW / 2 + d * gapX;
+        if (!n.kids.length) n.y = 20 + leaf++ * gapY;
+        else { n.kids.forEach((k) => walk(k, d + 1)); n.y = (n.kids[0].y + n.kids[n.kids.length - 1].y) / 2; }
+      };
+      nodes.filter((n) => !n.parent).forEach((r) => walk(r, 0));
+      out.geo = { w: Math.max(200, 16 + NW + maxD * gapX), h: 20 + (leaf - 1) * gapY + 38, nw: NW };
+    }
+    callsCache.set(frames, out);
+    return out;
+  }
+  const CALLS_MAX = 160;
+  function drawCalls(parent, f, i, frames) {
+    const nodes = buildCalls(frames);
+    if (!nodes) return;
+    if (nodes.length > CALLS_MAX) { section(parent, "Recursion tree", D.el("p", { class: "small muted", text: nodes.length + " calls: too many to draw clearly. Try a smaller input." })); return; }
+    const g = nodes.geo, NH = 26, top = f.stack[f.stack.length - 1];
+    const onStack = new Set(f.stack.map((fr) => fr.id));
+    const svg = D.svg("svg", { class: "canvas", viewBox: "0 0 " + g.w + " " + g.h, width: g.w, height: g.h, style: "max-width:100%;min-width:" + Math.round(g.w * 0.7) + "px;height:auto;margin:0 auto;display:block" });
+    const shown = nodes.filter((n) => n.born <= i);
+    shown.forEach((n) => { if (n.parent && n.parent.born <= i) svg.appendChild(D.sLine(n.parent.x + g.nw / 2, n.parent.y, n.x - g.nw / 2, n.y, "edge " + (n.doneAt <= i ? "tree" : "on"))); });
+    shown.forEach((n) => {
+      const st = n.doneAt <= i ? "done" : top && n.id === top.id ? "active" : onStack.has(n.id) ? "visit" : "done";
+      const gEl = D.svg("g", {});
+      gEl.appendChild(D.svg("rect", { x: n.x - g.nw / 2, y: n.y - NH / 2, width: g.nw, height: NH, rx: 7, class: "node-c " + st }));
+      gEl.appendChild(D.sText(n.x, n.y, n.label, { "font-size": Math.min(11.5, (g.nw - 8) / Math.max(1, n.label.length * 0.62)) }));
+      if (n.doneAt <= i && n.ret != null) gEl.appendChild(D.sText(n.x, n.y + NH / 2 + 10, "↩ " + n.ret, { class: "lbl-s", fill: "#16a34a", "font-size": 10 }));
+      svg.appendChild(gEl);
+    });
+    /* a window that follows the running call, not the whole tree */
+    const win = wrapCanvas(svg);
+    win.style.maxHeight = "240px";
+    win.style.overflow = "auto";
+    win.tabIndex = 0;
+    section(parent, "Recursion tree (blue: running · purple: waiting · green: returned)", win);
+    const cur = top && nodes.find((n) => n.id === top.id && n.born <= i);
+    if (cur) Promise.resolve().then(() => {
+      const k = svg.getBoundingClientRect().width / g.w || 1;
+      if (win.scrollHeight > win.clientHeight) win.scrollTop = Math.max(0, cur.y * k - win.clientHeight / 2);
+      if (win.scrollWidth > win.clientWidth) win.scrollLeft = Math.max(0, cur.x * k - win.clientWidth / 2);
+    });
+  }
+
+  /* ---------- a graph, from adjacency lists or a 0/1 adjacency matrix ---------- */
+  const GRAPH_NAME = /adj|graph|^g$|edges|neigh|matrix/i;
+  function findGraph(f) {
+    for (const id of Object.keys(f.heap)) {
+      const h = f.heap[id];
+      if ((h.kind !== "array" && h.kind !== "list") || !h.data || h.data.length < 2 || h.data.length > 26 || h.length !== h.data.length) continue;
+      const V = h.data.length;
+      const rows = h.data.map((v) => (isRef(v) && f.heap[v.ref] && f.heap[v.ref].data ? f.heap[v.ref] : null));
+      if (rows.some((r) => !r || r.length !== r.data.length)) continue;
+      const name = refName(f, +id) || "";
+      const bit = (x) => x === "1" || x === "true";
+      if (rows.every((r) => r.data.length === V && r.data.every((x) => bit(x) || x === "0" || x === "false"))) {
+        if (!GRAPH_NAME.test(name) && h.elem !== "boolean[]") continue;
+        const edges = [];
+        rows.forEach((r, u) => r.data.forEach((x, v) => { if (bit(x) && u !== v) edges.push([u, v]); }));
+        return { id: +id, V, edges, name, rowIds: h.data.map((v) => v.ref) };
+      }
+      const listy = rows.every((r) => r.kind === "list");
+      if (!(listy || GRAPH_NAME.test(name))) continue;
+      if (!rows.every((r) => r.data.every((x) => { const n = asInt(x); return n != null && n >= 0 && n < V; }))) continue;
+      const edges = [];
+      rows.forEach((r, u) => r.data.forEach((x) => edges.push([u, asInt(x)])));
+      return { id: +id, V, edges, name, rowIds: h.data.map((v) => v.ref) };
+    }
+    return null;
+  }
+  function drawGraph(parent, f) {
+    const G = findGraph(f);
+    if (!G) return;
+    const V = G.V, has = new Set(G.edges.map((e) => e[0] + ">" + e[1]));
+    const directed = G.edges.some((e) => !has.has(e[1] + ">" + e[0]));
+    /* what the run is doing to it: visited flags, the queue or stack, and the vertices u and v in hand */
+    const state = new Array(V).fill("");
+    const rowIds = new Set(G.rowIds || []);
+    Object.keys(f.heap).forEach((id) => {
+      const h = f.heap[id];
+      if (+id === G.id || rowIds.has(+id) || !h.data) return;
+      const nm = refName(f, +id) || "";
+      if (h.kind === "array" && h.data.length === V && /visit|seen|mark|disc|done|explored|color/i.test(nm))
+        h.data.forEach((x, k) => { if (x === "true" || (asInt(x) || 0) > 0) state[k] = "done"; });
+    });
+    Object.keys(f.heap).forEach((id) => {
+      const h = f.heap[id];
+      if (+id === G.id || rowIds.has(+id) || h.kind !== "list") return;
+      if (/Deque|Queue|Stack|LinkedList/.test(h.cls || "") || /queue|^q$|stack|frontier|deque/i.test(refName(f, +id) || ""))
+        h.data.forEach((x) => { const n = asInt(x); if (n != null && n >= 0 && n < V) state[n] = "cmp"; });
+    });
+    const top = f.stack[f.stack.length - 1];
+    if (top) Object.keys(top.vars).forEach((k) => {
+      const n = asInt(top.vars[k]);
+      if (n == null || n < 0 || n >= V) return;
+      if (/^(u|cur|curr|current|node|s|src|source|start|from|vertex)$/.test(k)) state[n] = "active";
+      else if (/^(v|w|nbr|next|neighbor|neighbour|to|adjV)$/.test(k) && state[n] !== "active") state[n] = "target";
+    });
+    const R = Math.max(70, V * 15), cx = R + 30, cy = R + 26, W = 2 * R + 60, H = 2 * R + 52, r = 15;
+    const P = Array.from({ length: V }, (_, k) => ({ x: cx + R * Math.cos(-Math.PI / 2 + (2 * Math.PI * k) / V), y: cy + R * Math.sin(-Math.PI / 2 + (2 * Math.PI * k) / V) }));
+    const svg = D.svg("svg", { class: "canvas", viewBox: "0 0 " + W + " " + H, width: W, height: H, style: "max-width:100%;height:auto;margin:0 auto;display:block" });
+    if (directed) svg.appendChild(D.svg("defs", {}, [D.svg("marker", { id: "pgGArw", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: "auto" }, [D.svg("path", { d: "M0 0L10 5L0 10z", fill: "#666" })])]));
+    const drawn = new Set();
+    G.edges.forEach(([u, v]) => {
+      if (u === v) return;
+      if (!directed && drawn.has(v + ">" + u)) return;
+      drawn.add(u + ">" + v);
+      const a = P[u], b = P[v], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1;
+      const ln = D.sLine(a.x + (dx / d) * r, a.y + (dy / d) * r, b.x - (dx / d) * (r + (directed ? 2 : 0)), b.y - (dy / d) * (r + (directed ? 2 : 0)), "edge");
+      if (directed) ln.setAttribute("marker-end", "url(#pgGArw)");
+      svg.appendChild(ln);
+    });
+    P.forEach((p, k) => {
+      const g = D.svg("g", {});
+      g.appendChild(D.svg("circle", { cx: p.x, cy: p.y, r: r, class: "node-c " + state[k] }));
+      g.appendChild(D.sText(p.x, p.y, String(k), { "font-size": 12 }));
+      svg.appendChild(g);
+    });
+    section(parent, "Graph " + (G.name || "") + " (green: visited · amber: in the queue or stack · blue: u · teal: v)", wrapCanvas(svg));
   }
 
   function render(f, i, frames) {
@@ -196,6 +413,8 @@
     const returning = f.event === "return" && top ? top.id : null;
     box.appendChild(D.el("h3", { text: "Call stack (top is running)" }));
     box.appendChild(D.callStack(cards, { returning, retVal: f.retVal == null ? "nothing" : f.retVal, err: false, compact: true, fmt: String, hidden: f.hiddenFrames || 0 }));
+    drawGraph(box, f);
+    const pv = pointerVars(f);
 
     /* arrays and lists, under the name of the variable that holds them */
     const shownLinks = drawChains(f, box, prev);
@@ -210,8 +429,7 @@
       const rows = D.el("div", { class: "pg-rows" });
       h.data.forEach((v, r) => {
         const row = f.heap[v.ref], before = prev && prev.heap[v.ref];
-        const marks = {};
-        row.data.forEach((x, j) => { if (before && before.data && JSON.stringify(before.data[j]) !== JSON.stringify(x)) marks[j] = "swap"; });
+        const marks = stepMarks(f, prev, v.ref, row);
         rows.appendChild(D.el("div", { class: "pg-row" }, [
           D.el("span", { class: "pg-row-i", text: "[" + r + "]" }),
           D.cells(row.data.map((x) => valText(f, x)), { marks, w: 34, h: 30, index: false, emptyText: "(empty)" }),
@@ -224,12 +442,12 @@
       if (shownIds.has(id)) return;
       if (h.kind === "array" && !h.length && refName(f, id) === "args") return;
       if (h.kind === "array" || h.kind === "list") {
-        const before = prev && prev.heap[id];
-        const marks = {};
-        h.data.forEach((v, j) => { if (before && before.data && JSON.stringify(before.data[j]) !== JSON.stringify(v)) marks[j] = "swap"; });
+        const marks = stepMarks(f, prev, id, h);
+        const ptrs = ptrMap(pv, id, h.data.length);
         const title = labelFor(f, id, h.cls || h.elem + "[]") + (h.kind === "list" ? " (" + h.cls + ")" : "") + (h.length > h.data.length ? " (first " + h.data.length + " of " + h.length + ")" : "");
-        const cellsEl = D.cells(h.data.map((v) => valText(f, v)), { marks, w: 42, h: 38, emptyText: "(empty)" });
-        section(box, title, cellsEl);
+        const vals = h.data.map((v) => valText(f, v));
+        const asBars = arrMode() === "bars" && h.kind === "array" && vals.length >= 2 && vals.length <= 60 && vals.every(isNumText);
+        section(box, title, asBars ? barsView(vals, marks, ptrs) : D.cells(vals, { marks, ptrs, w: 42, h: 38, emptyText: "(empty)" }));
       } else if (h.kind === "map") {
         const wrap = D.el("div", { class: "pg-objs" });
         if (!h.entries.length) wrap.appendChild(D.el("span", { class: "small muted", text: "(empty)" }));
@@ -237,6 +455,8 @@
         section(box, labelFor(f, id, h.cls) + " (" + h.cls + ")", wrap);
       }
     });
+
+    drawCalls(box, f, i, frames);
 
     /* remaining objects as cards */
     const cardsEl = D.el("div", { class: "pg-objs" });
@@ -395,21 +615,16 @@
     building = Promise.all([loadScript("assets/vendor/editor.js"), loadScript("assets/js/playground-examples.js")]).then(() => {
       examples = (D.PLAYGROUND_EXAMPLES && D.PLAYGROUND_EXAMPLES[PAGE]) || [];
       panel.innerHTML =
-        '<div class="panel-title"><h2 id="pg-title">Code playground</h2><button type="button" class="ghost" id="pg-close">Close</button></div>' +
         '<div class="toolbar">' +
         '<div class="field"><label for="pg-example">Program</label><select id="pg-example"></select></div>' +
-        '<button type="button" class="primary" id="pg-run" title="Ctrl or Cmd + Enter">Run code</button>' +
+        '<button type="button" class="primary" id="pg-run" title="Ctrl or Cmd + Enter">▶ Run code</button>' +
+        '<div class="field"><label for="pg-arr">Arrays as</label><select id="pg-arr" style="width:auto"><option value="boxes">boxes</option><option value="bars">bars</option></select></div>' +
+        '<div class="spacer"></div>' +
+        '<button type="button" id="pg-close" title="Close the editor and show the visualizer again">← Back to the animation</button>' +
         "</div>" +
         '<p class="pg-err" id="pg-err" role="alert"></p>' +
         '<div class="pg-grid"><div class="pg-editor" id="pg-editor"></div><div class="stage pg-stage" tabindex="0" role="group" aria-label="What the program is doing"><div id="pg-view"></div><h3>Output</h3><pre class="pg-out" id="pg-out" role="log" aria-label="Program output" tabindex="0"></pre></div></div>' +
-        '<div id="pg-player"></div>' +
-        '<details class="pg-help"><summary>What Java works here?</summary>' +
-        '<p>Your code runs entirely in your browser and is saved on this device. Nothing is uploaded.</p>' +
-        '<p>In the editor, Tab indents your code. To move on with the keyboard, press Esc and then Tab.</p>' +
-        '<p>This is a teaching interpreter, not a full JDK, so check a program with <span class="mono">javac</span> before you hand it in. Some type errors only appear once the line actually runs.</p>' +
-        '<p><b>Works:</b> classes, fields, constructors, static and instance methods, inheritance with <span class="mono">super</span>, generics, recursion, arrays of any dimension, loops, <span class="mono">switch</span>, <span class="mono">try</span> / <span class="mono">catch</span> / <span class="mono">throw</span>, <span class="mono">String</span>, <span class="mono">StringBuilder</span>, <span class="mono">Math</span>, <span class="mono">Arrays</span>, <span class="mono">Collections</span>, <span class="mono">ArrayList</span>, <span class="mono">LinkedList</span>, <span class="mono">Stack</span>, <span class="mono">ArrayDeque</span>, <span class="mono">PriorityQueue</span>, <span class="mono">HashMap</span>, <span class="mono">HashSet</span>.</p>' +
-        '<p><b>Not yet:</b> interfaces, enums, lambdas, streams, anonymous classes, threads, files and <span class="mono">Scanner</span> input. <span class="mono">long</span> is exact only up to 2<sup>53</sup>, and <span class="mono">HashMap</span> keeps insertion order rather than Java\'s order.</p>' +
-        "</details>";
+        '<div id="pg-player"></div>';
 
       const mine = saved();
       const start = mine != null ? mine : (exampleForTab() || { code: FALLBACK }).code;
@@ -431,6 +646,8 @@
         showIntro();
       });
       q("pg-run").addEventListener("click", () => runCode(true));
+      q("pg-arr").value = arrMode();
+      q("pg-arr").addEventListener("change", (e) => { try { localStorage.setItem(ARR_LS, e.target.value); } catch (err) {} if (player) player.goto(player.index); });
       q("pg-close").addEventListener("click", () => toggle(false));
 
       showIntro();
@@ -438,34 +655,59 @@
     return building;
   }
 
+  /* the rest of the visualizer (its controls, its picture, its player) steps aside while the student's code runs */
+  function stepAside(on) {
+    away.forEach((n) => n.classList.remove("pg-away"));
+    away = [];
+    if (!on) return;
+    for (let n = dock; n && n !== main; n = n.parentElement)
+      Array.from(n.parentElement.children).forEach((c) => { if (c !== n) { c.classList.add("pg-away"); away.push(c); } });
+  }
+  const isOpen = () => !!panel && !panel.hidden;
+  /* unchanged code follows the tab the student is on now */
+  function followTab() {
+    if (edited || !examples.length) return;
+    const e = exampleForTab();
+    if (e && editor.value !== e.code) { setCode(e.code); fillSelect(String(examples.indexOf(e))); if (cancelRun) cancelRun(); showIntro(); }
+  }
+
   async function toggle(want) {
-    const on = want == null ? panel.hidden : want;
+    const on = want == null ? !isOpen() : want;
     panel.hidden = !on;
+    dock.classList.toggle("editing", on);
     openBtn.setAttribute("aria-expanded", String(on));
-    openBtn.classList.toggle("on", on);
+    stepAside(on);
+    /* the visualizer and the editor are different heights: let the panel find its own again */
+    main.style.minHeight = ""; main._holdRun = null;
     if (!on) {
       if (player) player.pause();
       if (cancelRun) cancelRun();
       openBtn.focus({ preventScroll: true });
+      dock.scrollIntoView({ block: "nearest" });
       return;
     }
     D._players.forEach((p) => p.pause());
     const firstTime = !building;
     await build();
-    /* unchanged code follows the tab the student is on now */
-    if (!firstTime && !edited && examples.length) {
-      const e = exampleForTab();
-      if (e && editor.value !== e.code) { setCode(e.code); fillSelect(String(examples.indexOf(e))); showIntro(); }
-    }
-    panel.scrollIntoView({ block: "start" });
+    if (!firstTime) followTab();
+    dock.scrollIntoView({ block: "start" });
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const main = D.$(".panel.main");
-    openBtn = q("pg-open");
-    if (!main || !openBtn) return;
-    panel = D.el("section", { class: "panel playground", id: "playground", hidden: "", "aria-labelledby": "pg-title" });
-    main.parentNode.insertBefore(panel, main.nextSibling);
-    openBtn.addEventListener("click", () => toggle());
-  });
+  /* after every page script's own DOMContentLoaded work, since that is where the code box gets made */
+  document.addEventListener("DOMContentLoaded", () => setTimeout(() => {
+    main = D.$(".panel.main");
+    dock = main && D.$("#code.code-dock", main);
+    const head = dock && D.$(".code-head", dock);
+    if (!head) return;
+    openBtn = D.el("button", { type: "button", class: "code-edit pg-open", id: "pg-open", "aria-expanded": "false", "aria-controls": "playground", title: "Change this code and watch it run step by step", text: "✎ Edit & run" });
+    head.insertBefore(openBtn, D.$(".code-hide", head));
+    head.insertBefore(D.el("div", { class: "code-edit-title", html: "Your code <span class='muted'>· Java, runs right here, step by step</span>" }), head.firstChild);
+    panel = D.el("div", { class: "playground pg-pane", id: "playground", hidden: "", role: "region", "aria-label": "Edit and run the code" });
+    dock.appendChild(panel);
+    openBtn.addEventListener("click", () => toggle(true));
+    /* switching tabs while editing: the module draws its new tab behind the editor, and untouched code follows it */
+    document.addEventListener("click", (e) => {
+      if (isOpen() && e.target.closest && e.target.closest(".tabs button")) setTimeout(() => { stepAside(true); if (editor) followTab(); }, 0);
+    });
+  }, 0));
 })();

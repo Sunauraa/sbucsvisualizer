@@ -6,8 +6,8 @@
 <title>Arrays &amp; Lists</title>
 <meta name="description" content="Step through fixed and dynamic arrays, 2-D arrays, and singly, doubly and circularly linked lists, with the running line of code highlighted.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=07e04f44212d">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=07e04f44212d">
+<link rel="stylesheet" href="../assets/css/style.css?v=3730970a7d46">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=3730970a7d46">
 </head>
 <body>
 
@@ -22,11 +22,10 @@
 </header>
 
 <section class="page-head" aria-label="Page heading">
-  <div class="wrap has-action">
+  <div class="wrap">
     <div class="page-title">
     <h1>Arrays &amp; Lists</h1>
     </div>
-    <button type="button" class="btn primary pg-open" id="pg-open" aria-expanded="false" aria-controls="playground" title="Write Java here and watch it run step by step">Code playground</button>
   </div>
 </section>
 
@@ -50,7 +49,7 @@
         <button id="fa-get">get(i)</button>
         <button id="fa-set">set(i, value)</button>
         <button id="fa-find">indexOf(value)</button>
-        <button class="danger" id="fa-clear">clear</button>
+        <button class="danger" id="fa-clear" data-more>clear</button>
       </div>
 
       <div class="toolbar" data-tab="dynamic" style="margin:0">
@@ -59,7 +58,7 @@
         <button id="da-remove">remove(i)</button>
         <button id="da-get">get(i)</button>
         <button id="da-find">indexOf(value)</button>
-        <button class="danger" id="da-clear">clear</button>
+        <button class="danger" id="da-clear" data-more>clear</button>
       </div>
 
       <div class="toolbar" data-tab="grid" style="margin:0">
@@ -67,12 +66,12 @@
         <button id="g-set">set(r, c, value)</button>
         <button id="g-rowsum">rowSum(r)</button>
         <button id="g-find">find(value)</button>
-        <button id="g-rowmajor">row-major traversal</button>
-        <button id="g-colmajor">column-major traversal</button>
+        <button id="g-rowmajor" title="row-major traversal: row by row">row-major</button>
+        <button id="g-colmajor" title="column-major traversal: column by column">column-major</button>
         <div class="sep"></div>
-        <div class="field"><label for="g-rows">rows</label><input type="number" id="g-rows" value="4" min="1" max="6" style="width:3.8rem"></div>
-        <div class="field"><label for="g-cols">cols</label><input type="number" id="g-cols" value="5" min="1" max="8" style="width:3.8rem"></div>
-        <button id="g-new">↻ new grid</button>
+        <div class="field" data-more><label for="g-rows">rows</label><input type="number" id="g-rows" value="4" min="1" max="6" style="width:3.8rem"></div>
+        <div class="field" data-more><label for="g-cols">cols</label><input type="number" id="g-cols" value="5" min="1" max="8" style="width:3.8rem"></div>
+        <button id="g-new" data-more>↻ new grid</button>
       </div>
 
       <div class="toolbar" data-tab="single double" style="margin:0">
@@ -84,9 +83,9 @@
         <button id="ll-rat">remove(i)</button>
         <button id="ll-find">indexOf</button>
         <button id="ll-rev" data-tab="single">reverse</button>
-        <button id="ll-back" data-tab="double">walk backward</button>
-        <button id="ll-rand">↻ random</button>
-        <button class="danger" id="ll-clear">clear</button>
+        <button id="ll-back" data-tab="double" title="walk the list backward, from the tail">walk back</button>
+        <button id="ll-rand" data-more>↻ random</button>
+        <button class="danger" id="ll-clear" data-more>clear</button>
       </div>
 
       <div class="toolbar" data-tab="circular" style="margin:0">
@@ -95,8 +94,8 @@
         <button id="cl-rf">removeFirst</button>
         <button id="cl-rot">rotate</button>
         <button id="cl-find">indexOf</button>
-        <button id="cl-rand">↻ random</button>
-        <button class="danger" id="cl-clear">clear</button>
+        <button id="cl-rand" data-more>↻ random</button>
+        <button class="danger" id="cl-clear" data-more>clear</button>
       </div>
     </div>
 
@@ -158,10 +157,10 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../credits.html">Credits</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=07e04f44212d"></script>
-<script src="../assets/js/account.js?v=07e04f44212d"></script>
-<script src="../assets/js/motion.js?v=07e04f44212d"></script>
-<script src="../assets/js/playground.js?v=07e04f44212d"></script>
-<script src="../assets/js/arrays.js?v=07e04f44212d"></script>
+<script src="../assets/js/core.js?v=3730970a7d46"></script>
+<script src="../assets/js/account.js?v=3730970a7d46"></script>
+<script src="../assets/js/motion.js?v=3730970a7d46"></script>
+<script src="../assets/js/playground.js?v=3730970a7d46"></script>
+<script src="../assets/js/arrays.js?v=3730970a7d46"></script>
 </body>
 </html>

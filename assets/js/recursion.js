@@ -641,18 +641,21 @@
     let nw = 62;
     ns.forEach((n) => (nw = Math.max(nw, n.label.length * 7.1 + 14)));
     nw = Math.min(nw, 150);
-    const gapX = nw + 14, gapY = 74;
+    /* sideways: the first call on the left, the calls it makes to its right, siblings stacked top to
+       bottom. Call boxes are wide and short, so a chain (factorial, gcd...) is one short row, and a
+       branching tree grows down by one box height per leaf instead of one row per level */
+    const gapX = nw + 34, gapY = 46;
     let leaf = 0, maxD = 0;
     (function walk(n) {
       maxD = Math.max(maxD, n.depth);
-      if (!n.children.length) n._x = leaf++ * gapX + gapX / 2;
+      if (!n.children.length) n._y = 22 + leaf++ * gapY;
       else {
         n.children.forEach(walk);
-        n._x = (n.children[0]._x + n.children[n.children.length - 1]._x) / 2;
+        n._y = (n.children[0]._y + n.children[n.children.length - 1]._y) / 2;
       }
-      n._y = 26 + n.depth * gapY;
+      n._x = 10 + nw / 2 + n.depth * gapX;
     })(ns[0]);
-    geom = { w: Math.max(340, leaf * gapX + 20), h: 26 + (maxD + 1) * gapY + 26, nw: nw };
+    geom = { w: Math.max(200, 20 + nw + maxD * gapX), h: 22 + (leaf - 1) * gapY + 40, nw: nw };
   }
 
   function render(f) {
@@ -667,25 +670,28 @@
     points && points.length ? D.el("ul", {}, points.map((t) => D.el("li", { text: t }))) : null,
   ].filter(Boolean));
 
+  /* a panel's title and its short points on one line */
+  const capLine = (title) => D.el("div", { class: "cells-cap rec-cap rec-cap-line" }, [D.el("b", { text: title })]);
+
   function recView(f, compact) {
     const box = D.el("div");
-    const row = D.el("div", { class: "row" });
-    const left = D.el("div", { class: "col", style: "flex:0 1 " + (compact ? "230px" : "320px") });
-    left.appendChild(cap("Call stack", ["Top frame is running", "Each frame has its own variables"]));
-    const sc = D.el("div", { style: "min-height:120px" });
-    if (f.frames) sc.appendChild(D.callStack(f.frames, { returning: f.returning, retVal: f.retVal, err: f.err, fmt: fmt, compact: compact, emptyText: "" }));
-    left.appendChild(sc);
-    row.appendChild(left);
-
-    const right = D.el("div", { class: "col", style: "flex:2 1 " + (compact ? "240px" : "460px") });
-    right.appendChild(cap("Recursion tree", ["One box per call", "↩ shows what it returned"]));
-    const svg = D.svg("svg", { class: "canvas", viewBox: "0 0 " + geom.w + " " + geom.h, width: geom.w, height: geom.h, style: "max-width:none;margin:0" });
+    /* everything runs left to right: the call stack as one row (the first call on the left, the running
+       one on the right), and under it the sideways tree, at the full width */
+    box.appendChild(capLine("Call stack"));
+    const sc = D.el("div", { class: "rec-stack" });
+    if (f.frames) sc.appendChild(D.callStack(f.frames, { returning: f.returning, retVal: f.retVal, err: f.err, fmt: fmt, compact: compact, emptyText: "", horizontal: true, max: 4 }));
+    box.appendChild(sc);
+    const right = box;
+    right.appendChild(capLine("Recursion tree"));
+    /* drawn at its own size (never enlarged: data-fit off); a tree wider than its column shrinks to fit,
+       down to 85% so the labels stay readable, and past that it scrolls */
+    const svg = D.svg("svg", { class: "canvas", "data-fit": "off", viewBox: "0 0 " + geom.w + " " + geom.h, width: geom.w, height: geom.h, style: "max-width:100%;min-width:" + Math.round(geom.w * 0.85) + "px;height:auto;margin:0 auto;display:block" });
     const NW = geom.nw, NH = 30, drawn = f.created || 0;
     for (let i = 0; i < drawn && i < nodes.length; i++) {
       const n = nodes[i];
       if (n.parent !== null && n.parent < drawn) {
         const p = nodes[n.parent];
-        svg.appendChild(D.sLine(p._x, p._y + NH / 2, n._x, n._y - NH / 2, "edge " + (f.states[n.id] === "done" ? "tree" : f.states[n.id] ? "on" : "dim")));
+        svg.appendChild(D.sLine(p._x + NW / 2, p._y, n._x - NW / 2, n._y, "edge " + (f.states[n.id] === "done" ? "tree" : f.states[n.id] ? "on" : "dim")));
       }
     }
     for (let i = 0; i < drawn && i < nodes.length; i++) {
@@ -693,21 +699,26 @@
       const st = f.states[n.id];
       const cls = st === "active" ? "active" : st === "done" ? "done" : st === "err" ? "swap" : "visit";
       svg.appendChild(D.svg("rect", { x: n._x - NW / 2, y: n._y - NH / 2, width: NW, height: NH, rx: 7, class: "node-c " + cls }));
-      svg.appendChild(D.sText(n._x, n._y, n.label, { "font-size": Math.min(12, 1100 / Math.max(12, n.label.length * 8)) + "" }));
-      if (n.ret !== undefined && (st === "done" || st === "err")) svg.appendChild(D.sText(n._x, n._y + NH / 2 + 11, st === "err" ? "✗ throws" : "↩ " + fmt(n.ret), { class: "lbl-s", fill: st === "err" ? "#dc2626" : "#16a34a", "font-size": 10 }));
+      svg.appendChild(D.sText(n._x, n._y, n.label, { "font-size": Math.min(12, (NW - 10) / Math.max(1, n.label.length * 0.62)).toFixed(1) }));
+      if (n.ret !== undefined && (st === "done" || st === "err")) svg.appendChild(D.sText(n._x, n._y + NH / 2 + 9, st === "err" ? "✗ throws" : "↩ " + fmt(n.ret), { class: "lbl-s", fill: st === "err" ? "#dc2626" : "#16a34a", "font-size": 10 }));
     }
-    const sw = D.el("div", { style: "overflow:auto;max-height:" + (compact ? 340 : 480) + "px" });
+    /* a window onto the tree, not all of it: it follows the running call, so it shows the calls just made,
+       and the box stays one height however big the recursion gets (scroll it to look back) */
+    const sw = D.el("div", { class: "rec-window", tabindex: "0", role: "group", "aria-label": "Recursion tree", style: "overflow:auto;max-height:" + (compact ? 240 : 280) + "px" });
     sw.appendChild(svg);
-    right.appendChild(sw);
+    /* a picture of the work itself (the pegs, the array being searched) goes beside the tree when there is room */
+    const split = D.el("div", { class: "rec-split" });
+    split.appendChild(sw);
+    right.appendChild(split);
     /* the box is rebuilt every frame, so keep the running call in view once it is in the page */
     const focus = f.stack && f.stack.length ? nodes[f.stack[f.stack.length - 1]] : null;
+    Promise.resolve().then(() => { if (sc.scrollWidth > sc.clientWidth) sc.scrollLeft = sc.scrollWidth; });
     if (focus) Promise.resolve().then(() => {
-      if (sw.scrollWidth > sw.clientWidth) sw.scrollLeft = Math.max(0, focus._x - sw.clientWidth / 2);
-      if (sw.scrollHeight > sw.clientHeight) sw.scrollTop = Math.max(0, focus._y - sw.clientHeight / 2);
+      const k = svg.getBoundingClientRect().width / geom.w || 1;     /* the tree may be drawn a little smaller */
+      if (sw.scrollWidth > sw.clientWidth) sw.scrollLeft = Math.max(0, focus._x * k - sw.clientWidth / 2);
+      if (sw.scrollHeight > sw.clientHeight) sw.scrollTop = Math.max(0, focus._y * k - sw.clientHeight / 2);
     });
-    row.appendChild(right);
-    box.appendChild(row);
-    if (f.view) { const sv = sideView(f.view); sv.style.marginTop = ".8rem"; box.appendChild(sv); }
+    if (f.view) split.appendChild(sideView(f.view));
     return box;
   }
 

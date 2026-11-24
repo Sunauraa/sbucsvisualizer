@@ -4,7 +4,7 @@ Interactive data structure and algorithm visualizers. Static HTML/CSS/JS with no
 it runs on Vercel, GitHub Pages or from a folder, keeps a copy of itself for offline use, and every feature costs
 nothing to run.
 
-**Live pages:** `index.html` → course picker → CSE 214 → eight modules, each with its own Code playground.
+**Live pages:** `index.html` → course picker → CSE 214 → eight modules, each with code you can edit and run.
 
 ## What's built
 
@@ -19,9 +19,9 @@ nothing to run.
 | Graphs | `cse214/graphs.html` | click-to-build graph editor (add/delete, drag vertices in any mode, even mid-traversal, directed toggle, 7 presets); BFS with live queue; DFS with live stack and discovery/finish times; DFS forest; synchronised adjacency matrix and list |
 | Sorting | `cse214/sorting.html` | bubble, selection, insertion, heap, merge, quick, two-third and counting sort; negative and decimal values (bars grow down from a zero line) |
 
-Every module shares the same layout: site bar with breadcrumbs → page heading (title, Code playground button) →
+Every module shares the same layout: site bar with breadcrumbs → page heading →
 tabs → toolbar → **code dock** (worst-case time/space badge, what the function does and its call, the running function, and the
-running line highlighted in pseudocode or Java) → stage → player → **Study notes** (key terms, cost
+running line highlighted in pseudocode or Java, and an **Edit & run** button) → stage → player → **Study notes** (key terms, cost
 tables, LeetCode practice; starts hidden) → footer.
 
 The pages are written to be information-first: semantic landmarks (`header`, `nav`, `main`, `footer`), one `h1`
@@ -55,7 +55,7 @@ These sit in the player of every module, and none of them needs changes to a mod
 |---|---|---|
 | Animation | `assets/js/motion.js` | Values slide to their new place on each step, and tree edges follow their nodes. It compares the pictures before and after each repaint (FLIP), so stepping back works too. The slider jumps without animating, and `prefers-reduced-motion` fades instead of moving. Add `data-motion="off"` to anything whose text is not a value that travels, such as a counter. It is always on: there is no switch. |
 | Growth chart | `assets/js/growth.js`, `assets/js/growth-worker.js` | On the Sorting page: runs all eight sorts up to n = 10,000 in a Web Worker and plots the operation counts. The worker has its own fast copies of the sorts, and the tests check their counts match the visualizer's. |
-| Code playground | `assets/js/playground.js`, `assets/js/playground-examples.js`, `assets/js/java-interp.js` | The button by each module's title opens a panel under the visualizer, where a student types Java and steps through it. It opens on a starter program for the current tab, and keeps the student's own code per module. `java-interp.js` is a small interpreter in a Web Worker: it never uses `eval`, and it records frames like any module, so all the tools above work there too. The panel lists what it supports. The editor and starter programs load the first time it opens. Add a starter by adding an entry to `playground-examples.js`: the tests compile it with `javac` and compare the output. |
+| Edit & run | `assets/js/playground.js`, `assets/js/playground-examples.js`, `assets/js/java-interp.js` | The **Edit & run** button in each module's code dock turns the dock into an editor, where a student changes the Java and steps through it; the module's own controls, picture and player step aside until **Back to the animation**. It opens on a starter program for the current tab (and follows the tabs until the student types), and keeps the student's own code per module. `java-interp.js` is a small interpreter in a Web Worker: it never uses `eval`, and it records frames like any module, so all the tools above work there too. The editor and starter programs load the first time it opens. Add a starter by adding an entry to `playground-examples.js`: the tests compile it with `javac` and compare the output. |
 
 `assets/vendor/` holds `editor.js` (CodeMirror 6, MIT-licensed), committed so the site still has no build step. To rebuild the editor: `cd tools && npm install && npm run build:editor`.
 
@@ -302,7 +302,7 @@ files plus the functions in `api/`, with a stand-in for Supabase, so it uses no 
   animate, and reduced motion fades.
 - **growth**: the worker's counts equal the visualizer's across every algorithm and input shape, and the measured
   growth rates are about ×100, ×13 and ×10.
-- **playground**: on every module, the button opens the panel on the right program for the tab, and every starter runs
+- **playground**: on every module, Edit & run opens the editor in the code dock on the right program for the tab, the visualizer steps aside and comes back, and every starter runs
   and draws cleanly, at phone width too. Also errors, a student's code surviving a reload, and links carrying code.
 - **scroll**: starting a run brings the picture on screen once; playing and stepping never move the page.
 - **jvm**: also compiles every structure's full code with `javac`, so a function that is called but not shown fails the

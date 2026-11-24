@@ -6,8 +6,8 @@
 <title>Trees</title>
 <meta name="description" content="Step through traversals, binary search trees, AVL rotations, (2,4)-trees and B-trees, with a live call stack.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=07e04f44212d">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=07e04f44212d">
+<link rel="stylesheet" href="../assets/css/style.css?v=3730970a7d46">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=3730970a7d46">
 </head>
 <body>
 
@@ -22,11 +22,10 @@
 </header>
 
 <section class="page-head" aria-label="Page heading">
-  <div class="wrap has-action">
+  <div class="wrap">
     <div class="page-title">
     <h1>Trees</h1>
     </div>
-    <button type="button" class="btn primary pg-open" id="pg-open" aria-expanded="false" aria-controls="playground" title="Write Java here and watch it run step by step">Code playground</button>
   </div>
 </section>
 
@@ -49,33 +48,45 @@
         <button id="tr-height">height(root)</button>
         <button id="tr-size">size(root)</button>
         <div class="sep"></div>
-        <button id="tr-perfect">perfect tree</button>
-        <button id="tr-rand">↻ random</button>
-        <input type="text" id="tr-vals" class="wide" placeholder="50, 25, 75, ...">
-        <button id="tr-load">Build</button>
+        <button id="tr-perfect" data-more>perfect tree</button>
+        <button id="tr-rand" data-more>↻ random</button>
+        <div class="field" data-more>
+          <input type="text" id="tr-vals" class="wide" placeholder="50, 25, 75, ..." aria-label="values to build a tree from">
+          <button id="tr-load">Build</button>
+        </div>
       </div>
 
       <div class="toolbar" id="tools-bst" style="margin:0;display:none">
         <div id="bst-style" title="Run insert, search and delete as loops or as recursive calls"></div>
+        <div class="field" data-more title="Which neighbour a delete of a two-child node copies, and which one the button finds">
+          <label for="bst-nb">use</label>
+          <select id="bst-nb" class="nb-pick" style="width:auto"><option value="pred">predecessor</option><option value="succ">successor</option></select>
+        </div>
         <button id="bst-insert">insert</button>
         <button id="bst-search">search</button>
         <button id="bst-delete">delete</button>
         <button id="bst-pred">predecessor</button>
+        <button id="bst-height">height(root)</button>
         <div class="sep"></div>
-        <button id="bst-rand">↻ random</button>
-        <button id="bst-degenerate">insert 10,20,…,60 sorted</button>
-        <button class="danger" id="bst-clear">clear</button>
+        <button id="bst-rand" data-more>↻ random</button>
+        <button id="bst-degenerate" data-more>insert 10,20,…,60 sorted</button>
+        <button class="danger" id="bst-clear" data-more>clear</button>
       </div>
 
       <div class="toolbar" id="tools-avl" style="margin:0;display:none">
+        <div class="field" data-more title="Which neighbour a delete of a two-child node copies, and which one the button finds">
+          <label for="avl-nb">use</label>
+          <select id="avl-nb" class="nb-pick" style="width:auto"><option value="pred">predecessor</option><option value="succ">successor</option></select>
+        </div>
         <button id="avl-insert">insert</button>
         <button id="avl-search">search</button>
         <button id="avl-delete">delete</button>
         <button id="avl-pred">predecessor</button>
+        <button id="avl-height">height(root)</button>
         <div class="sep"></div>
-        <button id="avl-rand">↻ random</button>
-        <button id="avl-degenerate">insert 10,20,…,60 sorted</button>
-        <button class="danger" id="avl-clear">clear</button>
+        <button id="avl-rand" data-more>↻ random</button>
+        <button id="avl-degenerate" data-more>insert 10,20,…,60 sorted</button>
+        <button class="danger" id="avl-clear" data-more>clear</button>
       </div>
 
       <div class="toolbar" id="tools-t24" style="margin:0;display:none">
@@ -83,9 +94,9 @@
         <button id="t24-search">search</button>
         <button id="t24-delete">delete</button>
         <div class="sep"></div>
-        <button id="t24-rand">↻ random</button>
-        <button id="t24-seq">insert 1…12</button>
-        <button class="danger" id="t24-clear">clear</button>
+        <button id="t24-rand" data-more>↻ random</button>
+        <button id="t24-seq" data-more>insert 1…12</button>
+        <button class="danger" id="t24-clear" data-more>clear</button>
       </div>
 
       <div class="toolbar" id="tools-btree" style="margin:0;display:none">
@@ -93,9 +104,9 @@
         <button id="btree-search">search</button>
         <button id="btree-delete">delete</button>
         <div class="sep"></div>
-        <button id="btree-rand">↻ random</button>
-        <button id="btree-seq">insert 1…12</button>
-        <button class="danger" id="btree-clear">clear</button>
+        <button id="btree-rand" data-more>↻ random</button>
+        <button id="btree-seq" data-more>insert 1…12</button>
+        <button class="danger" id="btree-clear" data-more>clear</button>
       </div>
     </div>
 
@@ -174,10 +185,10 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../credits.html">Credits</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=07e04f44212d"></script>
-<script src="../assets/js/account.js?v=07e04f44212d"></script>
-<script src="../assets/js/motion.js?v=07e04f44212d"></script>
-<script src="../assets/js/playground.js?v=07e04f44212d"></script>
-<script src="../assets/js/trees.js?v=07e04f44212d"></script>
+<script src="../assets/js/core.js?v=3730970a7d46"></script>
+<script src="../assets/js/account.js?v=3730970a7d46"></script>
+<script src="../assets/js/motion.js?v=3730970a7d46"></script>
+<script src="../assets/js/playground.js?v=3730970a7d46"></script>
+<script src="../assets/js/trees.js?v=3730970a7d46"></script>
 </body>
 </html>

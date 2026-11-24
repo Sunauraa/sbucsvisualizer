@@ -675,6 +675,8 @@
     });
     const frames = [];
     let output = "", ops = 0, nextId = 1, truncated = false, curLine = 0;
+    /* the array slots (and list positions) read since the last snapshot, so a step can light up what it compared */
+    let reads = [];
     const stack = [];
     const lineOf = (n) => (n && n.line) || curLine;
 
@@ -725,7 +727,8 @@
         else if (h.kind === "sb") heap[h.id] = { kind: "obj", cls: h.cls, fields: { value: '"' + h.s + '"' } };
         else heap[h.id] = { kind: "obj", cls: h.cls || "Object", fields: {} };
       }
-      frames.push(Object.assign({ line, stack: st, heap, statics, out: output.length, hiddenFrames: stack.length - kept.length }, extra || {}));
+      frames.push(Object.assign({ line, stack: st, heap, statics, out: output.length, hiddenFrames: stack.length - kept.length, rd: reads }, extra || {}));
+      reads = [];
     }
 
     /* ---------- printing ---------- */
@@ -1322,7 +1325,7 @@
           if (name in BOX) return (BOX[v.t] || v.t) === BOX[name] ? TRUE : FALSE;
           return v.v && v.v.cls && isSub(v.v.cls, name) ? TRUE : name === "Object" ? TRUE : FALSE;
         }
-        case "index": { const { arr, i } = arrIndex(e); return arr.data[i]; }
+        case "index": { const { arr, i } = arrIndex(e); if (reads.length < 64) reads.push([arr.id, i]); return arr.data[i]; }
         case "field": return getField(e);
         case "arrlit": {
           const items = e.items.map((x) => coerce(evalExpr(x), e.elem, e.line, "this element"));
@@ -1719,7 +1722,7 @@
         case "contains": return d.some((x) => key(x) === key(a[0])) ? TRUE : FALSE;
         case "indexOf": return mk("int", d.findIndex((x) => key(x) === key(a[0])));
         case "toString": return mk("String", text(r));
-        case "get": at(a[0].v, d.length); return d[a[0].v];
+        case "get": at(a[0].v, d.length); if (reads.length < 64) reads.push([h.id, a[0].v]); return d[a[0].v];
         case "set": { at(a[0].v, d.length); const old = d[a[0].v]; d[a[0].v] = a[1]; return old; }
         case "add":
           if (a.length === 2) { at(a[0].v, d.length + 1); d.splice(a[0].v, 0, a[1]); return VOID; }

@@ -244,7 +244,8 @@
     const m = typeof mount === "string" ? DSA.$(mount) : mount;
     const maps = variants.map || {};
     const have = LANGS.filter((l) => Array.isArray(variants[l.id]) && variants[l.id].length);
-    const pre = DSA.el("pre", { class: "code" });
+    /* focusable, so a keyboard can scroll a listing that is wider or taller than its box */
+    const pre = DSA.el("pre", { class: "code", tabindex: "0", "aria-label": "Code listing" });
     let spans = [], tags = [], line = null, bar = null;
 
     /* `switcher: false` for a second block that follows the panel's own switch;
@@ -610,8 +611,8 @@
     DSA.onLang(() => { if (spec && specMount.isConnected) spec.repaint(); });
     const api = {
       listings: listings,
-      paintHidden: paintHidden,
-      setWaiting(on) { m.classList.toggle("waiting", !!on); },
+      paintHidden: () => { paintHidden(); if (api.onState) api.onState(); },
+      setWaiting(on) { m.classList.toggle("waiting", !!on); if (api.onState) api.onState(); },
       groups: groups,
       recvOf: (k) => (typeof o.recv === "function" ? o.recv(k) : o.recv || null),
       get current() { return key; },
@@ -638,6 +639,7 @@
         api.highlight(f.line);
       },
     };
+    api.el = m;
     docks.push(api);
     paintHidden();
     if (o.initial) api.show(o.initial);
@@ -646,6 +648,100 @@
   };
   const docks = [];
   DSA._docks = docks;   /* exposed for the headless test harness */
+
+  /* ------------------------------------------------------------
+     Code beside the picture. On a wide screen, an open code dock
+     becomes a column on the left with the visualizer on the right,
+     instead of a full-width strip above it whose right side is empty.
+     The dock and the boxes after it (up to the player) are wrapped once:
+       <div class="code-side"> dock <div class="code-side-vis"> ... </div></div>
+     and the wrapper only lays them out side by side (.side) while the
+     code is shown and there is room; otherwise it is a plain block, so a
+     phone, or hidden code, looks exactly as before.
+     ------------------------------------------------------------ */
+  const SIDE_MIN = 980;
+  function sideWrap(api) {
+    const dock = api.el;
+    if (!dock || !dock.closest(".panel.main") || dock.parentElement.classList.contains("code-side")) return;
+    const wrap = DSA.el("div", { class: "code-side" }), vis = DSA.el("div", { class: "code-side-vis" });
+    const move = [];
+    for (let n = dock.nextSibling; n; n = n.nextSibling) {
+      if (n.nodeType === 1 && (n.matches(".player, #player") || n.querySelector(".player, #player"))) break;
+      move.push(n);
+    }
+    dock.parentElement.insertBefore(wrap, dock);
+    wrap.appendChild(dock);
+    wrap.appendChild(vis);
+    move.forEach((n) => vis.appendChild(n));
+    const panel = wrap.closest(".panel");
+    /* the code shown or hidden, or moved beside the picture, changes the panel's height for a reason:
+       let it find its height again (Player._sync otherwise never lets it shrink during a run) */
+    const unhold = () => { if (panel) { panel._holdRun = null; panel.style.minHeight = ""; } };
+    const update = () => {
+      const c = dock.classList;
+      const on = wrap.clientWidth >= SIDE_MIN && !c.contains("collapsed") && !c.contains("waiting") && !c.contains("editing");
+      unhold();
+      if (wrap.classList.contains("side") === on) return;
+      wrap.classList.toggle("side", on);
+      /* the picture has a new width: draw the step again so it fits it */
+      players.forEach((p) => { if (p.scope && p.scope.contains(wrap) && p.isVisible()) { try { p._sync(); } catch (e) { console.error(e); } } });
+    };
+    /* at once when the code is shown, hidden or appears (a run that starts then scrolls to the right place),
+       and after any other change to the dock, such as the editor opening */
+    api.onState = update;
+    new MutationObserver(update).observe(dock, { attributes: true, attributeFilter: ["class"] });
+    let lastW = 0;
+    if (window.ResizeObserver) new ResizeObserver(() => { if (wrap.clientWidth !== lastW) { lastW = wrap.clientWidth; update(); } }).observe(wrap);
+    update();
+  }
+  document.addEventListener("DOMContentLoaded", () => setTimeout(() => docks.forEach(sideWrap), 0));
+
+  /* ------------------------------------------------------------
+     Options menus. A toolbar keeps its operations on one line; the
+     controls marked data-more (sizes, presets, random, clear...) go into
+     a "⚙ Options" menu at the end of the toolbar they sit in, so a tab
+     only ever shows its own. A bar still too wide scrolls sideways.
+     The menu floats (position: fixed), so the scrolling bar can't clip it.
+     ------------------------------------------------------------ */
+  function optionsMenus() {
+    const bars = new Map();
+    DSA.$$(".panel.main [data-more]").forEach((el) => {
+      const bar = el.parentElement && el.parentElement.closest(".toolbar");
+      if (!bar) return;
+      if (!bars.has(bar)) bars.set(bar, []);
+      bars.get(bar).push(el);
+    });
+    bars.forEach((items, bar) => {
+      const det = DSA.el("details", { class: "tb-more" });
+      const sum = DSA.el("summary", { text: "⚙ Options", title: "Settings, presets, random and clear" });
+      const menu = DSA.el("div", { class: "tb-more-menu", role: "group", "aria-label": "Options" });
+      items.forEach((el) => menu.appendChild(el));
+      det.appendChild(sum);
+      det.appendChild(menu);
+      bar.appendChild(det);
+      det._place = () => {
+        const r = sum.getBoundingClientRect(), w = menu.offsetWidth;
+        menu.style.top = Math.round(r.bottom + 6) + "px";
+        menu.style.left = Math.round(Math.max(8, Math.min(innerWidth - w - 8, r.right - w))) + "px";
+      };
+      det.addEventListener("toggle", () => {
+        if (!det.open) return;
+        DSA.$$(".tb-more[open]").forEach((o) => { if (o !== det) o.open = false; });
+        det._place();
+      });
+      /* a button runs something, so the menu closes; a field, a menu or a checkbox keeps it open */
+      menu.addEventListener("click", (e) => { if (e.target.closest("button")) det.open = false; });
+    });
+    if (!bars.size) return;
+    const openOnes = () => DSA.$$(".tb-more[open]");
+    document.addEventListener("pointerdown", (e) => openOnes().forEach((d) => { if (!d.contains(e.target)) d.open = false; }));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") openOnes().forEach((d) => { d.open = false; d.querySelector("summary").focus(); }); });
+    const replace = () => openOnes().forEach((d) => d._place());
+    addEventListener("scroll", replace, { passive: true });
+    addEventListener("resize", replace);
+    DSA.$$(".panel.main .toolbar").forEach((b) => b.addEventListener("scroll", replace, { passive: true }));
+  }
+  document.addEventListener("DOMContentLoaded", () => setTimeout(optionsMenus, 0));
 
   /* ---------------- per-tab visibility ---------------- */
   /** Show every [data-tab] element whose space-separated list names `id`; hide the rest. */
@@ -833,8 +929,8 @@
         class: "cell " + (marks[i] || "") + (on ? " filled" : " empty") + (o.ghost && o.ghost(i) ? " ghost" : ""),
         text: text,
       });
-      if (o.w) c.style.minWidth = o.w + "px";
-      if (o.h) c.style.height = o.h + "px";
+      if (o.w) c.style.setProperty("--cw", o.w + "px");   /* sizes are variables, so DSA.fit can scale them */
+      if (o.h) c.style.setProperty("--ch", o.h + "px");
       if (o.index !== false) c.appendChild(DSA.el("span", { class: "idx", text: (o.start || 0) + i }));
       if (ptrs[i]) c.appendChild(DSA.el("span", { class: "ptr", text: ptrs[i] }));
       row.appendChild(c);
@@ -856,7 +952,8 @@
   DSA.callStack = function (frames, opts) {
     const o = opts || {};
     const fmt = o.fmt || ((v) => String(v));
-    const col = DSA.el("div", { class: "frame-stack" });
+    /* horizontal: one row, the first call on the left and the running one on the right */
+    const col = DSA.el("div", { class: "frame-stack" + (o.horizontal ? " h" : "") });
     const max = o.max || 6;
     if (!frames || !frames.length) {
       if (o.emptyText !== "") col.appendChild(DSA.el("p", { class: "small muted", text: o.emptyText || "The call stack is empty." }));
@@ -865,7 +962,7 @@
     frames.forEach((fr, k) => {
       const top = k === frames.length - 1;
       if (frames.length > max + 1 && k < frames.length - max) {
-        if (k === 0) col.appendChild(DSA.el("div", { class: "small muted", text: "… " + (frames.length - max + (o.hidden || 0)) + " more frame(s) below" }));
+        if (k === 0) col.appendChild(DSA.el("div", { class: "small muted", text: "… " + (frames.length - max + (o.hidden || 0)) + (o.horizontal ? " earlier frame(s)" : " more frame(s) below") }));
         return;
       }
       const returning = o.returning != null && o.returning === fr.id;
@@ -874,7 +971,7 @@
       const tag = returning ? (o.err ? "throws" : "returning") : top ? "running" : "waiting";
       card.appendChild(DSA.el("div", { class: "fc-head" }, [DSA.el("span", { class: "mono", text: fr.label }), DSA.el("span", { class: "fc-tag", text: tag })]));
       const vars = Object.keys(fr.vars || {});
-      if (vars.length) card.appendChild(DSA.el("div", { class: "fc-vars mono", text: vars.map((k2) => k2 + " = " + fmt(fr.vars[k2])).join("   ") }));
+      if (vars.length) card.appendChild(DSA.el("div", { class: "fc-vars mono", text: vars.map((k2) => k2 + "\u00a0=\u00a0" + fmt(fr.vars[k2])).join("   ") }));   /* a line breaks between variables, never inside one */
       if (returning) card.appendChild(DSA.el("div", { class: "fc-wait mono", text: o.err ? "✗ throws an exception" : "↩ returns " + o.retVal }));
       else if (fr.wait) card.appendChild(DSA.el("div", { class: "fc-wait mono", text: "⏳ " + fr.wait }));
       col.appendChild(card);
@@ -1074,9 +1171,29 @@
       try { if (this.code) this.code.sync(f); } catch (err) { console.error(err); }
       /* one step forward or back slides things to their new places; a jump just repaints */
       const oneStep = prevFrames === this.frames && Math.abs(this.index - prevIndex) === 1;
+      /* Within one run the panel never gets shorter. A repaint that briefly shrinks the page (Safari
+         lays it out mid-repaint) would otherwise pull the reader's screen up on every step, when they
+         are scrolled near the bottom. A new run, or a new window width, lets it find its height again.
+         Nothing is measured during a repaint (a forced layout there starts the bars' height transitions
+         early); the height is read on the next animation frame, once the browser has laid the step out. */
+      const sc = this.scope && this.scope.style ? this.scope : null;
+      if (sc) {
+        if (sc._holdRun !== this.frames || sc._holdW !== innerWidth) { sc._holdRun = this.frames; sc._holdW = innerWidth; sc._holdH = 0; sc.style.minHeight = ""; }
+        else if (sc._holdH) sc.style.minHeight = sc._holdH + "px";
+      }
       const motion = DSA.motion ? DSA.motion.begin(this, oneStep && !this.noMotion) : null;
       try { this.render(f, this.index, this.frames); } catch (err) { console.error(err); }
+      try { DSA.fit(this.scope, this.frames); } catch (err) { console.error(err); }
       if (motion) motion.play();
+      if (sc && !sc._holdAsk) {
+        sc._holdAsk = true;
+        requestAnimationFrame(() => {
+          sc._holdAsk = false;
+          if (!sc._holdRun || !sc.isConnected) return;
+          sc._holdH = Math.max(sc._holdH || 0, Math.ceil(sc.getBoundingClientRect().height));
+          sc.style.minHeight = sc._holdH + "px";
+        });
+      }
       /* a new run, or a new window width, lets the caption find its height again (see noteHeld below) */
       if (prevFrames !== this.frames || heldWidth !== innerWidth) { noteMax = 0; note.style.minHeight = ""; heldWidth = innerWidth; }
       prevIndex = this.index; prevFrames = this.frames;
@@ -1301,6 +1418,277 @@
     });
     return a;
   }
+
+  /* ------------------------------------------------------------
+     fit(scope): use the room a wide screen gives. A picture drawn for
+     a narrow column used to sit at the left of a wide stage with empty
+     space beside it. After each repaint (before motion measures where
+     things landed) every visible stage in scope is measured:
+       cells   the stage gets --s, a scale for every .cell, chosen so the
+               widest row of cells grows into the free width (1 to 1.5×)
+       svg     a picture narrower than its box grows up to 1.4× its
+               drawn size, never past the box
+     A row that already wraps, or a picture that already fills the box,
+     stays as it is, so phones and long arrays look exactly as before.
+     Within one run (the same frames) a scale only ever shrinks and the
+     stage never gets shorter, so stepping never makes the picture pulse
+     or the page below it jump; a new run starts afresh.
+     ------------------------------------------------------------ */
+  const FIT_CELLS = 1.5, FIT_SVG = 1.4;
+  DSA.fit = function (scope, run) {
+    DSA.$$(".stage", scope || document).forEach((st) => {
+      /* nothing to grow (the sorting bars): leave the stage alone, without even reading its layout,
+         which would start the bars' height transition in the middle of a step */
+      if (st.dataset.fit === "off" || !st.querySelector(".cell, svg.canvas")) return;
+      /* the renderer has just drawn its pictures at their own size: put back this run's size before
+         anything below reads the layout, or the page would be shorter for a moment and the browser
+         would pull the scroll position up */
+      if (run != null && st._fitRun === run && st._fitK) st.querySelectorAll("svg.canvas").forEach((svg, i) => {
+        const w = parseFloat(svg.getAttribute("width")), k = st._fitK[i];
+        if (w && k > 1.05) { svg.style.width = w * k + "px"; svg.style.marginLeft = svg.style.marginRight = "auto"; }
+      });
+      if (!st.offsetParent) return;
+      const cs = getComputedStyle(st);
+      const avail = st.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      if (avail <= 0) return;
+      const same = run != null && st._fitRun === run && st._fitW === avail;
+      if (!same) { st._fitRun = run; st._fitW = avail; st._fitS = Infinity; st._fitK = []; st._fitH = 0; st.style.minHeight = ""; }
+      const cells = st.querySelectorAll(".cell");
+      if (cells.length) {
+        /* measured at the scale it has now (resetting it to 1 first would shrink the page for a moment,
+           and the browser would pull the scroll position up), then divided back to its natural size */
+        const cur = parseFloat(st.style.getPropertyValue("--s")) || 1;
+        const box = st.getBoundingClientRect();
+        let lo = Infinity, hi = -Infinity, rowLen = 0;
+        cells.forEach((c) => {
+          const r = c.getBoundingClientRect();
+          if (!r.width) return;
+          lo = Math.min(lo, r.left); hi = Math.max(hi, r.right);
+        });
+        /* a row that wraps is as long as its cells laid end to end */
+        st.querySelectorAll(".cells").forEach((row) => {
+          const k = Array.from(row.children).filter((c) => c.classList.contains("cell"));
+          if (k.length < 2) return;
+          const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+          rowLen = Math.max(rowLen, k.reduce((t, c) => t + c.getBoundingClientRect().width, 0) + gap * (k.length - 1));
+        });
+        const natural = Math.max(hi - Math.max(lo, box.left), rowLen) / cur;
+        let sc = 1;
+        if (natural > 0) sc = Math.max(1, Math.min(FIT_CELLS, Math.floor(((avail * 0.94) / natural) * 20) / 20));
+        sc = Math.min(sc, st._fitS);
+        st._fitS = sc;
+        st.style.setProperty("--s", String(sc));
+      }
+      st.querySelectorAll("svg.canvas").forEach((svg, i) => {
+        const w = parseFloat(svg.getAttribute("width")), h = parseFloat(svg.getAttribute("height"));
+        if (!w || svg.dataset.fit === "off") return;
+        const par = svg.parentElement, pcs = getComputedStyle(par);
+        const room = par.clientWidth - parseFloat(pcs.paddingLeft) - parseFloat(pcs.paddingRight);
+        let k = Math.min(FIT_SVG, room / w);
+        /* inside a box with a height limit (it scrolls), grow only as far as that limit */
+        if (pcs.maxHeight !== "none" && h) k = Math.min(k, parseFloat(pcs.maxHeight) / h);
+        /* and never past about 60% of the window's height: a bigger picture would no longer fit the screen */
+        if (h) k = Math.min(k, Math.max(1, (innerHeight * 0.6) / h));
+        k = Math.min(k, st._fitK[i] == null ? Infinity : st._fitK[i]);
+        st._fitK[i] = k;
+        if (k > 1.05) { svg.style.width = w * k + "px"; svg.style.marginLeft = svg.style.marginRight = "auto"; }
+        else svg.style.width = "";
+      });
+      /* hold the tallest height this run has reached */
+      const hNow = st.offsetHeight;
+      if (hNow >= st._fitH) st._fitH = hNow;
+      else st.style.minHeight = st._fitH + "px";
+    });
+  };
+  let fitTimer = 0;
+  window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => DSA.fit(document), 120); });
+
+  /* ------------------------------------------------------------
+     Download a diagram as PNG, JPG, SVG or PDF.
+     A stage can be drawn with SVG, with HTML boxes (cells, bars,
+     tables) or with both, so the exporter redraws whatever is on
+     screen as one plain SVG: a rectangle per painted box, a <text>
+     per run of text, and each inline <svg> copied with its computed
+     styles. Plain SVG, unlike HTML in a foreignObject, can be drawn
+     onto a canvas in every browser, which gives the PNG, the JPG and
+     (a JPG wrapped in a one-page PDF) the PDF. No libraries.
+     ------------------------------------------------------------ */
+  const XML_ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
+  const xesc = (t) => String(t).replace(/[&<>"]/g, (c) => XML_ESC[c]);
+  const clear = (c) => !c || c === "transparent" || /rgba\([^)]*,\s*0\)$/.test(c);
+  const SVG_PROPS = ["fill", "fill-opacity", "stroke", "stroke-width", "stroke-dasharray", "stroke-opacity", "stroke-linecap", "opacity",
+    "font-family", "font-size", "font-weight", "font-style", "text-anchor", "dominant-baseline", "visibility"];
+
+  function snapshotSVG(root) {
+    const r0 = root.getBoundingClientRect();
+    const W = Math.ceil(Math.max(r0.width, root.scrollWidth)), H = Math.ceil(Math.max(r0.height, root.scrollHeight));
+    const ox = r0.left - root.scrollLeft, oy = r0.top - root.scrollTop;
+    const out = [];
+    let bg = "#ffffff";
+    for (let e = root; e && e.nodeType === 1; e = e.parentElement) { const c = getComputedStyle(e).backgroundColor; if (!clear(c)) { bg = c; break; } }
+    out.push('<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="' + bg + '"/>');
+    const font = (cs) => 'font-family="' + xesc(cs.fontFamily) + '" font-size="' + cs.fontSize + '" font-weight="' + cs.fontWeight + '"' + (cs.fontStyle !== "normal" ? ' font-style="' + cs.fontStyle + '"' : "") + ' fill="' + cs.color + '"';
+    function text(node, cs) {
+      const raw = node.textContent;
+      if (!raw.trim()) return;
+      const up = cs.textTransform === "uppercase" ? (t) => t.toUpperCase() : (t) => t;
+      const range = document.createRange();
+      const words = [];
+      const re = /\S+/g;
+      let m;
+      while ((m = re.exec(raw))) words.push([m.index, m.index + m[0].length]);
+      /* one box: the whole run in one piece; wrapped text: word by word */
+      range.setStart(node, words[0][0]);
+      range.setEnd(node, words[words.length - 1][1]);
+      const rects = range.getClientRects();
+      const put = (r, t) => { if (r.width || r.height) out.push('<text x="' + (r.left - ox).toFixed(1) + '" y="' + (r.top - oy + r.height / 2).toFixed(1) + '" dominant-baseline="central" ' + font(cs) + ' xml:space="preserve">' + xesc(up(t)) + "</text>"); };
+      if (rects.length <= 1) { if (rects[0]) put(rects[0], raw.slice(words[0][0], words[words.length - 1][1]).replace(/\s+/g, " ")); return; }
+      words.forEach(([a, b]) => { range.setStart(node, a); range.setEnd(node, b); const r = range.getBoundingClientRect(); put(r, raw.slice(a, b)); });
+    }
+    function svgCopy(el) {
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      const copy = el.cloneNode(true);
+      const a = [el].concat(Array.from(el.querySelectorAll("*"))), b = [copy].concat(Array.from(copy.querySelectorAll("*")));
+      a.forEach((o, i) => {
+        const cs = getComputedStyle(o);
+        let st = SVG_PROPS.map((k) => { const v = cs.getPropertyValue(k); return v ? k + ":" + v : ""; }).filter(Boolean).join(";");
+        if (cs.display === "none") st += ";display:none";
+        b[i].setAttribute("style", st);
+        b[i].removeAttribute("class");
+      });
+      copy.setAttribute("x", (r.left - ox).toFixed(1));
+      copy.setAttribute("y", (r.top - oy).toFixed(1));
+      copy.setAttribute("width", r.width.toFixed(1));
+      copy.setAttribute("height", r.height.toFixed(1));
+      copy.setAttribute("style", "overflow:visible");
+      if (!copy.getAttribute("viewBox") && el.viewBox && el.viewBox.baseVal && el.viewBox.baseVal.width) { const v = el.viewBox.baseVal; copy.setAttribute("viewBox", [v.x, v.y, v.width, v.height].join(" ")); }
+      out.push(new XMLSerializer().serializeToString(copy));
+    }
+    function walk(el) {
+      if (el.classList && el.classList.contains("dl")) return;
+      const cs = getComputedStyle(el);
+      if (cs.display === "none" || cs.visibility === "hidden") return;
+      const op = parseFloat(cs.opacity);
+      if (op === 0) return;
+      if (el.namespaceURI === SVGNS && el.tagName.toLowerCase() === "svg") { svgCopy(el); return; }
+      if (op < 1) out.push('<g opacity="' + op + '">');
+      if (el !== root) {
+        const r = el.getBoundingClientRect();
+        if (r.width && r.height) {
+          const x = r.left - ox, y = r.top - oy, w = r.width, h = r.height;
+          const rad = Math.min(parseFloat(cs.borderTopLeftRadius) || 0, w / 2, h / 2);
+          const sides = ["Top", "Right", "Bottom", "Left"].map((sd) => ({ w: cs["border" + sd + "Style"] === "none" ? 0 : parseFloat(cs["border" + sd + "Width"]) || 0, c: cs["border" + sd + "Color"], st: cs["border" + sd + "Style"] }));
+          const same = sides.every((sd) => sd.w === sides[0].w && sd.c === sides[0].c);
+          const fill = clear(cs.backgroundColor) ? "none" : cs.backgroundColor;
+          if (same && sides[0].w && !clear(sides[0].c)) {
+            const bw = sides[0].w;
+            out.push('<rect x="' + (x + bw / 2).toFixed(1) + '" y="' + (y + bw / 2).toFixed(1) + '" width="' + Math.max(0, w - bw).toFixed(1) + '" height="' + Math.max(0, h - bw).toFixed(1) + '" rx="' + Math.max(0, rad - bw / 2).toFixed(1) + '" fill="' + fill + '" stroke="' + sides[0].c + '" stroke-width="' + bw + '"' + (sides[0].st === "dashed" ? ' stroke-dasharray="' + bw * 3 + " " + bw * 2 + '"' : sides[0].st === "dotted" ? ' stroke-dasharray="' + bw + " " + bw * 1.5 + '"' : "") + "/>");
+          } else {
+            if (fill !== "none") out.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="' + rad.toFixed(1) + '" fill="' + fill + '"/>');
+            const [t, rt, bt, lt] = sides;
+            const strip = (sx, sy, sw, sh, c) => out.push('<rect x="' + sx.toFixed(1) + '" y="' + sy.toFixed(1) + '" width="' + sw.toFixed(1) + '" height="' + sh.toFixed(1) + '" fill="' + c + '"/>');
+            if (t.w && !clear(t.c)) strip(x, y, w, t.w, t.c);
+            if (bt.w && !clear(bt.c)) strip(x, y + h - bt.w, w, bt.w, bt.c);
+            if (lt.w && !clear(lt.c)) strip(x, y, lt.w, h, lt.c);
+            if (rt.w && !clear(rt.c)) strip(x + w - rt.w, y, rt.w, h, rt.c);
+          }
+        }
+      }
+      el.childNodes.forEach((c) => { if (c.nodeType === 3) text(c, cs); else if (c.nodeType === 1) walk(c); });
+      if (op < 1) out.push("</g>");
+    }
+    walk(root);
+    return { w: W, h: H, svg: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '">' + out.join("") + "</svg>" };
+  }
+
+  function svgToCanvas(snap, scale) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement("canvas");
+        c.width = Math.round(snap.w * scale); c.height = Math.round(snap.h * scale);
+        const g = c.getContext("2d");
+        g.fillStyle = "#ffffff"; g.fillRect(0, 0, c.width, c.height);
+        g.drawImage(img, 0, 0, c.width, c.height);
+        resolve(c);
+      };
+      img.onerror = () => reject(new Error("could not draw the picture"));
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(snap.svg);
+    });
+  }
+  const canvasBlob = (c, type, q) => new Promise((res) => c.toBlob(res, type, q));
+
+  /** a one-page PDF holding one JPEG, page size = picture size (1 px = 0.75 pt) */
+  function pdfFromJpeg(jpg, pxW, pxH, wPt, hPt) {
+    const enc = new TextEncoder(), parts = [], offs = [];
+    let len = 0;
+    const add = (x) => { const b = typeof x === "string" ? enc.encode(x) : x; parts.push(b); len += b.length; };
+    const obj = (n, body) => { offs[n] = len; add(n + " 0 obj\n"); body(); add("\nendobj\n"); };
+    const content = "q " + wPt + " 0 0 " + hPt + " 0 0 cm /Im0 Do Q";
+    add("%PDF-1.4\n%âã\n");
+    obj(1, () => add("<< /Type /Catalog /Pages 2 0 R >>"));
+    obj(2, () => add("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"));
+    obj(3, () => add("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + wPt + " " + hPt + "] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>"));
+    obj(4, () => { add("<< /Type /XObject /Subtype /Image /Width " + pxW + " /Height " + pxH + " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + jpg.length + " >>\nstream\n"); add(jpg); add("\nendstream"); });
+    obj(5, () => add("<< /Length " + content.length + " >>\nstream\n" + content + "\nendstream"));
+    const xref = len;
+    add("xref\n0 6\n0000000000 65535 f \n");
+    for (let n = 1; n <= 5; n++) add(String(offs[n]).padStart(10, "0") + " 00000 n \n");
+    add("trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF\n");
+    return new Blob(parts, { type: "application/pdf" });
+  }
+
+  function saveBlob(blob, name) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+
+  /** exportDiagram(el, format, baseName): save what el shows as "png" | "jpg" | "svg" | "pdf" */
+  DSA.exportDiagram = async function (el, fmt, base) {
+    const snap = snapshotSVG(el);
+    if (!snap.w || !snap.h) throw new Error("the diagram is empty or hidden");
+    const name = (base || "diagram") + "." + fmt;
+    if (fmt === "svg") return saveBlob(new Blob([snap.svg], { type: "image/svg+xml" }), name);
+    const c = await svgToCanvas(snap, 2);
+    const blobOf = async (type, q) => { const bl = await canvasBlob(c, type, q); if (!bl) throw new Error("the picture is too big for this browser"); return bl; };
+    if (fmt === "png") return saveBlob(await blobOf("image/png"), name);
+    const jpg = await blobOf("image/jpeg", 0.92);
+    if (fmt === "jpg") return saveBlob(jpg, name);
+    const bytes = new Uint8Array(await jpg.arrayBuffer());
+    saveBlob(pdfFromJpeg(bytes, c.width, c.height, +(snap.w * 0.75).toFixed(2), +(snap.h * 0.75).toFixed(2)), name);
+  };
+  DSA._snapshotSVG = snapshotSVG;   /* exposed for the headless test harness */
+
+  /** downloadable(stage, label): a small "Download" menu under a diagram */
+  DSA.downloadable = function (stage, label) {
+    if (!stage || stage._dl) return;
+    stage._dl = true;
+    const page = (location.pathname.split("/").pop() || "page").replace(/\.html$/, "") || "page";
+    const base = page + (label ? "-" + label : "");
+    const menu = DSA.el("details", { class: "dl" }, [
+      DSA.el("summary", { html: '<span aria-hidden="true">⤓</span> Download picture', title: "Save this diagram as an image or a PDF" }),
+    ]);
+    const list = DSA.el("div", { class: "dl-menu", role: "menu" });
+    [["png", "PNG image"], ["jpg", "JPG image"], ["svg", "SVG (sharp at any size)"], ["pdf", "PDF"]].forEach(([fmt, txt]) => {
+      list.appendChild(DSA.el("button", { type: "button", role: "menuitem", text: txt, onclick: async () => {
+        menu.open = false;
+        try { await DSA.exportDiagram(stage, fmt, base); }
+        catch (e) { console.error(e); DSA.toast("Could not save the picture: " + e.message, true); }
+      } }));
+    });
+    menu.appendChild(list);
+    document.addEventListener("click", (e) => { if (menu.open && !menu.contains(e.target)) menu.open = false; });
+    stage.insertAdjacentElement("afterend", menu);
+  };
+  document.addEventListener("DOMContentLoaded", () => {
+    DSA.$$("main .stage").forEach((st, i, all) => DSA.downloadable(st, st.id || (all.length > 1 ? "diagram-" + (i + 1) : "")));
+  });
 
   /* footer, injected so every page shares one */
   DSA.footer = function () {

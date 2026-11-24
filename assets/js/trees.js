@@ -10,7 +10,8 @@
 
   let nextId = 1;
   let player, mode = "trav";
-  const delPred = true;     /* a two-child delete copies the in-order predecessor (the course's convention) */
+  /* a two-child delete copies the in-order predecessor (the course's convention) or, if the student picks it, the successor */
+  let delPred = true;
   let bstRec = false;       /* the BST tab runs the recursive versions */
 
   /* ---------------- binary nodes ---------------- */
@@ -255,6 +256,8 @@
     },
     bst_delete: delCode(true),
     bst_pred: neighbourCode(true),
+    bst_succ: neighbourCode(false),
+    bst_delete_succ: delCode(false),
 
     /* recursive versions: each call works on one subtree and returns its (new) root */
     bst_search_rec: {
@@ -294,6 +297,7 @@
       ],
     },
     bst_delete_rec: delRecCode(true),
+    bst_delete_rec_succ: delRecCode(false),
     trav_height: {
       title: "height(n) · recursive",
       pseudo: [
@@ -439,9 +443,12 @@
     bst_insert: { does: "Walks down as if searching for " + M("k") + " and hangs it as a new leaf where the search falls off.", params: M("k") + ": the key (keys are distinct; negative and decimal keys are fine)", returns: "nothing (a duplicate is ignored)", errors: "none", time: "Θ(h): " + H, space: "Θ(1): one new node" },
     bst_delete: delSpec(true),
     bst_pred: nbSpec(true),
+    bst_succ: nbSpec(false),
+    bst_delete_succ: delSpec(false),
     bst_search_rec: { does: "Recursive search: compare with this subtree's root, then search only the side that can hold " + M("k") + ".", params: M("n") + ": a subtree's root (start with root) · " + M("k") + ": the key", returns: "the node holding k, or null", errors: "none", time: "Θ(h): " + H, space: "Θ(h): one stack frame per level", callVals: { n: "root" } },
     bst_insert_rec: { does: "Recursive insert: walk down to the empty spot, create the leaf there, and let every caller re-link its child on the way back up.", params: M("n") + ": a subtree's root (start with root) · " + M("k") + ": the key", returns: "the subtree's root (only an empty subtree's root changes: it becomes the new node)", errors: "none", time: "Θ(h): " + H, space: "Θ(h): one stack frame per level", callVals: { n: "root" } },
     bst_delete_rec: delRecSpec(true),
+    bst_delete_rec_succ: delRecSpec(false),
     avl_insert: { does: "Does a BST insert, then walks back up fixing heights and rotating the first unbalanced node.", params: M("k") + ": the key", returns: "nothing", errors: "none", time: "Θ(log n): the height is at most 1.44·log₂n; at most one (single or double) rotation", space: "Θ(1): one new node" },
     avl_delete: { does: "Does a BST delete, then walks back up fixing heights and rotating wherever a node is unbalanced.", params: M("k") + ": the key", returns: "nothing", errors: "none", time: "Θ(log n): may rotate at every level on the way up", space: "Θ(1)" },
     m_search: { does: "Scans each node's sorted keys and follows the child whose range contains " + M("k") + ".", params: M("k") + ": the key", returns: "the node and index holding k, or null", errors: "none", time: "Θ(m · log n): Θ(log n) nodes on the path, up to m − 1 keys scanned in each", space: "Θ(1)" },
@@ -564,7 +571,7 @@
   const FULL = D.classes(CODE, [
     Object.assign({ keys: /^trav_/, helpers: [VISIT] }, treeClass("BinaryTree", BNODE(false, false), "The traversals are <span class='mono'>static</span> helpers: they get the node to start from as a parameter instead of using a field.")),
     Object.assign({ keys: /^bst_/, helpers: [REPLACE, EDGE] }, treeClass("BinarySearchTree", BNODE(true, false), "Every key in a node's left subtree is smaller than its key, and every key in its right subtree is larger. The recursive versions neither read nor set <span class='mono'>parent</span>, so use one family or the other on a given tree.")),
-    Object.assign({ keys: /^avl_/, methods: /^(avl_|bst_search$|bst_pred$)/, helpers: [AVL_HELP, REPLACE, EDGE] }, treeClass("AVLTree", BNODE(true, true), "A BST whose nodes also store their height, so the balance factor h(left) − h(right) is cheap to check.")),
+    Object.assign({ keys: /^avl_/, methods: /^(avl_|bst_search$|bst_pred$|bst_succ$)/, helpers: [AVL_HELP, REPLACE, EDGE] }, treeClass("AVLTree", BNODE(true, true), "A BST whose nodes also store their height, so the balance factor h(left) − h(right) is cheap to check.")),
     { keys: /^m_/, name: "BTree", note: "A (2,4)-tree is the same class with M = 4.",
       helpers: [{
         pseudo: [
@@ -859,7 +866,7 @@
   function bstDelete(st, v, c, rebalance) {
     const findAlias = { found: "find", goL: "find", goR: "find", attachL: null, attachR: null };
     if (rebalance) c.code("avl_delete", { found: "bst", goL: "bst", goR: "bst", attachL: null, attachR: null, find: "bst", two: "bst", succ: "bst", copy: "bst", splice: "bst" });
-    else c.code("bst_delete", findAlias);
+    else c.code(delPred ? "bst_delete" : "bst_delete_succ", findAlias);
     c.at("find").bin(st, {}, "<b>delete(" + v + ")</b>: first find it.");
     const r = bstFind(st, v, c);
     if (!r.node) { c.at("find").bin(st, {}, v + " is not in the tree, so there is nothing to delete."); return; }
@@ -1092,7 +1099,7 @@
   function neighbour(st, v, pred) {
     const nm = pred ? "predecessor" : "successor";
     const side = pred ? "left" : "right", other = pred ? "right" : "left";
-    const c = Ctx(1200).code("bst_pred", { found: "find", goL: "find", goR: "find", attachL: null, attachR: null });
+    const c = Ctx(1200).code(pred ? "bst_pred" : "bst_succ", { found: "find", goL: "find", goR: "find", attachL: null, attachR: null });
     c.at("find").bin(st, {}, "<b>" + nm + "(" + v + ")</b>: the key that comes just " + (pred ? "before" : "after") + " " + v + " in sorted order. First find " + v + ".");
     const r = bstFind(st, v, c);
     if (!r.node) { c.at("find").bin(st, {}, v + " is not in the tree, so return <b>null</b>."); return c; }
@@ -1201,7 +1208,7 @@
   }
 
   function bstDeleteRec(st, v, pred) {
-    const c = Ctx(2000).code("bst_delete_rec");
+    const c = Ctx(2000).code(pred ? "bst_delete_rec" : "bst_delete_rec_succ");
     c.calls = [];
     c.bin(st, {}, "<b>root ← delete(root, " + v + ")</b>, written recursively. Each call returns its subtree's new root, and the caller stores it back, which is how a removed node gets unlinked.");
     const path = [];
@@ -1888,7 +1895,14 @@
       q(pre + "-insert").addEventListener("click", () => { if (rec()) return show(bstInsertRec(ST[pre], val())); const c = Ctx(1500); bstInsert(ST[pre], val(), c, bal); show(c); });
       q(pre + "-search").addEventListener("click", () => show(rec() ? bstSearchRec(ST[pre], val()) : bstSearch(ST[pre], val())));
       q(pre + "-delete").addEventListener("click", () => { if (rec()) return show(bstDeleteRec(ST[pre], val(), delPred)); const c = Ctx(1500); bstDelete(ST[pre], val(), c, bal); show(c); });
-      q(pre + "-pred").addEventListener("click", () => show(neighbour(ST[pre], val(), true)));
+      q(pre + "-pred").addEventListener("click", () => show(neighbour(ST[pre], val(), delPred)));
+      q(pre + "-height").addEventListener("click", () => show(measure(ST[pre], "height")));
+      /* predecessor or successor: one choice for both trees, and the button says which it finds */
+      q(pre + "-nb").addEventListener("change", (e) => {
+        delPred = e.target.value === "pred";
+        D.$$(".nb-pick").forEach((s) => (s.value = e.target.value));
+        ["bst", "avl"].forEach((p2) => (q(p2 + "-pred").textContent = delPred ? "predecessor" : "successor"));
+      });
       q(pre + "-rand").addEventListener("click", () => {
         const vals = D.randArray(9, 10, 99).filter((v, i, a) => a.indexOf(v) === i);
         show(buildBinary(pre, vals, bal));

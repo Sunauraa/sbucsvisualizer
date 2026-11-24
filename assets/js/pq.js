@@ -870,7 +870,7 @@
       "Kth Largest Element in an Array",
       "kth-largest-element-in-an-array",
       "Medium",
-      "Compare Î(n·k) scanning with a heap."
+      "Compare Θ(n·k) scanning with a heap."
      ],
      [
       1464,
@@ -903,7 +903,7 @@
       "Last Stone Weight",
       "last-stone-weight",
       "Easy",
-      "removeMax is Î(1) on a sorted list; insert is not."
+      "removeMax is Θ(1) on a sorted list; insert is not."
      ],
      [
       2336,

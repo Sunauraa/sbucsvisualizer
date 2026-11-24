@@ -6,8 +6,8 @@
 <title>Hash Tables</title>
 <meta name="description" content="Watch separate chaining, linear probing and quadratic probing, with load factor, tombstones and rehashing.">
 <meta name="theme-color" content="#1b365d">
-<link rel="stylesheet" href="../assets/css/style.css?v=07e04f44212d">
-<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=07e04f44212d">
+<link rel="stylesheet" href="../assets/css/style.css?v=3730970a7d46">
+<link rel="icon" type="image/svg+xml" href="../assets/logo.svg?v=3730970a7d46">
 </head>
 <body>
 
@@ -22,11 +22,10 @@
 </header>
 
 <section class="page-head" aria-label="Page heading">
-  <div class="wrap has-action">
+  <div class="wrap">
     <div class="page-title">
     <h1>Hash Tables</h1>
     </div>
-    <button type="button" class="btn primary pg-open" id="pg-open" aria-expanded="false" aria-controls="playground" title="Write Java here and watch it run step by step">Code playground</button>
   </div>
 </section>
 
@@ -42,12 +41,16 @@
       <button id="op-search">get(k)</button>
       <button id="op-delete">remove(k)</button>
       <div class="sep"></div>
-      <div class="field"><label for="msize">table size m</label><input type="number" id="msize" value="11" min="3" max="31" style="width:4.5rem"></div>
-      <label class="field small" style="cursor:pointer"><input type="checkbox" id="auto" checked style="width:auto"> auto-rehash</label>
-      <button id="op-rehash">rehash now</button>
+      <div class="field" data-more><label for="msize">table size m</label><input type="number" id="msize" value="11" min="3" max="31" style="width:4.5rem"></div>
+      <div class="field" id="ch-at-field" data-more title="Separate chaining: where put adds a new key in its bucket's list">
+        <label for="ch-at">new key</label>
+        <select id="ch-at" style="width:auto"><option value="first">at the front</option><option value="last">at the end</option></select>
+      </div>
+      <label class="field small" data-more style="cursor:pointer"><input type="checkbox" id="auto" style="width:auto"> auto-rehash</label>
+      <button id="op-rehash" data-more>rehash now</button>
       <div class="sep"></div>
-      <button id="op-fill">↻ random keys</button>
-      <button class="danger" id="op-clear">clear</button>
+      <button id="op-fill" data-more>↻ random keys</button>
+      <button class="danger" id="op-clear" data-more>clear</button>
     </div>
 
     <div id="code"></div>
@@ -122,10 +125,10 @@
     <p class="foot-legal"><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../credits.html">Credits</a> · <a href="https://forms.gle/9jS8QR9ZPHqK9xR18" target="_blank" rel="noopener">Feedback</a></p>
   </div>
 </footer>
-<script src="../assets/js/core.js?v=07e04f44212d"></script>
-<script src="../assets/js/account.js?v=07e04f44212d"></script>
-<script src="../assets/js/motion.js?v=07e04f44212d"></script>
-<script src="../assets/js/playground.js?v=07e04f44212d"></script>
-<script src="../assets/js/hashtables.js?v=07e04f44212d"></script>
+<script src="../assets/js/core.js?v=3730970a7d46"></script>
+<script src="../assets/js/account.js?v=3730970a7d46"></script>
+<script src="../assets/js/motion.js?v=3730970a7d46"></script>
+<script src="../assets/js/playground.js?v=3730970a7d46"></script>
+<script src="../assets/js/hashtables.js?v=3730970a7d46"></script>
 </body>
 </html>

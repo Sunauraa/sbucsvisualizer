@@ -1785,7 +1785,7 @@
       "Rotate Array",
       "rotate-array",
       "Medium",
-      "Moving every element: Î(n) no matter how you do it."
+      "Moving every element: Θ(n) no matter how you do it."
      ],
      [
       26,
@@ -1818,7 +1818,7 @@
       "Running Sum of 1d Array",
       "running-sum-of-1d-array",
       "Easy",
-      "Warm-up: indexed reads and writes are Î(1)."
+      "Warm-up: indexed reads and writes are Θ(1)."
      ],
      [
       1470,
@@ -1846,7 +1846,7 @@
       "Insert Delete GetRandom Θ(1)",
       "insert-delete-getrandom-o1",
       "Medium",
-      "Remove in Î(1) by swapping with the last slot, then shrinking size."
+      "Remove in Θ(1) by swapping with the last slot, then shrinking size."
      ]
     ]
    },
@@ -1980,7 +1980,7 @@
       "LRU Cache",
       "lru-cache",
       "Medium",
-      "A doubly linked list plus a hash map: Î(1) remove from the middle."
+      "A doubly linked list plus a hash map: Θ(1) remove from the middle."
      ],
      [
       430,
@@ -2008,7 +2008,7 @@
       "Design Circular Deque",
       "design-circular-deque",
       "Medium",
-      "Add and remove at both ends: what a doubly linked list does in Î(1)."
+      "Add and remove at both ends: what a doubly linked list does in Θ(1)."
      ]
     ]
    },

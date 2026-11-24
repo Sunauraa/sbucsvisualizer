@@ -724,7 +724,7 @@
       "Min Stack",
       "min-stack",
       "Medium",
-      "push, pop, top and getMin all in Î(1)."
+      "push, pop, top and getMin all in Θ(1)."
      ],
      [
       225,
@@ -818,7 +818,7 @@
       "Design Circular Deque",
       "design-circular-deque",
       "Medium",
-      "This exact tab: add and remove at both ends in Î(1)."
+      "This exact tab: add and remove at both ends in Θ(1)."
      ],
      [
       239,

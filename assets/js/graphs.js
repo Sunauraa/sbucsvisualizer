@@ -17,7 +17,7 @@
 
   /* ---------------- graph mutation ---------------- */
   function addNode(x, y) {
-    if (nCount() >= 12) return D.toast("12 vertices is plenty for a visualizer.", true);
+    if (nCount() >= MAXV) return D.toast(MAXV + " vertices is plenty for a visualizer.", true);
     G.pos.push({ x: D.clamp(x, R + 4, VW - R - 4), y: D.clamp(y, R + 4, VH - R - 4) });
     G.adj.push([]);
     refresh("Added vertex <b>" + name(nCount() - 1) + "</b>.");
@@ -55,41 +55,66 @@
   }
   const edgeCount = () => edgeList().length;
 
-  /* ---------------- presets ---------------- */
+  /* ---------------- presets ----------------
+     A sized preset takes the vertex count n from the "vertices" box;
+     the fixed ones (sample, disconnected) always draw the same graph. */
+  const MAXV = 12, MINV = 3;
+  const ring = (n, i) => {
+    const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+    return [380 + 160 * Math.cos(a), 200 + 150 * Math.sin(a)];
+  };
   const PRESETS = {
     sample: () => {
       set([[120, 80], [300, 60], [470, 90], [630, 70], [110, 250], [290, 220], [470, 250], [640, 240], [380, 350]],
         [[0, 1], [0, 4], [1, 2], [1, 5], [2, 3], [2, 6], [3, 7], [4, 5], [5, 6], [5, 8], [6, 7], [6, 8]]);
     },
-    tree: () => {
-      set([[380, 50], [200, 140], [560, 140], [110, 240], [290, 240], [470, 240], [650, 240], [70, 340], [160, 340], [430, 340]],
-        [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6], [3, 7], [3, 8], [5, 9]]);
-    },
-    cycle: () => {
-      const n = 8, pts = [], es = [];
+    tree: (n) => {
+      /* a complete binary tree: vertex i has children 2i+1 and 2i+2 */
+      const pts = [], es = [];
       for (let i = 0; i < n; i++) {
-        const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-        pts.push([380 + 150 * Math.cos(a), 200 + 140 * Math.sin(a)]);
-        es.push([i, (i + 1) % n]);
+        const lvl = Math.floor(Math.log2(i + 1)), first = Math.pow(2, lvl) - 1, slots = Math.pow(2, lvl);
+        pts.push([40 + ((i - first + 0.5) / slots) * (VW - 80), 45 + lvl * 100]);
+        if (i) es.push([Math.floor((i - 1) / 2), i]);
       }
       set(pts, es);
     },
-    complete: () => {
-      const n = 6, pts = [], es = [];
+    path: (n) => {
+      const pts = [], es = [];
       for (let i = 0; i < n; i++) {
-        const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-        pts.push([380 + 150 * Math.cos(a), 200 + 140 * Math.sin(a)]);
+        pts.push([60 + (i * (VW - 120)) / Math.max(1, n - 1), i % 2 ? 230 : 170]);
+        if (i) es.push([i - 1, i]);
+      }
+      set(pts, es);
+    },
+    cycle: (n) => {
+      const pts = [], es = [];
+      for (let i = 0; i < n; i++) { pts.push(ring(n, i)); es.push([i, (i + 1) % n]); }
+      set(pts, es);
+    },
+    star: (n) => {
+      const pts = [[380, 200]], es = [];
+      for (let i = 1; i < n; i++) { pts.push(ring(n - 1, i - 1)); es.push([0, i]); }
+      set(pts, es);
+    },
+    complete: (n) => {
+      const pts = [], es = [];
+      for (let i = 0; i < n; i++) {
+        pts.push(ring(n, i));
         for (let j = 0; j < i; j++) es.push([j, i]);
       }
       set(pts, es);
     },
-    grid: () => {
+    grid: (n) => {
+      /* as square as possible; a short last row when n is not a product */
+      const cols = Math.ceil(Math.sqrt(n * 4 / 3)), rows = Math.ceil(n / cols);
       const pts = [], es = [];
-      for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) pts.push([160 + c * 150, 90 + r * 110]);
-      const id = (r, c) => r * 4 + c;
-      for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) {
-        if (c < 3) es.push([id(r, c), id(r, c + 1)]);
-        if (r < 2) es.push([id(r, c), id(r + 1, c)]);
+      const gx = Math.min(150, (VW - 120) / Math.max(1, cols - 1)), gy = Math.min(110, (VH - 90) / Math.max(1, rows - 1));
+      const x0 = (VW - gx * (cols - 1)) / 2, y0 = (VH - gy * (rows - 1)) / 2;
+      for (let i = 0; i < n; i++) {
+        const r = Math.floor(i / cols), c = i % cols;
+        pts.push([x0 + c * gx, y0 + r * gy]);
+        if (c > 0) es.push([i - 1, i]);
+        if (r > 0) es.push([i - cols, i]);
       }
       set(pts, es);
     },
@@ -97,14 +122,22 @@
       set([[140, 100], [280, 70], [230, 210], [110, 230], [500, 90], [640, 130], [520, 250], [400, 330], [660, 320]],
         [[0, 1], [0, 3], [1, 2], [2, 3], [4, 5], [5, 6], [4, 6], [7, 8]]);
     },
-    random: () => {
-      const n = D.randInt(7, 9), pts = [], es = [];
-      for (let i = 0; i < n; i++) pts.push([D.randInt(70, VW - 70), D.randInt(60, VH - 60)]);
+    random: (n) => {
+      const pts = [], es = [];
+      for (let i = 0; i < n; i++) {
+        /* keep vertices apart so none hide each other */
+        let p, tries = 0;
+        do p = [D.randInt(60, VW - 60), D.randInt(50, VH - 50)];
+        while (tries++ < 200 && pts.some((o) => Math.hypot(o[0] - p[0], o[1] - p[1]) < 3.4 * R));
+        pts.push(p);
+      }
       for (let i = 1; i < n; i++) es.push([D.randInt(0, i - 1), i]);          /* keep it connected */
       for (let k = 0; k < n; k++) { const a = D.randInt(0, n - 1), b = D.randInt(0, n - 1); if (a !== b) es.push([a, b]); }
       set(pts, es);
     },
   };
+  /* presets whose size the "vertices" box controls, with the size each starts at */
+  const SIZED = { tree: 10, path: 7, cycle: 8, star: 8, complete: 6, grid: 12, random: 8 };
   function set(pts, es) {
     G.pos = pts.map((p) => ({ x: p[0], y: p[1] }));
     G.adj = pts.map(() => []);
@@ -124,8 +157,8 @@
     };
   }
 
-  function bfs(start) {
-    const c = Ctx(1200, "bfs");
+  function bfs(start, forest) {
+    const c = Ctx(1600, "bfs");
     const n = nCount();
     const state = {}, dist = {}, parent = {}, order = [];
     const Q = [];
@@ -140,36 +173,52 @@
       return o;
     };
     const tre = {};
-    c.snap({ line: null, ns: ns(), note: "<b>BFS from " + name(start) + ".</b> Every vertex is <em>undiscovered</em>; the queue is empty.", queue: [], tags: tags() });
-    state[start] = 1; dist[start] = 0; Q.push(start);
-    c.snap({ line: "init", ns: Object.assign(ns(), { [start]: "active" }), note: "Discover " + name(start) + " with dist 0 and <b>enqueue</b> it. Marking it discovered <em>now</em> (not when it is dequeued) is what stops a vertex entering the queue twice.", queue: Q.slice(), tags: tags(), es: Object.assign({}, tre) });
-    c.snap({ line: "loop", ns: Object.assign(ns(), { [start]: "active" }), note: "The queue holds " + name(start) + ", so it is not empty: enter the loop.", queue: Q.slice(), tags: tags(), es: Object.assign({}, tre) });
-    while (Q.length) {
-      const u = Q.shift();
-      order.push(u);
-      c.snap({ line: "deq", ns: Object.assign(ns(), { [u]: "active" }), note: "<b>Dequeue " + name(u) + "</b> (dist " + dist[u] + "). Everything in the queue is at distance " + dist[u] + " or " + (dist[u] + 1) + ": BFS never mixes more than two levels.", queue: Q.slice(), tags: tags(), es: Object.assign({}, tre), lhl: u, order: order.slice() });
-      for (const v of G.adj[u]) {
-        const nsx = ns();
-        nsx[u] = "active";
-        if (!state[v]) nsx[v] = "target";
-        c.snap({ line: ["nbr", "check"], ns: nsx, es: Object.assign({}, tre, { [ekey(u, v)]: "on" }), note: "Next neighbour of " + name(u) + " is " + name(v) + ": " + (state[v] ? "already discovered, so <b>skip</b> it. This edge is not part of the BFS tree." : "<b>undiscovered</b>."), queue: Q.slice(), tags: tags(), mhl: { r: u, c: v }, lhl: u, order: order.slice() });
-        if (!state[v]) {
-          state[v] = 1; dist[v] = dist[u] + 1; parent[v] = u;
-          tre[ekey(u, v)] = "tree";
-          Q.push(v);
-          c.snap({ line: "set", ns: ns(), es: Object.assign({}, tre), note: "Set dist[" + name(v) + "] = dist[" + name(u) + "] + 1 = " + dist[v] + ", parent = " + name(u) + ", and enqueue. Because the queue is FIFO, this is guaranteed to be the <b>shortest</b> path in edges.", queue: Q.slice(), tags: tags(), mhl: { r: u, c: v }, lhl: u, order: order.slice() });
+    let trees = 0;
+    c.snap({ line: forest ? "forest" : null, ns: ns(), note: forest
+      ? "<b>BFS forest.</b> Run BFS from " + name(start) + " first; whenever the queue empties, restart from any vertex still undiscovered, so every vertex is reached."
+      : "<b>BFS from " + name(start) + ".</b> Every vertex is <em>undiscovered</em>; the queue is empty.", queue: [], tags: tags() });
+
+    function from(s) {
+      trees++;
+      state[s] = 1; dist[s] = 0; Q.push(s);
+      c.snap({ line: "init", ns: Object.assign(ns(), { [s]: "active" }), note: "Discover " + name(s) + " with dist 0 and <b>enqueue</b> it" + (trees > 1 ? ": it is the root of BFS tree #" + trees : "") + ". Marking it discovered <em>now</em> (not when it is dequeued) is what stops a vertex entering the queue twice.", queue: Q.slice(), tags: tags(), es: Object.assign({}, tre), order: order.slice() });
+      c.snap({ line: "loop", ns: Object.assign(ns(), { [s]: "active" }), note: "The queue holds " + name(s) + ", so it is not empty: enter the loop.", queue: Q.slice(), tags: tags(), es: Object.assign({}, tre), order: order.slice() });
+      while (Q.length) {
+        const u = Q.shift();
+        order.push(u);
+        c.snap({ line: "deq", ns: Object.assign(ns(), { [u]: "active" }), note: "<b>Dequeue " + name(u) + "</b> (dist " + dist[u] + "). Everything in the queue is at distance " + dist[u] + " or " + (dist[u] + 1) + ": BFS never mixes more than two levels.", queue: Q.slice(), tags: tags(), es: Object.assign({}, tre), lhl: u, order: order.slice() });
+        for (const v of G.adj[u]) {
+          const nsx = ns();
+          nsx[u] = "active";
+          if (!state[v]) nsx[v] = "target";
+          c.snap({ line: ["nbr", "check"], ns: nsx, es: Object.assign({}, tre, { [ekey(u, v)]: "on" }), note: "Next neighbour of " + name(u) + " is " + name(v) + ": " + (state[v] ? "already discovered, so <b>skip</b> it. This edge is not part of the BFS tree." : "<b>undiscovered</b>."), queue: Q.slice(), tags: tags(), mhl: { r: u, c: v }, lhl: u, order: order.slice() });
+          if (!state[v]) {
+            state[v] = 1; dist[v] = dist[u] + 1; parent[v] = u;
+            tre[ekey(u, v)] = "tree";
+            Q.push(v);
+            c.snap({ line: "set", ns: ns(), es: Object.assign({}, tre), note: "Set dist[" + name(v) + "] = dist[" + name(u) + "] + 1 = " + dist[v] + ", parent = " + name(u) + ", and enqueue. Because the queue is FIFO, this is guaranteed to be the <b>shortest</b> path in edges.", queue: Q.slice(), tags: tags(), mhl: { r: u, c: v }, lhl: u, order: order.slice() });
+          }
         }
+        state[u] = 2;
+        c.snap({ line: "loop", ns: ns(), es: Object.assign({}, tre), note: (G.adj[u].length ? "No neighbours of " + name(u) + " are left" : name(u) + " has no neighbours") + ", so it is finished. Back to the while test: the queue " + (Q.length ? "still holds " + Q.map(name).join(", ") + "." : "is <b>empty</b>, so the loop ends."), queue: Q.slice(), tags: tags(), order: order.slice() });
       }
-      state[u] = 2;
-      c.snap({ line: "loop", ns: ns(), es: Object.assign({}, tre), note: (G.adj[u].length ? "No neighbours of " + name(u) + " are left" : name(u) + " has no neighbours") + ", so it is finished. Back to the while test: the queue " + (Q.length ? "still holds " + Q.map(name).join(", ") + "." : "is <b>empty</b>, so the loop ends."), queue: Q.slice(), tags: tags(), order: order.slice() });
+    }
+
+    from(start);
+    if (forest) {
+      for (let i = 0; i < n; i++)
+        if (!state[i]) {
+          c.snap({ line: "forest", ns: ns(), es: Object.assign({}, tre), queue: [], tags: tags(), order: order.slice(), note: "The queue is empty but " + name(i) + " is still undiscovered: it is in another component. Start a <b>new BFS tree</b> there, with " + name(i) + " at distance 0." });
+          from(i);
+        }
     }
     const unreached = [];
     for (let i = 0; i < n; i++) if (!state[i]) unreached.push(name(i));
     c.snap({
       line: null, ns: ns(), es: Object.assign({}, tre), queue: [], tags: tags(), order: order.slice(),
-      note: "BFS is done. Visit order: <b>" + order.map(name).join(" ") + "</b>. " +
-        (unreached.length ? "Never reached: <b>" + unreached.join(", ") + "</b>. They are in different connected components." : "Every vertex was reached, so the graph is connected from " + name(start) + ".") +
-        " The green edges form the <b>BFS tree</b>, and each dist label is a shortest-path length. Total work Θ(V + E).",
+      note: (forest ? "BFS forest is done: <b>" + trees + "</b> tree" + (trees === 1 ? "" : "s") + (G.directed ? "." : ", one per connected component.") + " Visit order: <b>" : "BFS is done. Visit order: <b>") + order.map(name).join(" ") + "</b>. " +
+        (unreached.length ? "Never reached: <b>" + unreached.join(", ") + "</b>. They are in different connected components (try <em>BFS forest</em> to cover them). " : forest ? "" : "Every vertex was reached, so the graph is connected from " + name(start) + ". ") +
+        "The green edges form the <b>BFS " + (forest ? "forest" : "tree") + "</b>, and each dist label is a shortest-path length " + (forest ? "from the root of its own tree" : "") + ". Total work Θ(V + E).",
     });
     return c;
   }
@@ -406,15 +455,16 @@
       title: "BFS(s) · breadth-first search",
       pseudo: [
         "BFS(s):",
-        "  mark s discovered;  dist[s] ← 0 @@init",
-        "  Q ← [s] @@init",
+        "  mark s discovered;  dist[s] ← 0;  Q ← [s] @@init",
         "  while Q is not empty: @@loop",
         "    u ← Q.dequeue() @@deq",
         "    for each v in adj[u]: @@nbr",
         "      if v is undiscovered: @@check",
         "        dist[v] ← dist[u] + 1;  parent[v] ← u @@set",
-        "        mark v discovered           // now, not when dequeued @@set",
-        "        Q.enqueue(v) @@set",
+        "        mark v discovered;  Q.enqueue(v)   // mark now, not when dequeued @@set",
+        "",
+        "BFSForest():",
+        "  for each vertex u: if u is undiscovered: BFS(u)   // a new tree @@forest",
       ],
       java: [
         "void bfs(int s) {",
@@ -429,6 +479,11 @@
         "        q.add(v); @@set",
         "      }",
         "  }",
+        "}",
+        "",
+        "void bfsForest() {",
+        "  for (int u = 0; u < n; u++) @@forest",
+        "    if (!seen[u]) bfs(u); @@forest",
         "}",
       ],
     },
@@ -606,6 +661,17 @@
     const dock = D.CodeDock("#code", CODE, { full: FULL, recv: "graph" });
     player = new D.Player({ mount: "#player", render: render, delay: 700, code: dock });
     wireHost(q("gr-canvas"));
+    /* the graph is stored one way at a time on screen: its adjacency list or its adjacency matrix */
+    const REP_LS = "dsa.graphs.rep";
+    const showRep = (v) => {
+      q("rep-list").style.display = v === "matrix" ? "none" : "";
+      q("rep-matrix").style.display = v === "matrix" ? "" : "none";
+    };
+    let rep = "list";
+    try { rep = localStorage.getItem(REP_LS) || "list"; } catch (e) {}
+    q("rep").value = rep;
+    showRep(rep);
+    q("rep").addEventListener("change", (e) => { showRep(e.target.value); try { localStorage.setItem(REP_LS, e.target.value); } catch (err) {} });
 
     D.$$("[data-tool]").forEach((b) =>
       b.addEventListener("click", () => {
@@ -626,22 +692,37 @@
       }
       refresh(G.directed ? "Now <b>directed</b>: each edge points one way, so the adjacency matrix no longer has to be symmetric." : "Now <b>undirected</b>: every edge was mirrored, so the matrix is symmetric and each edge appears in two lists.");
     });
-    q("preset").addEventListener("change", (e) => {
-      if (!PRESETS[e.target.value]) return;
-      PRESETS[e.target.value]();
-      refresh("Loaded the <b>" + e.target.value + "</b> graph: " + nCount() + " vertices, " + edgeCount() + " edges.");
+    const nBox = q("nverts");
+    const loadPreset = (kind, fresh) => {
+      if (!PRESETS[kind]) return;
+      const sized = kind in SIZED;
+      if (sized && fresh) nBox.value = SIZED[kind];
+      const n = D.clamp(Math.round(+nBox.value) || SIZED[kind] || 8, MINV, MAXV);
+      PRESETS[kind](n);
+      nBox.disabled = !sized;
+      nBox.value = sized ? n : nCount();
+      nBox.title = sized ? "Number of vertices (" + MINV + "–" + MAXV + ")" : "This preset has a fixed size";
+      refresh("Loaded the <b>" + kind + "</b> graph: " + nCount() + " vertices, " + edgeCount() + " edges." + (sized ? " Change <b>vertices</b> to resize it." : ""));
+    };
+    q("preset").addEventListener("change", (e) => loadPreset(e.target.value, true));
+    nBox.addEventListener("change", () => loadPreset(q("preset").value, false));
+    /* the spinner arrows and typing redraw at once, as long as the number is already a valid size */
+    nBox.addEventListener("input", () => {
+      const v = +nBox.value;
+      if (Number.isInteger(v) && v >= MINV && v <= MAXV && v !== nCount()) loadPreset(q("preset").value, false);
     });
     q("btn-clear").addEventListener("click", () => { G.pos = []; G.adj = []; refresh("Empty graph: click to start building."); });
     const go = (kind) => {
       if (!nCount()) return D.toast("Add some vertices first.", true);
       const st = +q("start").value || 0;
-      const c = kind === "bfs" ? bfs(st) : dfs(st, kind === "forest");
+      const c = kind === "bfs" || kind === "bforest" ? bfs(st, kind === "bforest") : dfs(st, kind === "forest");
       q("algo-explain").innerHTML = EXPL[kind];
       player.load(c.frames, true);
     };
     q("btn-bfs").addEventListener("click", () => go("bfs"));
     q("btn-dfs").addEventListener("click", () => go("dfs"));
     q("btn-forest").addEventListener("click", () => go("forest"));
+    q("btn-bforest").addEventListener("click", () => go("bforest"));
 
     D.practiceShow("graphs");
     /* Play before any search has run: run BFS from the chosen start vertex */
@@ -649,6 +730,7 @@
 
 
     PRESETS.sample();
+    nBox.value = nCount(); nBox.disabled = true;
     refresh("A sample graph. Pick a start vertex and press <b>BFS</b> or <b>DFS</b>, or click the canvas to build your own.");
     q("algo-explain").innerHTML = EXPL.intro;
   });
@@ -660,6 +742,8 @@
       "<p><b>The ripple, ring by ring.</b> The queue only ever holds two neighbouring rings, and a vertex is marked the moment it joins. The green edges form a shortest-path tree: follow parents back to the source for a shortest path. Θ(V + E).</p>",
     dfs:
       "<p><b>Exploring a maze with a ball of string.</b> Each vertex gets a discovery and a finish time, and two vertices' intervals are either nested or separate. An edge back to a vertex still on the string means a cycle. Sort by finish time, latest first, to get a topological order.</p>",
+    bforest:
+      "<p><b>Ripples dropped on every island.</b> When the queue empties, BFS restarts from any vertex it has not discovered yet, at distance 0. Each restart grows a new BFS tree; on an undirected graph the trees are exactly the connected components, and each tree still holds shortest paths from its own root. Still Θ(V + E).</p>",
     forest:
       "<p><b>Exploring every island.</b> When DFS runs out of road, restart from any unvisited vertex: each restart grows a new tree. On an undirected graph, the trees are exactly the connected components.</p>",
   };

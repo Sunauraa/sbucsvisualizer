@@ -52,6 +52,12 @@ const openPage = async (name, opts) => {
   return { page, ctx, errors };
 };
 
+/* the code box, with its "Edit & run" button, shows once a student has run an operation: show it, then open the editor */
+const openEditor = async (page) => {
+  await page.evaluate(() => DSA._docks.forEach((d) => d.setWaiting(false)));
+  await page.click("#pg-open");
+};
+
 /* boxes other than the visualizer start hidden (DSA.collapsible): open one the way a student would */
 const openBox = async (page, sel) => {
   /* a box inside a hidden box (the LeetCode list inside Study notes) needs the outer one opened first */
@@ -130,9 +136,13 @@ if (want("fuzz")) {
         });
       };
       const fields = () => Array.from(document.querySelectorAll(".panel.main .toolbar input:not([type=range]):not([type=checkbox]), #inputs input")).filter((x) => x.offsetParent);
+      /* settings live in "⚙ Options" menus: keep them open so their controls get pressed too */
+      const openMenus = () => document.querySelectorAll(".tb-more").forEach((d) => { if (!d.open) d.open = true; });
       const pressAll = async (where) => {
+        openMenus();
         const count = () => Array.from(document.querySelectorAll(".panel.main .toolbar button, .panel.main .seg button")).filter((b) => b.offsetParent).length;
         for (let k = 0, n = count(); k < n; k++) {
+          openMenus();
           const b = Array.from(document.querySelectorAll(".panel.main .toolbar button, .panel.main .seg button")).filter((x) => x.offsetParent)[k];
           if (!b) continue;
           for (const v of INPUTS) {
@@ -143,6 +153,7 @@ if (want("fuzz")) {
             /* a bad input must not poison the next round */
           }
         }
+        openMenus();
         document.querySelectorAll(".panel.main .toolbar select").forEach((s) => {
           if (!s.offsetParent) return;
           Array.from(s.options).forEach((o) => { s.value = o.value; s.dispatchEvent(new Event("change", { bubbles: true })); walk(where + " / select " + o.value); });
@@ -334,14 +345,17 @@ if (want("playground")) {
   /* every module: the button is there, it opens on a program for the current tab, and every program runs */
   for (const name of PAGES) {
     const { page, ctx, errors } = await openPage(name);
-    ok(await page.locator("#pg-open").isVisible(), name + " shows the Code playground button");
-    ok(!(await page.locator("#playground").isVisible()), name + " keeps the playground closed until asked");
+    ok((await page.locator(".page-head button").count()) === 0, name + " has no Code playground button in its heading");
+    ok((await page.locator("#code .code-head #pg-open").count()) === 1, name + " has Edit & run in its code box");
+    ok(!(await page.locator("#playground").isVisible()), name + " keeps the editor closed until asked");
     ok(!(await page.evaluate(() => !!window.DSAEditor)), name + " doesn't load the editor until it opens");
     /* on the second tab, the panel should open on that tab's program */
     const tabName = await page.evaluate(() => { const t = document.querySelectorAll(".tabs button"); if (t.length > 1) { t[1].click(); return t[1].textContent.trim(); } return ""; });
-    await page.click("#pg-open");
+    await openEditor(page);
     await page.waitForSelector("#pg-run");
-    ok(await page.locator("#playground").isVisible(), name + " opens the playground");
+    ok(await page.locator("#playground").isVisible(), name + " opens the editor in its code box");
+    const aside = await page.evaluate(() => ({ away: document.querySelectorAll(".panel.main .pg-away").length, listing: !!document.querySelector("#code .code-body").offsetParent, player: !!DSA._players[0].mount.offsetParent }));
+    ok(aside.away > 0 && !aside.listing && !aside.player, name + ": the editor takes the visualizer's place while it is open", aside);
     /* the site scrolls smoothly, so this may take a moment */
     const inView = await page.waitForFunction(() => { const r = document.querySelector("#playground").getBoundingClientRect(); return r.top >= 0 && r.top < innerHeight * 0.5; }, null, { timeout: 2500 }).then(() => true).catch(() => false);
     ok(inView, name + " scrolls the playground into view");
@@ -389,14 +403,16 @@ if (want("playground")) {
     ok(over <= 1, name + " with the playground open fits a 390 px phone", over + " px too wide");
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.click("#pg-close");
-    ok(!(await page.locator("#playground").isVisible()), name + " closes the playground");
+    ok(!(await page.locator("#playground").isVisible()), name + " closes the editor");
+    const restored = await page.evaluate(() => ({ away: document.querySelectorAll(".pg-away").length, player: !!DSA._players[0].mount.offsetParent }));
+    ok(!restored.away && restored.player, name + ": Back to the animation brings the visualizer back", restored);
     await ctx.close();
     console.log("  " + name + " done");
   }
 
   /* one page in depth: errors, a student's own code, and links */
   const { page, ctx, errors } = await openPage("sorting");
-  await page.click("#pg-open");
+  await openEditor(page);
   await page.waitForSelector("#pg-run");
   const setCode = async (c) => { await page.click(".cm-content"); await page.keyboard.press("ControlOrMeta+A"); await page.keyboard.insertText(c); };
   const pgPlayer = "DSA._players[DSA._players.length - 1]";
@@ -418,12 +434,44 @@ if (want("playground")) {
   /* the student's code is still there after a reload */
   await page.reload();
   await page.waitForLoadState("load");
-  await page.click("#pg-open");
+  await openEditor(page);
   await page.waitForSelector("#pg-run");
   const back = await page.evaluate(() => ({ text: document.querySelector(".cm-content").textContent, picked: document.querySelector("#pg-example").selectedOptions[0].textContent }));
   ok(/from a link/.test(back.text) && back.picked === "my code", "a student's code survives a reload", back);
   ok(!errors.length, "playground depth checks have no errors", errors);
   await ctx.close();
+
+  /* the editor's pictures of a student's own code: bars, index pointers, what a step read, the call tree, a graph, the node in hand */
+  {
+    const PICS = [
+      ["sorting", "bubble sort", "bars with the compared pair lit and i, j under them",
+        () => document.querySelectorAll("#pg-view .pg-bars .bar.cmp").length === 2 && Array.from(document.querySelectorAll("#pg-view .pg-ptrs span")).some((x) => x.textContent === "j")],
+      ["recursion", "fibonacci", "a recursion tree with returned values",
+        () => document.querySelectorAll("#pg-view svg rect.node-c").length >= 5 && /↩/.test(document.querySelector("#pg-view").textContent)],
+      ["graphs", "BFS only", "the graph with visited and queued vertices",
+        () => document.querySelectorAll("#pg-view circle.node-c.done").length >= 1 && document.querySelectorAll("#pg-view circle.node-c.cmp").length >= 1],
+      ["trees", "BST: iterative", "the node a variable points at",
+        () => document.querySelectorAll("#pg-view circle.node-c.active").length >= 1],
+    ];
+    for (const [mod, prog, what, test] of PICS) {
+      const { page, ctx, errors } = await openPage(mod);
+      await openEditor(page);
+      await page.waitForSelector("#pg-run");
+      await page.locator("#pg-example").selectOption({ label: prog });
+      await page.click("#pg-run");
+      await page.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 3 && !document.querySelector("#pg-run").disabled; }, null, { timeout: 8000 });
+      const hit = await page.evaluate((src) => {
+        const test = new Function("return (" + src + ")")();
+        const p = DSA._players[DSA._players.length - 1];
+        p.pause(); p.noMotion = true;
+        for (let k = 0; k < p.frames.length; k++) { p.goto(k); if (test()) return k; }
+        return -1;
+      }, test.toString());
+      ok(hit >= 0, mod + " / " + prog + ": the editor draws " + what);
+      ok(!errors.length, mod + " / " + prog + ": its pictures have no errors", errors.slice(0, 3));
+      await ctx.close();
+    }
+  }
 
   /* the bug the explanation audit found: every slot a tombstone used to refuse a new key */
   {
@@ -495,11 +543,15 @@ if (want("scroll")) {
     await page.goto(BASE + "/cse214/trees.html", { waitUntil: "load" });
     await page.waitForFunction(() => document.documentElement.classList.contains("ready"));
     await page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; });
-    await page.click("#pg-open");
+    await openEditor(page);
     await page.waitForSelector("#pg-run");
     await page.locator("#pg-example").selectOption({ label: "AVL tree" });
-    /* the stage starts out of sight, so the run has a reason to scroll */
-    await page.evaluate(() => { const s = document.querySelector(".pg-stage"); scrollTo(0, Math.max(0, s.getBoundingClientRect().top + scrollY - innerHeight - 200)); });
+    /* the stage starts out of sight (above it, or scrolled on past it), so the run has a reason to scroll */
+    await page.evaluate(() => {
+      const r = document.querySelector(".pg-stage").getBoundingClientRect(), top = r.top + scrollY;
+      /* above it if there is room there (a phone stacks the editor first), else on past it */
+      scrollTo(0, top > innerHeight + 50 ? 0 : r.bottom + scrollY + 200);
+    });
     const before = await yNow(page);
     await page.evaluate(() => document.querySelector("#pg-run").click());
     await page.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 1 && p.frames[0].stack && !document.querySelector("#pg-run").disabled; }, null, { timeout: 8000 });
@@ -786,7 +838,7 @@ if (want("a11y")) {
       await new Promise((r) => setTimeout(r, 200));
     });
     await scan(g, name + " with the code open");
-    await g.click("#pg-open");
+    await openEditor(g);
     await g.waitForSelector("#pg-run");
     await g.click("#pg-run");
     await g.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 3 && !document.querySelector("#pg-run").disabled; });
@@ -807,7 +859,7 @@ if (want("a11y")) {
   ok(kb.index === 1, "Space activates a focused button instead of playing", kb);
   ok(!kb.playing, "Space on a button doesn't start the player", kb);
   /* the editor must not trap the Tab key */
-  await page.click("#pg-open");
+  await openEditor(page);
   await page.waitForSelector("#pg-run");
   await page.click(".cm-content");
   await page.keyboard.press("Escape");
@@ -922,7 +974,7 @@ if (want("prod")) {
     const blocked = [];
     page.on("console", (m) => { if (/Content Security Policy|violates/i.test(m.text())) blocked.push(m.text().slice(0, 200)); });
     watchAssets(page);
-    await page.click("#pg-open");
+    await openEditor(page);
     await page.waitForSelector("#pg-run");
     await page.click("#pg-run");
     await page.waitForFunction(() => { const p = DSA._players[DSA._players.length - 1]; return p.frames.length > 3 && !document.querySelector("#pg-run").disabled; }, null, { timeout: 8000 });
@@ -953,14 +1005,14 @@ if (want("prod")) {
   /* a playground run that gets interrupted leaves the button usable */
   {
     const { page, ctx } = await openPage("sorting");
-    await page.click("#pg-open");
+    await openEditor(page);
     await page.waitForSelector("#pg-run");
     await page.click(".cm-content");
     await page.keyboard.press("ControlOrMeta+A");
     await page.keyboard.insertText("while (true) { int x = 1; }");
     await page.click("#pg-run");
     await page.click("#pg-close");
-    await page.click("#pg-open");
+    await openEditor(page);
     await page.waitForTimeout(100);
     ok(await page.locator("#pg-run").isEnabled(), "closing the panel mid-run leaves Run code usable");
     await ctx.close();
@@ -969,7 +1021,7 @@ if (want("prod")) {
   {
     const { page, ctx } = await openPage("sorting");
     await page.route("**/assets/vendor/editor.js*", (r) => r.abort());
-    await page.click("#pg-open");
+    await openEditor(page);
     await page.waitForSelector("#pg-run");
     ok((await page.locator(".pg-editor textarea").count()) === 1, "if the editor can't load, a plain text box takes over");
     await ctx.close();
@@ -977,7 +1029,7 @@ if (want("prod")) {
     const p2 = await c2.newPage();
     await p2.route("**/playground-examples.js*", (r) => r.abort());
     await p2.goto(BASE + "/cse214/sorting.html");
-    await p2.click("#pg-open");
+    await openEditor(p2);
     await p2.waitForSelector("#pg-run");
     await p2.waitForTimeout(50);
     ok(await p2.locator("#pg-run").isVisible(), "if the starter programs can't load, the playground still opens");
@@ -1346,7 +1398,7 @@ if (want("offline")) {
   ok(!saved.some((u) => /editor\.js|playground-examples|why-data|java-interp|growth-worker/.test(u)), "the heavy tools are not downloaded until used", saved);
 
   /* opening the playground saves it for later */
-  await page.click("#pg-open");
+  await openEditor(page);
   await page.waitForSelector(".cm-content");
   await page.click("#pg-run");
   await page.waitForFunction(() => !document.querySelector("#pg-run").disabled, null, { timeout: 8000 });
@@ -1361,7 +1413,7 @@ if (want("offline")) {
   await page.goto(OB + "/");
   ok(/Courses/.test(await page.textContent("h1")), "offline: the site root loads");
   await page.goto(OB + "/cse214/sorting.html");
-  await page.click("#pg-open");
+  await openEditor(page);
   await page.waitForSelector(".cm-content", { timeout: 8000 }).catch(() => {});
   ok((await page.locator(".cm-content").count()) === 1, "offline: the playground opens with its editor");
   await page.click("#pg-run");
@@ -1399,7 +1451,7 @@ if (want("shots")) {
   };
   await shot("sorting", async (page) => { await openBox(page, "#growth"); await page.waitForFunction(() => /Stopped early|Measured every/.test(document.querySelector(".growth-status").textContent), null, { timeout: 40000 }); await openBox(page, "#growth"); }, { as: "growth" });
   const inPanel = (example, back) => async (page) => {
-    await page.click("#pg-open");
+    await openEditor(page);
     await page.waitForSelector("#pg-run");
     if (example) {
       /* a renamed starter should fail one check by name, not time out and stop the whole run */
