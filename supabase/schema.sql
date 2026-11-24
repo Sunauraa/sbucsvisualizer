@@ -1,5 +1,5 @@
 -- ============================================================
--- DSA Visualizer: accounts and sync (decision 7 in notes/design-decisions.md)
+-- SBU Visualizer: accounts and sync (decision 7 in notes/design-decisions.md)
 --
 -- Run once: Supabase dashboard → SQL Editor → paste this file → Run. Safe to run again.
 --

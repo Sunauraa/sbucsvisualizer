@@ -120,7 +120,7 @@ async function asset(e, url) {
 
 function offline() {
   const html = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
-    '<title>Offline · DSA Visualizer</title><link rel="stylesheet" href="' + versioned("assets/css/style.css") + '"></head><body>' +
+    '<title>Offline · SBU Visualizer</title><link rel="stylesheet" href="' + versioned("assets/css/style.css") + '"></head><body>' +
     '<main id="content" class="wrap" style="padding:3rem 0"><h1>You are offline</h1>' +
     "<p>This address is not saved on this device, so it needs a connection. Every course page is saved after your first visit and works without one.</p>" +
     '<p><a class="btn primary" href="' + at("index.html") + '">Go to the course list</a></p></main></body></html>';

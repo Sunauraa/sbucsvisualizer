@@ -1,4 +1,4 @@
-# DSA Visualizer: CSE 214 / CSE 373
+# SBU Visualizer: CSE 214 / CSE 373
 
 Interactive data structure and algorithm visualizers. Static HTML/CSS/JS with no build step and no framework:
 it runs on Vercel, GitHub Pages or from a folder, keeps a copy of itself for offline use, and every feature costs
