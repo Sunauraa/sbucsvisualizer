@@ -96,7 +96,7 @@ export const prim = defineAlgorithm({
     if (!ctx.graph.weighted || unweighted) {
       return t.reject({
         lines: ['check'],
-        say: unweighted ? `The edge ${ctx.edgeName(unweighted.id)} has no weight, so there is nothing to minimise and the run stops.` : 'This graph has no edge weights, so there is nothing to minimise and the run stops.',
+        say: ctx.graph.weighted && unweighted ? `The edge ${ctx.edgeName(unweighted.id)} has no weight, so there is nothing to minimise and the run stops.` : 'This graph has no edge weights, so there is nothing to minimise and the run stops.',
         state, result: EMPTY,
       });
     }

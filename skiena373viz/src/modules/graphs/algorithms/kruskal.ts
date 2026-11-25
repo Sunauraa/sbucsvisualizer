@@ -100,8 +100,9 @@ export const kruskal = defineAlgorithm({
       while (rowOf(rows, at).parent !== at) at = rowOf(rows, at).parent as string;
       return at;
     };
+    let forestReady = false;
     const refresh = (): void => {
-      for (const id of ctx.ids) rowOf(rows, id).root = find(id);
+      if (forestReady) for (const id of ctx.ids) rowOf(rows, id).root = find(id);
     };
     const sizeOf = (id: string): number => rowOf(rows, find(id)).size ?? 1;
 
@@ -141,7 +142,7 @@ export const kruskal = defineAlgorithm({
     if (!ctx.graph.weighted || missing) {
       return t.reject({
         lines: ['check'],
-        say: missing ? `The edge ${ctx.edgeName(missing.id)} has no weight, so there is nothing to sort by and the run stops.` : 'This graph has no edge weights, so there is nothing to sort by and the run stops.',
+        say: ctx.graph.weighted && missing ? `The edge ${ctx.edgeName(missing.id)} has no weight, so there is nothing to sort by and the run stops.` : 'This graph has no edge weights, so there is nothing to sort by and the run stops.',
         state, result: EMPTY,
       });
     }
@@ -170,6 +171,7 @@ export const kruskal = defineAlgorithm({
       row.size = 1;
       row.root = id;
     }
+    forestReady = true;
     t.step({ lines: ['init'], say: n === 0 ? 'With no vertices there are no sets to make.' : `Every one of the ${plural(n, 'vertex', 'vertices')} starts as its own one-vertex set.`, state });
 
     for (let i = 0; i < list.length; i += 1) {

@@ -94,7 +94,7 @@ export const dijkstra = defineAlgorithm({
     if (!ctx.graph.weighted || missing) {
       return t.reject({
         lines: ['check'],
-        say: missing ? `The edge ${ctx.edgeName(missing.id)} has no weight, so there are no distances to add up and the run stops.` : 'This graph has no edge weights, so there are no distances to add up and the run stops.',
+        say: ctx.graph.weighted && missing ? `The edge ${ctx.edgeName(missing.id)} has no weight, so there are no distances to add up and the run stops.` : 'This graph has no edge weights, so there are no distances to add up and the run stops.',
         state, result: refused(ctx.ids, null),
       });
     }

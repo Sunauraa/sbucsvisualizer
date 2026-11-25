@@ -24,7 +24,7 @@ export function refHops(graph: Graph, start: string): Record<string, number | nu
   hops[ids.indexOf(start)] = 0;
   for (let round = 0; round < ids.length; round += 1) {
     for (const [a, b] of list) {
-      const ha = hops[a];
+      const ha = hops[a] ?? null;
       if (ha !== null && (hops[b] === null || (hops[b] as number) > ha + 1)) hops[b] = ha + 1;
     }
   }
@@ -38,7 +38,7 @@ export function refBellmanFord(graph: Graph, start: string): Record<string, numb
   dist[ids.indexOf(start)] = 0;
   for (let round = 0; round < ids.length; round += 1) {
     for (const [a, b, w] of list) {
-      const da = dist[a];
+      const da = dist[a] ?? null;
       if (da !== null && (dist[b] === null || (dist[b] as number) > da + w)) dist[b] = da + w;
     }
   }
