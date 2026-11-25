@@ -8,11 +8,12 @@ import type { MergesortState } from './algorithms/mergesort';
 import { quicksort } from './algorithms/quicksort';
 import type { QuicksortState } from './algorithms/quicksort';
 import type { CallNode, SortResult } from './algorithms/common';
+import { plural } from './algorithms/common';
 import { levelCosts, layoutTree, levelSummary } from './algorithms/tree';
 import type { TreeLayout } from './algorithms/tree';
 import { keyRange } from './SortBars';
 import { mergeArrayModel, quickModel } from './barModels';
-import { describeBars, SortBars } from './SortBars';
+import { describeBars, slotFor, SortBars } from './SortBars';
 import { SortInputFields, useSortSetup } from './SortInputs';
 import css from './sorting.module.css';
 
@@ -49,7 +50,7 @@ export function TreeCanvas({ state, layout, title }: { readonly state: TreeState
             <line x1={4} x2={width - 4} y1={y + layout.rowHeight / 2 - 1} y2={y + layout.rowHeight / 2 - 1} stroke={SURFACE.grid} />
             <text x={layout.width + 8} y={y - 6} fontSize={12} fontWeight={700} fill={SURFACE.ink}>level {depth}</text>
             <text x={layout.width + 8} y={y + 9} fontSize={12} fill={row ? SURFACE.ink : SURFACE.muted}>
-              {row ? `${row.comparisons} comparisons, ${row.items} items` : 'not reached yet'}
+              {row ? `${plural(row.comparisons, 'comparison')}, ${plural(row.items, 'item')}` : 'not reached yet'}
             </text>
           </g>
         );
@@ -87,6 +88,8 @@ function useLayout(trace: { readonly frames: readonly { readonly state: TreeStat
   return useMemo(() => layoutTree(trace.frames[trace.frames.length - 1]?.state.nodes ?? []), [trace]);
 }
 
+const HOLE_NOTE = 'The array at this step (a hole ∅ means that item is waiting in the merge buffer)';
+
 export function MergeTreeRenderer({ frame, trace }: RendererProps<MergesortState, SortResult>) {
   const layout = useLayout(trace);
   const first = trace.frames[0]?.state ?? frame.state;
@@ -94,9 +97,9 @@ export function MergeTreeRenderer({ frame, trace }: RendererProps<MergesortState
   return (
     <div className={css['stack']}>
       <TreeCanvas state={frame.state} layout={layout} title={`Mergesort call tree, ${frame.state.nodes.length} calls so far`} />
-      <p className={css['heading']}>The array at this step</p>
+      <p className={css['heading']}>{HOLE_NOTE}</p>
       <SortBars title={`Array: ${describeBars(model)}`} model={model} range={keyRange(first.items.flatMap((item) => (item ? [item.key] : [])))}
-        slots={first.items.length} rows={{ band: true }} barHeight={60} slot={30} />
+        slots={first.items.length} rows={{ band: true }} barHeight={60} slot={slotFor(first.items.length, true)} />
     </div>
   );
 }
@@ -110,7 +113,7 @@ export function QuickTreeRenderer({ frame, trace }: RendererProps<QuicksortState
       <TreeCanvas state={frame.state} layout={layout} title={`Quicksort call tree, ${frame.state.nodes.length} calls so far`} />
       <p className={css['heading']}>The array at this step</p>
       <SortBars title={`Array: ${describeBars(model)}`} model={model} range={keyRange(first.items.map((item) => item.key))}
-        slots={first.items.length} rows={{ band: true }} barHeight={60} slot={30} />
+        slots={first.items.length} rows={{ band: true }} barHeight={60} slot={slotFor(first.items.length, true)} />
     </div>
   );
 }

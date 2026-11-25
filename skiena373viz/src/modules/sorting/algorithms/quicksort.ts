@@ -31,17 +31,17 @@ export interface QuicksortState {
 }
 
 const PSEUDOCODE = definePseudocode([
-  ['signature', 0, 'quicksort(A, lo, hi)          sorts A[lo..hi-1]'],
+  ['signature', 0, 'quicksort(A, lo, hi)'],
   ['base', 1, 'if hi - lo <= 1: return'],
   ['choose', 1, 'pick a pivot position, swap it to A[hi-1]'],
   ['init', 1, 'pivot = A[hi-1];  store = lo'],
   ['loop', 1, 'for j = lo to hi - 2:'],
   ['compare', 2, 'if A[j] < pivot:'],
   ['swap', 3, 'swap A[store] and A[j];  store = store + 1'],
-  ['place', 1, 'swap A[store] and A[hi-1]      (the pivot is now final)'],
+  ['place', 1, 'swap A[store] and A[hi-1]'],
   ['left', 1, 'quicksort(A, lo, store)'],
   ['right', 1, 'quicksort(A, store + 1, hi)'],
-  ['return', 1, 'return   (A[lo..hi-1] is sorted)'],
+  ['return', 1, 'return'],
 ]);
 
 type T = Recorder<QuicksortState, AnchorOf<typeof PSEUDOCODE>, OpOf<typeof SORT_OPS>>;

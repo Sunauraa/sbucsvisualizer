@@ -107,5 +107,5 @@ export function levelSummary(nodes: readonly CallNode[], n: number): string {
   if (costs.length === 0) return 'No calls yet.';
   const total = costs.reduce((sum, row) => sum + row.comparisons, 0);
   const worst = Math.max(...costs.map((row) => row.comparisons));
-  return `${costs.length} ${costs.length === 1 ? 'level' : 'levels'} of calls so far, at most ${worst} comparisons on any one level, ${total} comparisons in all (n = ${n}).`;
+  return `${costs.length} ${costs.length === 1 ? 'level' : 'levels'} of calls so far, at most ${worst} ${worst === 1 ? 'comparison' : 'comparisons'} on any one level, ${total} ${total === 1 ? 'comparison' : 'comparisons'} in all (n = ${n}).`;
 }

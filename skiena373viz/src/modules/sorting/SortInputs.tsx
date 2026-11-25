@@ -10,6 +10,7 @@ import {
 } from './algorithms/inputs';
 import type { InputKind } from './algorithms/inputs';
 import { PIVOT_LABELS } from './algorithms/quicksort';
+import css from './sorting.module.css';
 
 type Params = Readonly<Record<string, string>>;
 type SetParams = (patch: Readonly<Record<string, string | null>>) => void;
@@ -136,5 +137,5 @@ export function SortInputFields({ setup, setParams, presets, withPivot = false }
 
 /** A button that lines up with labelled fields beside it. */
 function ButtonCell({ children }: { readonly children: ReactNode }) {
-  return <div className="field"><div aria-hidden="true" style={{ height: '1.7em' }} />{children}</div>;
+  return <div className="field"><div aria-hidden="true" className={css['spacer']} />{children}</div>;
 }

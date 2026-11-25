@@ -11,9 +11,10 @@ import type { SortResult } from './algorithms/common';
 import { describeRanking, finishTick, laneIndex, raceLength } from './algorithms/race';
 import type { AlignMode, TimedFrame } from './algorithms/race';
 import { heapModel, mergeArrayModel, mergeBufferModel, quickModel } from './barModels';
-import { describeBars, keyRange, SortBars } from './SortBars';
+import { describeBars, keyRange, slotFor, SortBars } from './SortBars';
 import type { BarModel } from './SortBars';
 import { SortInputFields, useSortSetup } from './SortInputs';
+import type { PresetChoice } from './SortInputs';
 import css from './sorting.module.css';
 
 interface LaneBars {
@@ -40,6 +41,15 @@ function laneOf<S>(id: string, name: string, trace: Trace<S, SortResult>, models
   };
 }
 
+const RACE_PRESETS: readonly PresetChoice[] = [
+  { id: 'mixed', label: 'Mixed order, 12 items', input: { items: [5, 2, 9, 1, 7, 3, 8, 4, 6, 12, 10, 11] } },
+  { id: 'sorted', label: 'Already sorted (quicksort worst case)', input: { items: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] } },
+  { id: 'sorted-random', label: 'Already sorted, random pivot', input: { items: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], pivot: 'random', seed: 373 } },
+  { id: 'reversed', label: 'Reversed', input: { items: [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1] } },
+  { id: 'duplicates', label: 'Many duplicates', input: { items: [3, 1, 3, 2, 1, 3, 2, 2, 1, 3] } },
+  { id: 'one', label: 'One item', input: { items: [4] } },
+];
+
 const OPS = [['comparisons', 'Comparisons'], ['swaps', 'Swaps'], ['writes', 'Writes']] as const;
 
 /** One lane: a name, a status, the counts, the bars of the frame this tick selects, and that frame's sentence. */
@@ -63,7 +73,7 @@ function Lane({ spec, tick, mode, range, slots }: {
       </div>
       {views.map((view) => (
         <SortBars key={view.title} title={`${spec.name} ${view.title}: ${describeBars(view.model)}`} model={view.model} range={range}
-          slots={slots} slot={30} barHeight={70} rows={view.rows} />
+          slots={slots} slot={slotFor(slots, true)} barHeight={70} rows={view.rows} />
       ))}
       <p className={css['laneSay']}>{frame.explanation}</p>
     </section>
@@ -102,7 +112,7 @@ export default function RaceView({ params, setParams }: ViewProps) {
   return (
     <div className="workbench">
       <section className="workbench-inputs" aria-label="Input">
-        <SortInputFields setup={setup} setParams={setParams} presets={quicksort.presets.concat(heapsort.presets)} withPivot />
+        <SortInputFields setup={setup} setParams={setParams} presets={RACE_PRESETS} withPivot />
         <fieldset className={css['align']}>
           <legend>One tick is</legend>
           <label>

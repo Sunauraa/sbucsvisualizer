@@ -30,7 +30,7 @@ export interface MergesortState {
 }
 
 const PSEUDOCODE = definePseudocode([
-  ['signature', 0, 'mergesort(A, lo, hi)          sorts A[lo..hi-1]'],
+  ['signature', 0, 'mergesort(A, lo, hi)'],
   ['base', 1, 'if hi - lo <= 1: return'],
   ['split', 1, 'mid = ⌊(lo + hi) / 2⌋'],
   ['left', 1, 'mergesort(A, lo, mid)'],
@@ -41,7 +41,7 @@ const PSEUDOCODE = definePseudocode([
   ['take-right', 3, 'A[k] = B[j];  j = j + 1;  k = k + 1'],
   ['take-left', 3, 'else  A[k] = B[i];  i = i + 1;  k = k + 1'],
   ['rest', 1, 'move what is left of either run into A'],
-  ['return', 1, 'return   (A[lo..hi-1] is sorted)'],
+  ['return', 1, 'return'],
 ]);
 
 type T = Recorder<MergesortState, AnchorOf<typeof PSEUDOCODE>, OpOf<typeof SORT_OPS>>;

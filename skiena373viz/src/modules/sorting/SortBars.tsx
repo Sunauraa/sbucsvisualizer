@@ -22,6 +22,8 @@ export interface Mark {
   readonly text: string;
   readonly tone: Tone;
   readonly dashed?: boolean;
+  /** Used when the bracket is too narrow for `text`. */
+  readonly short?: string;
 }
 
 export interface Band {
@@ -57,8 +59,12 @@ export interface SortBarsProps {
   readonly emptyText?: string;
 }
 
-export function SortBars({ title, model, range, slots, slot = 36, barHeight = 110, rows = {}, emptyText = 'the array is empty' }: SortBarsProps) {
+/** Wider bars when there are few of them; `compact` is for the race lanes and the tree's array. */
+export const slotFor = (count: number, compact = false): number => (compact ? (count <= 12 ? 42 : 30) : count <= 10 ? 54 : count <= 16 ? 44 : 36);
+
+export function SortBars({ title, model, range, slots, slot, barHeight = 110, rows = {}, emptyText = 'the array is empty' }: SortBarsProps) {
   const count = Math.max(slots ?? model.bars.length, 1);
+  slot ??= slotFor(count);
   const width = count * slot + 8;
   const bandH = rows.band ? 20 : 0;
   const glyphH = 18;
@@ -114,10 +120,11 @@ export function SortBars({ title, model, range, slots, slot = 36, barHeight = 11
         const x2 = x(mark.to) - 2;
         const y = barsY + labelH + pointerH + 6;
         const { color, ink } = TONES[mark.tone];
+        const text = x2 - x1 >= mark.text.length * 7.2 ? mark.text : (mark.short ?? mark.text);
         return (
           <g key={`${mark.text}${k}`} aria-hidden="true">
             <path d={`M ${x1} ${y - 4} V ${y} H ${x2} V ${y - 4}`} fill="none" stroke={color} strokeWidth={2} strokeDasharray={mark.dashed ? '4 3' : undefined} />
-            <text x={(x1 + x2) / 2} y={y + 13} textAnchor="middle" fontSize={12} fontWeight={600} fill={ink}>{mark.text}</text>
+            <text x={(x1 + x2) / 2} y={y + 13} textAnchor="middle" fontSize={12} fontWeight={600} fill={ink}>{text}</text>
           </g>
         );
       })}

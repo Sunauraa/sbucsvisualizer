@@ -65,8 +65,8 @@ export function mergeBufferModel(state: MergesortState): BarModel {
   }
   const marks: Mark[] = merging && mid !== null
     ? [
-      { from: merging[0], to: mid, text: 'left run', tone: 'visited' },
-      { from: mid, to: merging[1], text: 'right run', tone: 'visited', dashed: true },
+      { from: merging[0], to: mid, text: 'left run', short: 'L', tone: 'visited' },
+      { from: mid, to: merging[1], text: 'right run', short: 'R', tone: 'visited', dashed: true },
     ]
     : [];
   return { bars, pointers, marks, band: null };
