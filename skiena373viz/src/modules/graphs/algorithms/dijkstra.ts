@@ -76,7 +76,7 @@ export const dijkstra = defineAlgorithm({
       containers: [pqContainer(ctx, heap, rows, false)],
       facts: [
         { label: 'Final', value: `${order.length} of ${ctx.ids.length}` },
-        ...(popped === null ? [] : [{ label: 'Just popped', value: popped }]),
+        { label: 'Just popped', value: popped ?? '—' },
       ],
     });
     const spend = (): void => t.count('queue-comparisons', meter.take());

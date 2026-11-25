@@ -52,6 +52,7 @@ export const topologicalSort = defineAlgorithm({
     const stack: string[] = [];
     const finished: string[] = [];
     let cycle: string[] = [];
+    let time = 0;
     let focusVertex: string | null = null;
     let focusEdge: string | null = null;
     let focusFrom: string | null = null;
@@ -66,7 +67,7 @@ export const topologicalSort = defineAlgorithm({
           items: stack.map((id) => ({ text: label(id), kind: 'normal', note: `visit(${label(id)})` })),
         },
         {
-          id: 'finish', title: 'Finish stack', left: 'bottom (finished first)', right: 'top (finished last)',
+          id: 'finish', title: 'Finish stack (the top finished last)', left: 'bottom', right: 'top',
           items: finished.map((id) => ({ text: label(id), kind: 'normal', note: `${label(id)} finished` })),
         },
         {
@@ -79,7 +80,7 @@ export const topologicalSort = defineAlgorithm({
           }),
         },
       ],
-      facts: [{ label: 'Finished', value: `${finished.length} of ${n}` }],
+      facts: [{ label: 'Finished', value: `${finished.length} of ${n}` }, { label: 'Clock', value: String(time) }],
     });
     const stackText = (): string => (stack.length === 0 ? 'the call stack is empty' : `the call stack is ${names(ctx, stack)} (bottom to top)`);
 
@@ -111,6 +112,8 @@ export const topologicalSort = defineAlgorithm({
     let failed = false;
     const visit = (u: string): void => {
       const row = rowOf(rows, u);
+      time += 1;
+      row.entry = time;
       row.status = 'discovered';
       stack.push(u);
       focusVertex = u;
@@ -162,6 +165,8 @@ export const topologicalSort = defineAlgorithm({
           });
         }
       }
+      time += 1;
+      row.exit = time;
       row.status = 'processed';
       stack.pop();
       finished.push(u);

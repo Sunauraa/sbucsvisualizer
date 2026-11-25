@@ -79,7 +79,9 @@ export const dfs = defineAlgorithm({
       }],
       facts: [
         { label: 'Clock', value: String(time) },
-        { label: 'Edges so far', value: ctx.directed ? `tree ${kinds.tree}, back ${kinds.back}, forward ${kinds.forward}, cross ${kinds.cross}` : `tree ${kinds.tree}, back ${kinds.back}` },
+        { label: 'Tree edges', value: String(kinds.tree) },
+        { label: 'Back edges', value: String(kinds.back) },
+        ...(ctx.directed ? [{ label: 'Forward edges', value: String(kinds.forward) }, { label: 'Cross edges', value: String(kinds.cross) }] : []),
       ],
     });
     const stackText = (): string => (stack.length === 0 ? 'the call stack is empty' : `the call stack is ${names(ctx, stack)} (bottom to top)`);

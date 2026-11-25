@@ -75,7 +75,7 @@ export const prim = defineAlgorithm({
       facts: [
         { label: 'Tree weight so far', value: fmt(weight) },
         { label: 'In the tree', value: `${inTree} of ${ctx.ids.length}` },
-        ...(popped === null ? [] : [{ label: 'Just popped', value: popped }]),
+        { label: 'Just popped', value: popped ?? '—' },
       ],
     });
     const spend = (): void => t.count('queue-comparisons', meter.take());

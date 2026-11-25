@@ -61,6 +61,12 @@ describe('graphs-topological-sort', () => {
     expect(trace.frames[trace.frames.length - 1]?.explanation).toContain('undirected');
   });
 
+  it('entry and exit times are kept like depth-first search: nested, and exit times in finish order', () => {
+    const trace = run(inputOf('A>B, B>C', { directed: true }));
+    const rows = trace.frames[trace.frames.length - 1]?.state.vertices ?? [];
+    expect(rows.map((v) => [v.label, v.entry, v.exit])).toEqual([['A', 1, 6], ['B', 2, 5], ['C', 3, 4]]);
+  });
+
   it('disconnected pieces are all ordered', () => {
     const trace = run(inputOf('A>B, C>D, E', { directed: true }));
     expect(trace.result.order).toHaveLength(5);

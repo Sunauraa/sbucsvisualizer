@@ -70,7 +70,7 @@ export const bfs = defineAlgorithm({
       }],
       facts: [
         { label: 'Components found', value: String(components) },
-        { label: 'Processed', value: order.length === 0 ? 'none yet' : names(ctx, order) },
+        { label: 'Processed', value: `${order.length} of ${ctx.ids.length}` },
       ],
     });
     const queueText = (): string => (queue.length === 0 ? 'the queue is empty' : `the queue is now ${names(ctx, queue)}`);
