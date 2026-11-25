@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createRng } from '@core';
-import type { Trace } from '@core';
+import type { Algorithm, Trace } from '@core';
 import { checkAlgorithm, describeProblems, unlitAnchors } from '@core/testing';
 import { badKeyIndex, labelsFor, makeItems, sortedByKey } from './common';
 import type { Item, PivotRule, SortInput } from './common';
@@ -67,7 +67,8 @@ const lists = (count: number, maxLength: number, low: number, high: number, seed
   return Array.from({ length: count }, () => Array.from({ length: rng.int(0, maxLength) }, () => rng.int(low, high)));
 };
 const sortedKeys = (keys: readonly number[]): number[] => [...keys].sort((a, b) => a - b);
-const runCounts = (algorithm: typeof heapsort | typeof mergesort | typeof quicksort, input: SortInput) => algorithm.run(input, { mode: 'counts' });
+type AnySort = Algorithm<SortInput, unknown, readonly Item[]>;
+const runCounts = (algorithm: AnySort, input: SortInput) => algorithm.run(input, { mode: 'counts' });
 const RULES: readonly PivotRule[] = ['last', 'random', 'median-of-three'];
 
 const sorts = [
@@ -78,13 +79,13 @@ const sorts = [
 
 describe('all three sorts: description', () => {
   it.each(sorts)('%s is described completely', (_name, algorithm) => {
-    expect(describeProblems(algorithm)).toEqual([]);
+    expect(describeProblems(algorithm as AnySort)).toEqual([]);
   });
 
   it.each(sorts)('%s keeps the contract on every preset, and its presets light the code', (_name, algorithm, check) => {
     const traces = algorithm.presets.map((preset) => check(preset.input));
     expect(traces.every((trace) => trace.status === 'completed')).toBe(true);
-    expect(unlitAnchors(algorithm, traces as Trace<never>[])).toEqual(
+    expect(unlitAnchors(algorithm as AnySort, traces as Trace<unknown, readonly Item[]>[])).toEqual(
       { heapsort: ['extract-loop', 'sift-head', 'children'], mergesort: ['while'], quicksort: ['loop'] }[algorithm.id.replace('sorting-', '')],
     );
   });
