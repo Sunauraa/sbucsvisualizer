@@ -1,0 +1,66 @@
+/* Layout for the DP views. Colours come from the shared tone palette (inline) and the theme variables. */
+.stageStack { display: grid; gap: 14px; min-width: 0; }
+.label { margin: 0 0 2px; font-size: 0.85rem; font-weight: 700; color: var(--muted); }
+.strings { display: grid; gap: 4px; min-width: 0; }
+
+.recurrence { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; background: #fbfdff; }
+.recTitle { margin: 0 0 6px; font-weight: 700; min-height: 1.6em; }
+.recGeneral { margin: 0 0 6px; font-family: var(--mono); font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; }
+.recTable { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 0.9rem; }
+.recTable th, .recTable td { text-align: left; white-space: normal; overflow-wrap: anywhere; padding: 4px 8px; border: 1px solid var(--grid); vertical-align: top; }
+.recTable th { font-weight: 600; width: 6.5em; }
+.recTable td.num { text-align: right; width: 4.8em; font-variant-numeric: tabular-nums; font-weight: 700; }
+.recTable tr.best th, .recTable tr.best td { background: #cffafe; }
+.recEmpty { visibility: hidden; }
+.recFooter { margin: 6px 0 0; font-size: 0.9rem; min-height: 4.6em; }
+.captionSlot { min-height: 5.4em; }
+.captionSlot > p { min-height: 0; }
+
+.align { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.alignScroll { overflow-x: auto; max-width: 100%; }
+.alignTable { border-collapse: separate; border-spacing: 4px 3px; font-family: var(--mono); font-size: 1rem; margin-left: auto; }
+.alignTable th { text-align: left; font-family: var(--sans); font-size: 0.8rem; font-weight: 700; color: var(--muted); border: 0; padding: 0 6px 0 0; white-space: nowrap; position: sticky; left: 0; background: var(--panel); }
+.alignTable td { border: 2px solid var(--line); border-radius: 5px; padding: 2px 0; min-width: 2.1em; text-align: center; font-weight: 700; }
+.alignTable td.word { font-family: var(--sans); font-size: 0.68rem; font-weight: 700; border-width: 2px; }
+.alignTable td.unknown { border-style: dotted; color: var(--muted); }
+.gap { color: var(--muted); }
+
+.script { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; height: 9.5rem; overflow: auto; min-width: 0; }
+.script ol { margin: 0; padding-left: 1.6em; font-size: 0.92rem; }
+.script p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+.quiz { display: grid; gap: 10px; min-width: 0; min-height: 17rem; align-content: start; }
+.quiz h3 { margin: 0; }
+.quizStats { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: 6px 10px; margin: 0; font-size: 0.88rem; }
+.quizStats div { border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; }
+.quizStats dt { color: var(--muted); font-size: 0.78rem; }
+.quizStats dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.question { border: 2px solid var(--tone-compare); background: #fffbeb; border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
+.questionDone { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 10px 12px; }
+.prompt { margin: 0; font-weight: 700; font-size: 1.05rem; }
+.answerRow { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.answerRow .field { flex: 0 1 9rem; }
+.moves { display: flex; flex-wrap: wrap; gap: 8px; }
+.moves button { min-height: 44px; }
+.feedback { margin: 0; min-height: 2.8em; padding: 6px 10px; border-left: 4px solid transparent; border-radius: 4px; font-size: 0.95rem; }
+.feedbackWrong { border-color: var(--tone-swap); background: #fef2f2; }
+.feedbackRight { border-color: var(--tone-done); background: #f0fdf4; }
+.feedbackInfo { border-color: var(--tone-target); background: #ecfeff; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.inspect { display: grid; gap: 8px; min-width: 0; min-height: 13rem; align-content: start; }
+.inspect h3 { margin: 0; }
+.inspectBody { margin: 0; }
+
+.settings { display: flex; flex-wrap: wrap; gap: 8px var(--gap); align-items: flex-end; }
+.toggle { display: inline-flex; gap: 8px; align-items: center; min-height: 40px; font-weight: 600; }
+.legendNote { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+@media (max-width: 560px) {
+  .recTable th { width: 5.4em; }
+  .recTable td.num { width: 3.6em; }
+  .recEmpty { visibility: hidden; }
+.recFooter { min-height: 5.4em; }
+  .quiz { min-height: 22rem; }
+}
