@@ -114,21 +114,21 @@ export const certificates = defineAlgorithm({
       id: 'cover-to-assignment', label: 'Cover to assignment',
       input: {
         formula: formulaFrom('(x1 | !x2 | x3) & (!x1 | x2 | x2)'), direction: 'to-assignment', assignment: {},
-        cover: ['x1', 'x2', '!x3', 'c1.1', 'c1.2', 'c2.2', 'c2.3'],
+        cover: ['x1', 'x2', '!x3', 'c1.2', 'c1.3', 'c2.1', 'c2.3'],
       },
     },
     {
       id: 'uncovered-edge', label: 'Wrong cover: an edge is uncovered',
       input: {
         formula: formulaFrom('(x1 | !x2 | x3) & (!x1 | x2 | x2)'), direction: 'to-assignment', assignment: {},
-        cover: ['x1', 'x2', '!x3', 'c1.1', 'c1.2', 'c2.2'],
+        cover: ['x1', 'x2', '!x3', 'c1.2', 'c1.3', 'c2.1'],
       },
     },
     {
       id: 'oversized-cover', label: 'Wrong cover: too many vertices',
       input: {
         formula: formulaFrom('(x1 | !x2 | x3) & (!x1 | x2 | x2)'), direction: 'to-assignment', assignment: {},
-        cover: ['x1', '!x1', 'x2', '!x3', 'c1.1', 'c1.2', 'c1.3', 'c2.1', 'c2.2', 'c2.3'],
+        cover: ['x1', '!x1', 'x2', '!x3', 'c1.2', 'c1.3', 'c2.1', 'c2.3'],
       },
     },
     {
@@ -300,7 +300,7 @@ export const certificates = defineAlgorithm({
       const stopTriangle = checkEdges(
         trianglesOf(i),
         () => `The three triangle edges of ${clauseText(i)} are covered, because the corner${inTriangle.length === 1 ? '' : 's'} ${inTriangle.map((p) => p + 1).join(', ')} ${inTriangle.length === 1 ? 'is' : 'are'} in S.`,
-        (edge) => `The triangle edge between ${nodeLabel(edge.source)} and ${nodeLabel(edge.target)} of ${clauseText(i)} is not covered, since neither corner is in S, so S is not a vertex cover.`,
+        (edge) => `The triangle edge between corners ${(nodeById.get(edge.source)?.position ?? 0) + 1} and ${(nodeById.get(edge.target)?.position ?? 0) + 1} of ${clauseText(i)} is not covered, since neither corner is in S, so S is not a vertex cover.`,
         { ...NO_HIGHLIGHT, clauses: [i] },
       );
       if (stopTriangle) return stopTriangle;

@@ -9,7 +9,7 @@
 import { firstTrueLiteral, formulaVariables, unsatisfiedClauses, valueOf } from './formula';
 import type { Assignment, Formula } from './formula';
 import { cornerId, literalVertexId } from './gadgets';
-import type { VcGraph } from './gadgets';
+import type { VcEdge, VcGraph, VcNode } from './gadgets';
 
 /** Why a certificate is refused: the specific edge, clause or size that breaks it. */
 export type Witness =
@@ -64,4 +64,51 @@ export function coverToAssignment(formula: Formula, graph: VcGraph, cover: reado
   const assignment: Record<string, boolean> = {};
   for (const variable of formulaVariables(formula)) assignment[variable] = chosen.has(literalVertexId({ variable, negated: false }));
   return { ok: true, assignment };
+}
+
+/** An edge in words, for lists and messages: `x1 — ¬x1`, `triangle edge of C2 between corners 1 and 3`, ... */
+export function describeEdge(edge: VcEdge, nodes: readonly VcNode[]): string {
+  const label = (id: string): string => nodes.find((node) => node.id === id)?.label ?? id;
+  if (edge.kind === 'variable') return `${label(edge.source)} — ${label(edge.target)}`;
+  const corner = (id: string): number => (nodes.find((node) => node.id === id)?.position ?? 0) + 1;
+  if (edge.kind === 'triangle') return `triangle edge of C${(edge.clause ?? 0) + 1} between corners ${corner(edge.source)} and ${corner(edge.target)}`;
+  return `cross edge from corner ${corner(edge.source)} of C${(edge.clause ?? 0) + 1} to ${label(edge.target)}`;
+}
+
+export interface CoverReport {
+  readonly size: number;
+  readonly k: number;
+  /** Every edge with no endpoint in the cover. */
+  readonly uncovered: readonly VcEdge[];
+  /** Variables whose vertices x and ¬x are both in the cover. */
+  readonly bothEnds: readonly string[];
+  /** The assignment read off the cover, or null when the cover is refused. */
+  readonly assignment: Readonly<Record<string, boolean>> | null;
+  /** One sentence: the induced assignment, or exactly why there is none. */
+  readonly reason: string;
+}
+
+/** Everything the "choose a cover" panel shows: coverage, size against k, and the assignment or the reason for none. */
+export function reportCover(formula: Formula, graph: VcGraph, cover: readonly string[], k: number): CoverReport {
+  const known = new Set(graph.nodes.map((node) => node.id));
+  const chosen = [...new Set(cover.filter((id) => known.has(id)))];
+  const uncovered = uncoveredEdges(graph, chosen);
+  const variables = formulaVariables(formula);
+  const bothEnds = variables.filter((variable) => chosen.includes(variable) && chosen.includes(`!${variable}`));
+  const mapped = coverToAssignment(formula, graph, chosen, k);
+  const base = { size: chosen.length, k, uncovered, bothEnds };
+  if (mapped.ok) {
+    const text = variables.length === 0 ? 'the empty assignment' : variables.map((v) => `${v} = ${mapped.assignment[v] ? 'T' : 'F'}`).join(', ');
+    return { ...base, assignment: mapped.assignment, reason: `S covers every edge with ${chosen.length} ≤ k = ${k} vertices, so it holds exactly one vertex of each pair and two of each triangle, and it induces ${text}.` };
+  }
+  if (mapped.witness.kind === 'edge') {
+    const edge = uncovered[0];
+    const what = edge ? describeEdge(edge, graph.nodes) : mapped.witness.edge;
+    return { ...base, assignment: null, reason: `The ${what} has no endpoint in S, so S is not a vertex cover${uncovered.length > 1 ? ` (${uncovered.length} edges are uncovered)` : ''} and induces no assignment.` };
+  }
+  const first = bothEnds[0];
+  const ambiguous = first === undefined
+    ? ' and some pair or triangle holds more vertices than the counting argument allows'
+    : `, for example ${first} and ¬${first} are both in S, so ${first} would be both true and false`;
+  return { ...base, assignment: null, reason: `S covers every edge but has ${chosen.length} vertices, more than k = ${k}${ambiguous}, so no assignment is read off it.` };
 }

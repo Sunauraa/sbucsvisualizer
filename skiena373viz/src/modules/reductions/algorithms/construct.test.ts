@@ -9,7 +9,7 @@ import { experiments } from './experiments';
 import { formulaFrom, formulaVariables } from './formula';
 import type { Formula } from './formula';
 import { layoutSize } from './gadgets';
-import { allClauses, coversOfSize, minimumCoverSize, randomFormula, referenceGraph } from './reference';
+import { allClauses, minimumCoverSize, randomFormula, referenceGraph } from './reference';
 import { isSatisfiable, solve } from './solver';
 
 const check = (formula: Formula) => checkAlgorithm(threeSatToVertexCover, formula, {
