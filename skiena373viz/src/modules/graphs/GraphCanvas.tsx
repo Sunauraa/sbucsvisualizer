@@ -50,7 +50,7 @@ export function GraphCanvas({
   const pairs = new Set(graph.edges.map((edge) => `${edge.source} ${edge.target}`));
   const interactive = Boolean(onVertex ?? onEdge ?? onBackground ?? onVertexPointerDown);
   return (
-    <SvgStage width={GRAPH_WIDTH} height={GRAPH_HEIGHT} title={title} minWidth={540} interactive={interactive}>
+    <SvgStage width={GRAPH_WIDTH} height={GRAPH_HEIGHT} title={title} minWidth={440} interactive={interactive}>
       <rect width={GRAPH_WIDTH} height={GRAPH_HEIGHT} fill="transparent"
         onClick={onBackground ? (event) => {
           const svg = event.currentTarget.ownerSVGElement;
