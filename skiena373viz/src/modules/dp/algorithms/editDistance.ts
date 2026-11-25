@@ -195,17 +195,17 @@ export function parseEditInput(pattern: string, text: string): Result<EditInput>
 
 const PSEUDOCODE = definePseudocode([
   ['signature', 0, 'edit-distance(P[1..m], T[1..n])'],
-  ['base-row', 1, 'D[0][j] = j for j = 0..n          (j insertions)'],
-  ['base-col', 1, 'D[i][0] = i for i = 1..m          (i deletions)'],
-  ['loop', 1, 'for i = 1..m, then for j = 1..n       (row by row)'],
+  ['base-row', 1, 'D[0][j] = j, for j = 0..n'],
+  ['base-col', 1, 'D[i][0] = i, for i = 1..m'],
+  ['loop', 1, 'for i = 1..m, for j = 1..n'],
   ['look', 2, 'c = 0 if P[i] = T[j], else 1'],
-  ['write', 2, 'D[i][j] = min( D[i-1][j-1] + c,       (diagonal: keep or substitute)'],
-  ['write-left', 2, '               D[i][j-1] + 1,         (left: insert T[j])'],
-  ['write-up', 2, '               D[i-1][j] + 1 )        (up: delete P[i])'],
-  ['tie', 2, 'on a tie in the minimum, the parent is diagonal, then left, then up'],
+  ['write', 2, 'D[i][j] = min( D[i-1][j-1] + c,  # diagonal'],
+  ['write-left', 2, '               D[i][j-1] + 1,  # left'],
+  ['write-up', 2, '               D[i-1][j] + 1 ) # up'],
+  ['tie', 2, 'tie: diagonal, then left, then up'],
   ['trace-start', 1, '(i, j) = (m, n)'],
-  ['trace-step', 1, 'while (i, j) is not (0, 0): move to the parent, record the edit'],
-  ['done', 1, 'return D[m][n] and the edits, read from (0, 0) to (m, n)'],
+  ['trace-step', 1, 'until (0, 0): move to the parent'],
+  ['done', 1, 'return D[m][n] and the edits'],
 ]);
 
 const OPS = defineOps([

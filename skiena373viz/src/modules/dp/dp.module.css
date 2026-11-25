@@ -11,7 +11,10 @@
 .recTable th { font-weight: 600; width: 6.5em; }
 .recTable td.num { text-align: right; width: 4.8em; font-variant-numeric: tabular-nums; font-weight: 700; }
 .recTable tr.best th, .recTable tr.best td { background: #cffafe; }
-.recFooter { margin: 6px 0 0; font-size: 0.9rem; min-height: 2.9em; }
+.recEmpty { visibility: hidden; }
+.recFooter { margin: 6px 0 0; font-size: 0.9rem; min-height: 4.6em; }
+.captionSlot { min-height: 5.4em; }
+.captionSlot > p { min-height: 0; }
 
 .align { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
 .alignScroll { overflow-x: auto; max-width: 100%; }
@@ -39,7 +42,7 @@
 .answerRow .field { flex: 0 1 9rem; }
 .moves { display: flex; flex-wrap: wrap; gap: 8px; }
 .moves button { min-height: 44px; }
-.feedback { margin: 0; min-height: 2.8em; padding: 6px 10px; border-left: 4px solid var(--line); border-radius: 4px; font-size: 0.95rem; }
+.feedback { margin: 0; min-height: 2.8em; padding: 6px 10px; border-left: 4px solid transparent; border-radius: 4px; font-size: 0.95rem; }
 .feedbackWrong { border-color: var(--tone-swap); background: #fef2f2; }
 .feedbackRight { border-color: var(--tone-done); background: #f0fdf4; }
 .feedbackInfo { border-color: var(--tone-target); background: #ecfeff; }
@@ -57,6 +60,7 @@
 @media (max-width: 560px) {
   .recTable th { width: 5.4em; }
   .recTable td.num { width: 3.6em; }
-  .recFooter { min-height: 5.4em; }
+  .recEmpty { visibility: hidden; }
+.recFooter { min-height: 5.4em; }
   .quiz { min-height: 22rem; }
 }

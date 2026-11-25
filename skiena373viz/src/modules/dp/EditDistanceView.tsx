@@ -171,7 +171,7 @@ function EditPage({ trace, quizOn, settings }: { readonly trace: ReturnType<type
             </StageContext.Provider>
           </section>
           <PlayerControls player={player} />
-          <Caption text={frame.explanation} playing={player.playing} />
+          <div className={styles['captionSlot']}><Caption text={frame.explanation} playing={player.playing} /></div>
           <TraceNotices trace={trace} atEnd={player.atEnd} />
           {quizOn ? (
             <QuizPanel

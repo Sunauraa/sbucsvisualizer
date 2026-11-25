@@ -66,7 +66,7 @@ export function stageArrows(state: EditState, selected: Cell | null): GridArrow[
   } else if (step.kind === 'write' && active) {
     const best = state.parents[active[0]]?.[active[1]] ?? [];
     for (const c of state.candidates ?? []) {
-      arrows.push({ from: c.from, to: active, tone: best.includes(c.dir) ? 'target' : 'compare', label: String(c.total) });
+      arrows.push({ from: c.from, to: active, tone: best.includes(c.dir) ? 'target' : 'compare' });
     }
   } else if (step.kind === 'trace-start' || step.kind === 'trace-move' || step.kind === 'done') {
     for (const move of state.moves) arrows.push({ from: move.from, to: move.to, tone: step.kind === 'done' ? 'done' : 'target' });
@@ -111,7 +111,8 @@ export function EditStage({ frame }: RendererProps<EditState>) {
         arrows={stageArrows(state, selected)}
         {...(onCell ? { onCell } : {})}
       />
-      <table className={styles['vh']}>
+      <div className={styles['vh']}>
+      <table>
         <caption>{`Edit distance table, ${m + 1} rows by ${n + 1} columns, as of this step. Cells not written yet are empty.`}</caption>
         <thead>
           <tr><th scope="col">Pattern prefix</th>{Array.from({ length: n + 1 }, (_c, c) => <th key={c} scope="col">{c === 0 ? 'empty text' : `text up to ${showChar(state.text[c - 1] ?? '')}`}</th>)}</tr>
@@ -125,6 +126,7 @@ export function EditStage({ frame }: RendererProps<EditState>) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -147,12 +149,11 @@ function Recurrence({ state }: { readonly state: EditState }) {
     <section className={styles['recurrence']} aria-label="Recurrence with the current numbers">
       <p className={styles['recGeneral']}>{GENERAL_RECURRENCE}</p>
       <p className={styles['recTitle']}>{view.title}</p>
-      <table className={styles['recTable']}>
-        <thead className={styles['vh']}><tr><th>Neighbour</th><th>Formula</th><th>Total</th></tr></thead>
+      <table className={`${styles['recTable']} ${view.rows === null ? styles['recEmpty'] : ''}`} aria-hidden={view.rows === null ? true : undefined}>
         <tbody>
           {slots.map((row, k) => (
             <tr key={row?.dir ?? k} className={row?.best ? styles['best'] : undefined}>
-              <th scope="row">{row ? row.name : '—'}</th>
+              <th scope="row">{row ? row.name : '\u00a0'}</th>
               <td>{row ? row.formula : ''}</td>
               <td className={styles['num']}>{row ? `${row.best ? '◎ ' : ''}${row.total}` : ''}</td>
             </tr>
@@ -179,8 +180,7 @@ function Alignment({ state }: { readonly state: EditState }) {
     <section className={styles['align']} aria-label="Alignment">
       <p className={styles['label']}>Alignment (pattern over text){finished ? '' : ', built from the right end during the traceback'}</p>
       <div className={styles['alignScroll']}>
-        <table className={styles['alignTable']}>
-          <caption className={styles['vh']}>{description}</caption>
+        <table className={styles['alignTable']} aria-label={description}>
           <tbody>
             <tr>
               <th scope="row">Pattern</th>
