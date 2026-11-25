@@ -94,11 +94,11 @@ describe('random inputs', () => {
 describe('growth experiments', () => {
   it('are well formed and quick', () => {
     for (const experiment of experiments) expect(experimentProblems(experiment)).toEqual([]);
-    const started = Date.now();
+    const started = performance.now();
     for (const experiment of experiments) {
       for (const c of experiment.cases) for (const n of experiment.sizes) measureAt(experiment, c.id, n, 1);
     }
-    expect(Date.now() - started).toBeLessThan(1500);
+    expect(performance.now() - started).toBeLessThan(1500);
   });
 
   it('match the arithmetic of the theory', () => {

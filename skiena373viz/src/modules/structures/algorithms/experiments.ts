@@ -42,7 +42,8 @@ export const heapExperiment = experimentFor(heap, {
   makeInput(n, caseId, rng) {
     const decreasing = Array.from({ length: n }, (_, i) => n - i);
     const start = caseId === 'insert-random' ? rng.shuffle(decreasing) : decreasing;
-    return { start, operations: [{ kind: caseId === 'build-reversed' ? 'build' : 'rebuild', key: null }] };
+    const kind = caseId === 'build-reversed' ? ('build' as const) : ('rebuild' as const);
+    return { start, operations: [{ kind, key: null }] };
   },
 });
 
