@@ -95,6 +95,7 @@ export const heap = defineAlgorithm({
     { id: 'rebuild', label: 'Build by repeated insertion, same keys', input: { start: [9, 4, 7, 1, 8, 2, 6, 3, 5], operations: [{ kind: 'rebuild', key: null }] } },
     { id: 'reversed', label: 'Reversed keys: the worst case for building a min-heap', input: { start: [9, 8, 7, 6, 5, 4, 3, 2, 1], operations: [{ kind: 'build', key: null }] } },
     { id: 'ties', label: 'Equal keys: ties go left', input: { start: [5, 5, 5, 5, 5], operations: [{ kind: 'insert', key: 5 }, { kind: 'extract', key: null }, { kind: 'insert', key: 2 }] } },
+    { id: 'not-a-heap', label: 'Not a heap yet: insert is refused until build runs', input: { start: [3, 1, 2], operations: [{ kind: 'insert', key: 9 }, { kind: 'build', key: null }, { kind: 'insert', key: 0 }] } },
     { id: 'empty', label: 'Empty heap', input: { start: [], operations: [{ kind: 'extract', key: null }, { kind: 'insert', key: 7 }, { kind: 'extract', key: null }, { kind: 'extract', key: null }] } },
   ],
   execute({ start, operations }: HeapInput, t: T): Finished<HeapResult> {
