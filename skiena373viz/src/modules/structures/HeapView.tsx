@@ -1,5 +1,5 @@
 import type { ViewProps } from '@core';
-import { Legend } from '@ui';
+import { Legend, ScrollX } from '@ui';
 import { heapExperiment } from './algorithms/experiments';
 import { heap } from './algorithms/heap';
 import type { HeapInput, HeapOperation, HeapResult, HeapState } from './algorithms/heap';
@@ -23,13 +23,13 @@ function Contrast({ input }: { readonly input: HeapInput }) {
         Build by sift-down never needs more than 2n comparisons; repeated insertion can need about n lg n, and the starting order decides how much.
         A decreasing order is the worst case for both.
       </p>
-      <table>
+      <ScrollX label="Comparison of build methods"><table>
         <thead><tr><th scope="col">Method</th><th scope="col">Comparisons</th><th scope="col">Swaps</th></tr></thead>
         <tbody>
           <tr><th scope="row">Build by sift-down</th><td>{down['comparisons']}</td><td>{down['swaps']}</td></tr>
           <tr><th scope="row">Build by repeated insertion</th><td>{up['comparisons']}</td><td>{up['swaps']}</td></tr>
         </tbody>
-      </table>
+      </table></ScrollX>
     </section>
   );
 }

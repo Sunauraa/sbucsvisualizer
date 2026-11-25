@@ -70,8 +70,8 @@ export function ProbingRenderer({ frame }: RendererProps<ProbingState, ProbingRe
                   <text x={x + 7} y={y + BOX_H + 12} dy="0.36em" textAnchor="middle" fontSize={11} fontWeight={700} fill={SURFACE.ink}>{order + 1}</text>
                 </g>
               ) : null}
-              {i === home ? <text x={x + BOX_W / 2 + 6} y={y + BOX_H + 13} fontSize={11} fontWeight={700} fill={SURFACE.ink} textAnchor="middle">home</text> : null}
-              {i === s.reusable ? <text x={x + BOX_W / 2 + 6} y={y + BOX_H + 26} fontSize={10} fontWeight={700} fill={SURFACE.ink} textAnchor="middle">reuse?</text> : null}
+              {i === home ? <text x={x + 19} y={y + BOX_H + 13} dy="0.35em" fontSize={10} fontWeight={700} fill={SURFACE.ink}>home</text> : null}
+              {i === s.reusable ? <text x={x + 19} y={y + BOX_H + 26} dy="0.35em" fontSize={10} fontWeight={700} fill={SURFACE.ink}>reuse?</text> : null}
             </g>
           );
         })}

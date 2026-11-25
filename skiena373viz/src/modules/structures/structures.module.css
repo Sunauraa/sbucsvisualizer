@@ -39,7 +39,8 @@
   font-weight: 700;
 }
 
-.stack { display: grid; gap: 8px; min-width: 0; }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+.stack select { width: 100%; }
 
 .opsList {
   list-style: none;
