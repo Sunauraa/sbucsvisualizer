@@ -60,7 +60,7 @@ export function mergeBufferModel(state: MergesortState): BarModel {
   const bars = buffer.map((item, p): BarSpec | null => (item === null ? null : bar(item, labels, compare.includes(p) ? 'compare' : 'visited')));
   const pointers: Pointer[] = [];
   if (merging) {
-    if (i !== null && i < mid!) pointers.push({ at: i, text: 'i' });
+    if (i !== null && mid !== null && i < mid) pointers.push({ at: i, text: 'i' });
     if (j !== null && j < merging[1]) pointers.push({ at: j, text: 'j' });
   }
   const marks: Mark[] = merging && mid !== null

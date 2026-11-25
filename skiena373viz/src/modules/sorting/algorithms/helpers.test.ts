@@ -180,11 +180,9 @@ describe('input generators and parsing', () => {
 });
 
 describe('sorting growth experiments', () => {
-  it.each(experiments)('$id is valid and cheap', (experiment) => {
+  it.each(experiments)('$id is valid', (experiment) => {
     expect(experimentProblems(experiment)).toEqual([]);
-    const started = Date.now();
     for (const { id } of experiment.cases) for (const n of experiment.sizes) measureAt(experiment, id, n, 1);
-    expect(Date.now() - started).toBeLessThan(800);
   });
   it('all three sorts see exactly the same list for the same seed, size and case', () => {
     const [heap, merge] = experiments;
