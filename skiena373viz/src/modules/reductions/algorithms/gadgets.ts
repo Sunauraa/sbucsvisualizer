@@ -65,12 +65,12 @@ export const TRIANGLE_PAIRS: readonly (readonly [number, number])[] = [[0, 1], [
 // Layout: variable pairs in a top row, triangles below in one row. Size depends only on n and m.
 
 const MARGIN = 36;
-const PAIR_WIDTH = 124;
+const PAIR_WIDTH = 120;
 const PAIR_OFFSET = 34;
-const TRIANGLE_WIDTH = 136;
-const TRIANGLE_OFFSET = 38;
+const TRIANGLE_WIDTH = 124;
+const TRIANGLE_OFFSET = 36;
 const TOP_Y = 40;
-const TRIANGLE_DEPTH = 46;
+const TRIANGLE_DEPTH = 52;
 const MIN_WIDTH = 280;
 
 /** Where the top of the triangles sits: below the pairs when there are any. */
@@ -79,7 +79,7 @@ const triangleTop = (n: number): number => (n > 0 ? 190 : 34);
 export function layoutSize(n: number, m: number): VcSize {
   const content = Math.max(n * PAIR_WIDTH, m * TRIANGLE_WIDTH);
   const width = Math.max(MIN_WIDTH, content + 2 * MARGIN);
-  const height = m > 0 ? triangleTop(n) + TRIANGLE_DEPTH + 58 : n > 0 ? TOP_Y + 66 : 120;
+  const height = m > 0 ? triangleTop(n) + TRIANGLE_DEPTH + 60 : n > 0 ? TOP_Y + 66 : 120;
   return { width, height };
 }
 

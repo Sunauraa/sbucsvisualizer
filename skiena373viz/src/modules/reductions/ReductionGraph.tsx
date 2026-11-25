@@ -88,7 +88,7 @@ export function ReductionGraph({ size, nodes, edges, nodeMarks = {}, edgeMarks =
   const summary = `${title ?? 'Graph'}: ${nodes.length} vertices and ${edges.length} edges`;
 
   return (
-    <SvgStage width={size.width} height={size.height} title={summary} minWidth={Math.round(Math.min(size.width, Math.max(380, size.width * 0.72)))} interactive={Boolean(onToggleVertex)}>
+    <SvgStage width={size.width} height={size.height} title={summary} minWidth={Math.round(Math.min(size.width, Math.max(380, size.width * 0.6)))} interactive={Boolean(onToggleVertex)}>
       <rect width={size.width} height={size.height} fill="transparent" />
       {nodes.length === 0 ? <Halo x={size.width / 2} y={size.height / 2} fill={SURFACE.muted}>{emptyText}</Halo> : null}
       {[...pairs.entries()].map(([variable, members]) => {
@@ -100,13 +100,15 @@ export function ReductionGraph({ size, nodes, edges, nodeMarks = {}, edgeMarks =
       })}
       {[...corners.entries()].map(([clause, members]) => {
         if (members.length < 3) return null;
-        const points = members.map((node) => `${node.x},${node.y}`).join(' ');
-        const x = members.reduce((sum, node) => sum + node.x, 0) / members.length;
-        const bottom = Math.max(...members.map((node) => node.y));
+        const xs = members.map((node) => node.x);
+        const ys = members.map((node) => node.y);
+        const left = Math.min(...xs) - R - 10;
+        const top = Math.min(...ys) - R - 10;
+        const bottom = Math.max(...ys) + R + 10;
         return (
           <g key={`tri-${clause}`}>
-            <polygon points={points} fill={SURFACE.page} stroke={SURFACE.line} strokeWidth={26} strokeLinejoin="round" />
-            <text x={x} y={bottom + R + 22} textAnchor="middle" fontSize={13} fontWeight={700} fill={SURFACE.muted}>{`C${clause + 1}`}</text>
+            <rect x={left} y={top} width={Math.max(...xs) - Math.min(...xs) + 2 * R + 20} height={bottom - top} rx={14} fill={SURFACE.page} stroke={SURFACE.line} strokeDasharray="3 4" />
+            <text x={(Math.min(...xs) + Math.max(...xs)) / 2} y={bottom + 16} textAnchor="middle" fontSize={13} fontWeight={700} fill={SURFACE.muted}>{`C${clause + 1}`}</text>
           </g>
         );
       })}

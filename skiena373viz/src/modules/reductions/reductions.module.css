@@ -1,9 +1,9 @@
 /* Styles for the reductions module. Colours come from the shared tokens in theme.css and from TONES. */
-.page { display: grid; gap: var(--gap); min-width: 0; }
+.page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); min-width: 0; }
 
 .sideBySide {
   display: grid;
-  grid-template-columns: minmax(220px, 290px) minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
   gap: var(--gap);
   align-items: start;
 }
@@ -19,7 +19,7 @@
 .clause {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto 1.35em;
+  grid-template-rows: auto minmax(1.35em, auto);
   column-gap: 8px;
   align-items: center;
   padding: 4px 6px 2px;
@@ -34,7 +34,7 @@
 .chip {
   min-height: 34px;
   min-width: 36px;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: 8px;
   border: 2px solid var(--line);
   background: var(--panel);
@@ -81,7 +81,7 @@
 .pill { display: inline-block; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line); background: #f8fafc; font-size: 0.85rem; margin: 2px 4px 2px 0; }
 .list { margin: 0; padding-left: 20px; }
 
-.tableWrap { overflow-x: auto; max-width: 100%; }
+.tableWrap { overflow-x: auto; max-width: 100%; position: relative; }
 .tableWrap table { min-width: 100%; }
 .tableWrap th, .tableWrap td { text-align: left; }
 .tableWrap tr[data-selected='true'] td, .tableWrap tr[data-selected='true'] th { background: #dbeafe; font-weight: 600; }
@@ -100,3 +100,5 @@
 .mono { font-family: var(--mono); font-size: 0.9em; }
 
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.formulaField { flex: 2 1 min(100%, 360px); min-width: 0; }

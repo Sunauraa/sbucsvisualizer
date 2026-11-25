@@ -5,6 +5,7 @@ import { Field } from '@ui';
 import { analyzeFormula, formatClauses, formatFormula, padClauses, UI_LIMITS } from './algorithms/formula';
 import type { Formula, FormulaAnalysis } from './algorithms/formula';
 import { threeSatToVertexCover } from './algorithms/construct';
+import css from './reductions.module.css';
 
 export const FORMULA_PRESETS: readonly Preset<Formula>[] = threeSatToVertexCover.presets;
 const DEFAULT_FORMULA: Formula = FORMULA_PRESETS[0]?.input ?? { clauses: [] };
@@ -38,7 +39,7 @@ export function FormulaField({ state, onText }: FormulaFieldProps) {
   const error = analysis.formula.ok ? null : analysis.formula.message;
   return (
     <div className="field-row">
-      <div style={{ flex: '2 1 360px' }}>
+      <div className={css['formulaField']}>
         <Field label="Formula (3-CNF)" error={error}
           hint={`Exactly three literals per clause, up to ${UI_LIMITS.maxVariables} variables and ${UI_LIMITS.maxClauses} clauses. Example: (x1 | !x2 | x3) & (!x1 | x2 | x2)`}>
           {(props) => (

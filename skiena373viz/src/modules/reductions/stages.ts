@@ -85,7 +85,7 @@ export function certificateStage(state: CertificateState): StageData {
     const failing = witness?.kind === 'clause' && witness.clause === i;
     clauseMarks[i] = {
       tone: failing ? 'swap' : base.clauseMarks[i] ? 'active' : status === 'satisfied' ? 'done' : 'swap',
-      note: status === 'satisfied' ? 'satisfied: it has a true literal' : 'unsatisfied: no literal is true',
+      note: status === 'satisfied' ? 'satisfied: a literal is true' : 'unsatisfied: no literal is true',
     };
   });
   const variableMarks: Record<string, Mark> = { ...base.variableMarks };
@@ -127,8 +127,8 @@ export function attemptStage(formula: Formula, reduction: ConstructResult, assig
   const clauseMarks: Record<number, Mark> = {};
   formula.clauses.forEach((_clause, i) => {
     clauseMarks[i] = failing.has(i)
-      ? { tone: 'swap', note: 'unsatisfied: no literal is true, so all three corners are needed' }
-      : { tone: 'done', note: 'satisfied: one corner can stay out' };
+      ? { tone: 'swap', note: 'unsatisfied: all 3 corners' }
+      : { tone: 'done', note: 'satisfied: 1 corner out' };
   });
   return {
     clauses: formula.clauses, variables: reduction.variables, size: { width: reduction.graph.width, height: reduction.graph.height },
