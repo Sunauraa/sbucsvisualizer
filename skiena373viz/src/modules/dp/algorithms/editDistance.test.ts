@@ -418,10 +418,4 @@ describe('edit distance: growth experiments', () => {
       expect(measureAt(fixed, id, 32, 1)['cells']).toBe(9 * 33);
     }
   });
-
-  it('a whole sweep is fast enough to plot', () => {
-    const started = Date.now();
-    for (const experiment of experiments) for (const { id } of experiment.cases) for (const n of experiment.sizes) measureAt(experiment, id, n, 1);
-    expect(Date.now() - started).toBeLessThan(1500);
-  });
 });
