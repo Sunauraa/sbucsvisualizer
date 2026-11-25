@@ -150,6 +150,13 @@ describe('race view', () => {
 });
 
 describe('recursion tree view', () => {
+  it('the cost table has the same number of rows at the first and the last step, so the page never jumps', () => {
+    render(<RecursionTreeView params={{ alg: 'quicksort', a: '1 2 3 4 5 6' }} setParams={noop} />);
+    const rows = () => within(screen.getByRole('table')).getAllByRole('row').length;
+    const before = rows();
+    fireEvent.click(screen.getByRole('button', { name: 'End' }));
+    expect(rows()).toBe(before);
+  });
   it('shows the cost table and a quicksort path for a sorted list', () => {
     render(<RecursionTreeView params={{ alg: 'quicksort', a: '1 2 3 4 5 6' }} setParams={noop} />);
     fireEvent.click(screen.getByRole('button', { name: 'End' }));

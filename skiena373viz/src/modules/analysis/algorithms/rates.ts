@@ -38,7 +38,7 @@ export function log10Of(id: GrowthFnId, n: number): number | null {
 }
 
 /** 1,234,567 style grouping with a thin space, so that numbers are easy to read. */
-export const group = (whole: number): string => String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+export const group = (whole: number): string => String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, '\u2009');
 
 /** A count of steps in words that never overflow: "12", "1 048 576", or "1.27 × 10³⁰". */
 export function formatSteps(id: GrowthFnId, n: number): string {
@@ -180,4 +180,29 @@ export function leavesAt(id: GrowthFnId, ceiling: number, maxN: number): number 
   const { f } = growthFn(id);
   for (let n = 1; n <= maxN; n += 1) if (f(n) > ceiling) return n;
   return null;
+}
+
+/**
+ * A chart height that shows the slower curves clearly: the largest value, at maxN, among every shown curve
+ * except the fastest-growing one (which is left to escape through the top), and never less than maxN itself.
+ */
+export function autoCeiling(ids: readonly GrowthFnId[], maxN: number): number {
+  const ordered = RATE_IDS.filter((id) => ids.includes(id));
+  const slower = ordered.length > 1 ? ordered.slice(0, -1) : ordered;
+  const values = slower.map((id) => growthFn(id).f(maxN)).filter((value) => Number.isFinite(value));
+  return Math.max(10, maxN, ...values);
+}
+
+/** The first n (not necessarily whole) at which an increasing curve reaches the ceiling, by bisection. */
+export function crossing(id: GrowthFnId, ceiling: number, maxN: number): number | null {
+  const { f } = growthFn(id);
+  if (f(maxN) <= ceiling) return null;
+  let low = 1;
+  let high = maxN;
+  for (let step = 0; step < 50; step += 1) {
+    const middle = (low + high) / 2;
+    if (f(middle) <= ceiling) low = middle;
+    else high = middle;
+  }
+  return high;
 }

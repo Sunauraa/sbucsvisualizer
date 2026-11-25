@@ -118,7 +118,8 @@ export function QuickTreeRenderer({ frame, trace }: RendererProps<QuicksortState
   );
 }
 
-function LevelsPanel({ nodes, n }: { readonly nodes: readonly CallNode[]; readonly n: number }) {
+/** The table has a row for every level of the FINISHED tree, so its height never changes while the tree grows. */
+function LevelsPanel({ nodes, n, levels }: { readonly nodes: readonly CallNode[]; readonly n: number; readonly levels: number }) {
   const rows = levelCosts(nodes);
   return (
     <section className="panel" aria-label="Cost per level">
@@ -128,9 +129,15 @@ function LevelsPanel({ nodes, n }: { readonly nodes: readonly CallNode[]; readon
         <table className={css['levels']}>
           <thead><tr><th scope="col">Level</th><th scope="col">Calls</th><th scope="col">Items</th><th scope="col">Comparisons</th></tr></thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.depth}><th scope="row">{row.depth}</th><td>{row.calls}</td><td>{row.items}</td><td>{row.comparisons}</td></tr>
-            ))}
+            {Array.from({ length: levels }, (_, depth) => {
+              const row = rows[depth];
+              return (
+                <tr key={depth}>
+                  <th scope="row">{depth}</th>
+                  <td>{row ? row.calls : '–'}</td><td>{row ? row.items : '–'}</td><td>{row ? row.comparisons : '–'}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -161,6 +168,9 @@ export function TreeNotes({ which }: { readonly which: 'merge' | 'quick' }) {
   );
 }
 
+const depthOf = (frames: readonly { readonly state: { readonly nodes: readonly CallNode[] } }[]): number =>
+  Math.max(0, ...(frames[frames.length - 1]?.state.nodes.map((node) => node.depth + 1) ?? []));
+
 export default function RecursionTreeView({ params, setParams }: ViewProps) {
   const which = params['alg'] === 'quicksort' ? 'quick' : 'merge';
   const setup = useSortSetup(params, { items: which === 'quick' ? [1, 2, 3, 4, 5, 6, 7, 8] : [5, 2, 9, 1, 7, 3, 8, 4, 6] });
@@ -188,12 +198,12 @@ export default function RecursionTreeView({ params, setParams }: ViewProps) {
   const n = setup.keys.length;
   return which === 'quick' ? (
     <Workbench algorithm={quicksort} trace={quickTrace} Renderer={QuickTreeRenderer} inputs={inputs} legend={legend}
-      aside={({ frame }) => <LevelsPanel nodes={frame.state.nodes} n={n} />}>
+      aside={({ frame }) => <LevelsPanel nodes={frame.state.nodes} n={n} levels={depthOf(quickTrace.frames)} />}>
       <TreeNotes which="quick" />
     </Workbench>
   ) : (
     <Workbench algorithm={mergesort} trace={mergeTrace} Renderer={MergeTreeRenderer} inputs={inputs} legend={legend}
-      aside={({ frame }) => <LevelsPanel nodes={frame.state.nodes} n={n} />}>
+      aside={({ frame }) => <LevelsPanel nodes={frame.state.nodes} n={n} levels={depthOf(mergeTrace.frames)} />}>
       <TreeNotes which="merge" />
     </Workbench>
   );
