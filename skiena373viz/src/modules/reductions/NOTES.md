@@ -6,8 +6,8 @@ None. Everything needed was in `@core` and `@ui`.
 
 ## Deviations and decisions
 
-* Views: `construct` (landing), `certificates`, `solver`, `direction`. The shell's view tabs link without parameters, so every view has a
-  "Keep this formula" panel linking to the others with `?f=`.
+* Views: `construct` (landing), `certificates`, `solver`, `direction`. The manifest sets `carryParams: ['f']`, so the shell's view tabs keep the
+  formula; view-specific keys (`a`, `s`, `dir`) are not carried.
 * Ids that appear in URLs (a chosen cover is `s=x1,!x2,c1.1,...`): literal vertex `x1` / `!x1`; corner `cI.J` (clause I, literal J, 1-based);
   edges `var:x1`, `tri:I:A-B`, `cross:I.J`. Documented in `algorithms/gadgets.ts`.
 * Formula limits are enforced by the parser (`UI_LIMITS`: 5 variables, 8 clauses, names up to 8 characters), not by the algorithms: the

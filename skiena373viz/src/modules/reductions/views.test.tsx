@@ -10,6 +10,7 @@ import CertificatesView, { CertificateRenderer } from './CertificatesView';
 import ConstructView, { ConstructRenderer } from './ConstructView';
 import DirectionView from './DirectionView';
 import SolverView from './SolverView';
+import manifest from './index';
 
 afterEach(cleanup);
 
@@ -207,7 +208,32 @@ describe('solver view', () => {
   });
 });
 
+describe('the formula follows the learner through the shell tabs', () => {
+  it('the manifest carries exactly the formula, not the view-specific keys', () => {
+    expect(manifest.carryParams).toEqual(['f']);
+  });
+
+  it.each([
+    ['construct', ConstructView],
+    ['certificates', CertificatesView],
+    ['solver', SolverView],
+    ['direction', DirectionView],
+  ] as const)('%s no longer renders its own row of "Keep this formula" links', (_id, View) => {
+    render(<View params={{ f: SAT }} setParams={noop} />);
+    expect(screen.queryByText(/Keep this formula/)).toBeNull();
+    expect(screen.queryByRole('navigation', { name: /Same formula/ })).toBeNull();
+  });
+});
+
 describe('direction view', () => {
+  it('says why a fast Vertex Cover algorithm would decide 3-SAT: polynomial construction that keeps the answer', () => {
+    render(<DirectionView params={{}} setParams={noop} />);
+    const paragraph = screen.getByText(/The construction only reads the shape of the formula/);
+    expect(paragraph).toHaveTextContent('polynomial time');
+    expect(paragraph).toHaveTextContent('keeps the yes/no answer');
+    expect(paragraph).not.toHaveTextContent('never asks');
+  });
+
   it('shows three questions; a wrong answer is explained, the right one is confirmed', async () => {
     render(<DirectionView params={{}} setParams={noop} />);
     expect(screen.getAllByRole('group').filter((group) => /Question/.test(group.textContent ?? ''))).toHaveLength(3);

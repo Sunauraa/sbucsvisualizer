@@ -11,7 +11,6 @@ import { solve } from './algorithms/solver';
 import { FormulaField, useFormula } from './FormulaField';
 import { ReductionPage } from './ReductionPage';
 import { ReductionStage } from './ReductionStage';
-import { SameFormulaLinks } from './SameFormulaLinks';
 import { certificateStage } from './stages';
 import { assignmentFromBits, bitsFromAssignment, coverFromParam, coverToParam, toggleInCover } from './params';
 import css from './reductions.module.css';
@@ -185,7 +184,6 @@ export default function CertificatesView({ params, setParams }: ViewProps) {
         <>
           {summary}
           {words}
-          <SameFormulaLinks text={input.text} current="certificates" />
         </>
       )}
     />
