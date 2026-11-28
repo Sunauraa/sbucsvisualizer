@@ -73,7 +73,7 @@ export const probingExperiment = experimentFor(hashProbing, {
   primaryOp: 'probes',
   sizes: SIZES,
   cases: [
-    { id: 'random', label: 'Random keys', claim: { symbol: 'Θ', fn: 'n', when: 'expected, uniform hashing' } },
+    { id: 'random', label: 'Random keys', claim: { symbol: 'Θ', fn: 'n', when: "expected, each key's home slot uniformly random and independent" } },
     { id: 'same-home', label: 'All keys share one home slot', claim: { symbol: 'Θ', fn: 'n²', when: 'worst case' } },
   ],
   makeInput: (n, caseId, rng) => ({ size: 2 * n, start: [], operations: hashInserts(hashKeys(n, caseId, rng)) }),
