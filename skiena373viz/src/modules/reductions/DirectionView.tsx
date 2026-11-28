@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ViewProps } from '@core';
 import { QUESTIONS } from './algorithms/questions';
 import type { Question } from './algorithms/questions';
 import css from './reductions.module.css';
@@ -31,7 +32,8 @@ function QuestionCard({ question, number }: { readonly question: Question; reado
   );
 }
 
-export default function DirectionView() {
+/** Needs no input: the shell's tabs still carry the formula past this view. */
+export default function DirectionView(_props: ViewProps) {
   return (
     <div className={css['page']}>
       <div className={css['prose']}>
