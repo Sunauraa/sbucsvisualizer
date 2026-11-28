@@ -50,6 +50,18 @@ describe('growth rates view', () => {
       unmount();
     }
   });
+  it('the dominance list says "grows slowest", "grows fastest" and "grows faster than the one before it", never a bare "faster" or "slowest" (R8)', () => {
+    render(<GrowthRatesView params={{}} setParams={noop} />);
+    const panel = screen.getByRole('region', { name: 'Which grows faster' });
+    const items = within(panel).getAllByRole('listitem').slice(0, 7).map((li) => li.textContent ?? '');
+    expect(items).toHaveLength(7);
+    expect(items[0]).toMatch(/; grows slowest\.$/);
+    expect(items[6]).toMatch(/; grows fastest\.$/);
+    for (const item of items.slice(1, 6)) expect(item).toMatch(/; grows faster than the one before it\.$/);
+    const all = items.join(' ');
+    expect(all).not.toMatch(/the slowest here|the fastest here/);
+    expect(all).not.toMatch(/; faster than/);
+  });
   it('says which curves leave the chart instead of drawing a wall', () => {
     render(<GrowthRatesView params={{ fns: 'n,n2,e', max: '60' }} setParams={noop} />);
     expect(screen.getByText(/2ⁿ rises past the top of the chart at n = \d+ and is not drawn beyond that point/)).toBeInTheDocument();
