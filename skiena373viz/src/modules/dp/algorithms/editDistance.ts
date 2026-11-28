@@ -116,7 +116,7 @@ export function showChar(ch: string): string {
 
 export const cellName = (i: number, j: number): string => `D[${i}][${j}]`;
 const quote = (ch: string): string => `‘${showChar(ch)}’`;
-const plural = (n: number, word: string): string => `${n} ${word}${n === 1 ? '' : 's'}`;
+export const plural = (n: number, word: string): string => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 export const DIR_NAME: Readonly<Record<Dir, string>> = { diag: 'diagonal', left: 'left', up: 'up' };
 export const DIR_MARK: Readonly<Record<Dir, string>> = { diag: '↖', left: '←', up: '↑' };

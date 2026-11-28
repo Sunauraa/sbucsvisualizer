@@ -217,6 +217,29 @@ describe('judging answers', () => {
     expect(judge(trace, row, { kind: 'number', value: 2 }, 1).message).toContain('inserted');
   });
 
+  it('base prompt asks for a value, not a why (R22)', () => {
+    const base = find(trace, 'base', (x) => x.cell[0] === 4 && x.cell[1] === 0);
+    expect(base.prompt).toBe('What value goes into D[4][0]?');
+    for (let i = 0; i < trace.frames.length; i += 1) expect(questionAt(trace, i)?.prompt ?? '').not.toContain('and why');
+  });
+
+  it('base hints use singular and plural correctly: "the first 1 text character", never "1 characters" (R22)', () => {
+    const one = run('a', 'b');
+    const row = find(one, 'base', (x) => x.cell[0] === 0 && x.cell[1] === 1);
+    const column = find(one, 'base', (x) => x.cell[0] === 1 && x.cell[1] === 0);
+    const hint = (q: Question, level: 0 | 1): string => judge(one, q, { kind: 'number', value: 9 }, level).message;
+    expect(hint(row, 0)).toContain('into the first 1 text character.');
+    expect(hint(column, 0)).toContain('turning the first 1 pattern character into the empty string');
+    expect(hint(row, 1)).toContain('that character has to be inserted');
+    expect(hint(column, 1)).toContain('that character has to be deleted');
+    // Longer prefixes keep the plural.
+    const many = run('abc', 'abc');
+    const row3 = find(many, 'base', (x) => x.cell[0] === 0 && x.cell[1] === 3);
+    expect(judge(many, row3, { kind: 'number', value: 9 }, 0).message).toContain('the first 3 text characters.');
+    expect(judge(many, row3, { kind: 'number', value: 9 }, 1).message).toContain('every one of those 3 characters has to be inserted');
+    for (const message of [hint(row, 0), hint(row, 1), hint(column, 0), hint(column, 1)]) expect(message).not.toMatch(/\b1 (text |pattern )?characters/);
+  });
+
   it('cell: the right cell passes; each wrong kind of cell gets its own feedback', () => {
     // Gate in the middle of row 2, after D[2][2] was written: the next cell is D[2][3].
     const q = find(trace, 'cell', (x) => x.cell[0] === 2 && x.cell[1] === 3);
