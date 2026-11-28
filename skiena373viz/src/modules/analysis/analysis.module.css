@@ -1,4 +1,4 @@
-.page { display: grid; gap: var(--gap); min-width: 0; }
+.page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); min-width: 0; }
 .twoCol { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gap); align-items: start; }
 .panelBody { display: grid; gap: 10px; min-width: 0; }
 .range { width: min(100%, 320px); }

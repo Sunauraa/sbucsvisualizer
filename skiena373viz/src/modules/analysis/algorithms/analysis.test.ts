@@ -284,9 +284,9 @@ describe('growth-rate arithmetic', () => {
   });
   it('words for the sizes', () => {
     expect(describeMaxSize({ kind: 'any' })).toContain('never grows');
-    expect(describeMaxSize({ kind: 'size', n: 31622 })).toBe('n up to 31 622');
+    expect(describeMaxSize({ kind: 'size', n: 31622 })).toBe('n up to 31\u2009622');
     expect(describeMaxSize({ kind: 'size', n: 0 })).toBe('not even n = 1');
-    expect(describeMaxSize({ kind: 'exponent', exponent: 1e9 })).toContain('2^1 000 000 000');
+    expect(describeMaxSize({ kind: 'exponent', exponent: 1e9 })).toContain('2^1\u2009000\u2009000\u2009000');
   });
   it('tables never show Infinity or NaN, however large or odd n is', () => {
     const sizes = [-5, 0, 0.5, 1, 2, 3, 10, 64, 100, 1023, 1024, 1025, 5000, 1e6, 1e9, 1e15, 1e100, 1e300, Number.MAX_VALUE, Infinity, Number.NaN];
@@ -298,7 +298,7 @@ describe('growth-rate arithmetic', () => {
     for (const log of [null, -20, -9, -7, -3.2, -1, 0, 1, 2.5, 4.6, 7.5, 9, 12, 17, 50, 299, 301, 5000]) expect(formatDuration(log)).not.toMatch(/Infinity|NaN|undefined/);
   });
   it('the numbers are right at small n', () => {
-    expect(formatSteps('2^n', 10)).toBe('1 024');
+    expect(formatSteps('2^n', 10)).toBe('1\u2009024');
     expect(formatSteps('n²', 12)).toBe('144');
     expect(formatSteps('n log n', 8)).toBe('24');
     expect(formatSteps('log n', 8)).toBe('3');
