@@ -6,6 +6,7 @@ script, cell inspector, quiz mode (four question kinds, gates, hints, show-me, s
 No stretch items (LCS, LIS, Fibonacci call tree) were done.
 
 ## Contract change requests
+Phase 4 status: 1 and 5 are done in `@ui` (`CellGrid` roving tabindex plus `accessibleTable`; `PseudocodePanel` wraps). 2, 3, 4 and 6 are won't-fix (PLAN_v2.md).
 1. **`CellGrid`: keyboard path and accessible names.** `onCell` turns every cell into a tab stop (up to 169 for 12 x 12). Proposal: a roving
    tabindex (one tab stop, arrow keys move between cells, Enter activates). Without `onCell` the cells have no accessible name at all (the SVG is
    one `role="img"`), so this module adds a visually hidden `<table>` with the cell values next to the SVG. Proposal: `CellGrid` renders that
@@ -27,8 +28,8 @@ No stretch items (LCS, LIS, Fibonacci call tree) were done.
   (`look`, `write`), `trace-start`, one frame per traceback move, `done`. `state.step.kind` names each one.
 * `look` frames have `candidates: null`, no value for the cell and no parents. `write` frames carry the three candidate totals, the minimum,
   the tie flag, all optimal parents (`state.parents`, in tie-break order, first = chosen) and the chosen parent.
-* The grid hides the parent marks of cells the traceback has not left yet, because the marks of the current cell are the answer to the
-  traceback question. They appear when the traceback leaves the cell.
+* Parent marks show on every written inner cell. Only in quiz mode, during `trace-start` and `trace-move`, are the marks of cells the traceback
+  has not left hidden, because the current cell's marks answer the traceback question. At `done` (no question) every mark shows (`StageContext.quizOn`).
 * `questionAt(trace, index)` reads frame `index + 1`; `quizGates(trace, {every, seed})` picks the frames where the player stops. A truncated
   trace has no quiz (the UI cap of 12 characters keeps traces under 400 frames).
 * "Every k-th cell": three independent streams (base cells, inner cells, traceback moves), each asked at ordinals 0, k, 2k, ...; `D[0][0]`
