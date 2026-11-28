@@ -118,24 +118,13 @@ export function EditStage({ frame }: RendererProps<EditState>) {
         rowHeader={(r) => headerText(r, state.pattern[r - 1])} colHeader={(c) => headerText(c, state.text[c - 1])}
         cell={(r, c): CellSpec => ({ text: cellText(state, r, c, quizOn), tone: cellTone(state, r, c, selected) })}
         arrows={stageArrows(state, selected)}
+        accessibleTable={{
+          caption: `Edit distance table, ${m + 1} rows by ${n + 1} columns, as of this step. Cells not written yet are empty.`,
+          rowHeader: (r) => (r === 0 ? 'empty pattern' : `pattern up to ${showChar(state.pattern[r - 1] ?? '')}`),
+          colHeader: (c) => (c === 0 ? 'empty text' : `text up to ${showChar(state.text[c - 1] ?? '')}`),
+        }}
         {...(onCell ? { onCell } : {})}
       />
-      <div className={styles['vh']}>
-      <table>
-        <caption>{`Edit distance table, ${m + 1} rows by ${n + 1} columns, as of this step. Cells not written yet are empty.`}</caption>
-        <thead>
-          <tr><th scope="col">Pattern prefix</th>{Array.from({ length: n + 1 }, (_c, c) => <th key={c} scope="col">{c === 0 ? 'empty text' : `text up to ${showChar(state.text[c - 1] ?? '')}`}</th>)}</tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: m + 1 }, (_r, r) => (
-            <tr key={r}>
-              <th scope="row">{r === 0 ? 'empty pattern' : `pattern up to ${showChar(state.pattern[r - 1] ?? '')}`}</th>
-              {Array.from({ length: n + 1 }, (_c, c) => <td key={c} data-cell={`${r},${c}`}>{cellText(state, r, c, quizOn) || 'empty'}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      </div>
     </div>
   );
 }

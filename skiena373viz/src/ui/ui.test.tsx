@@ -140,6 +140,78 @@ describe('TraceNotices', () => {
   });
 });
 
+describe('CellGrid keyboard: one tab stop and an accessible table', () => {
+  const tabStops = (container: HTMLElement): HTMLElement[] => [...container.querySelectorAll<HTMLElement>('[tabindex="0"]')];
+  const cellButton = (r: number, c: number): HTMLElement => screen.getByRole('button', { name: new RegExp(`^row ${r}, column ${c}:`) });
+
+  it('a 13 by 13 grid with onCell has exactly one tab stop, and Tab passes through it in one press', async () => {
+    const onCell = vi.fn();
+    const { container } = render(<><CellGrid title="big" rows={13} cols={13} cell={(r, c) => ({ text: `${r * 13 + c}` })} onCell={onCell} /><button type="button">after</button></>);
+    expect(tabStops(container).filter((el) => el.matches('[data-rc]'))).toHaveLength(1);
+    expect(container.querySelectorAll('[data-rc]')).toHaveLength(169);
+    await userEvent.tab();
+    expect(document.activeElement).toBe(cellButton(0, 0));
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'after' }));
+  });
+
+  it('arrow keys move focus, Home and End go to the row ends, the stop follows the last focused cell, and Enter or Space activate', async () => {
+    const onCell = vi.fn();
+    const { container } = render(<CellGrid title="t" rows={3} cols={4} cell={(r, c) => ({ text: `${r}${c}` })} onCell={onCell} />);
+    cellButton(0, 0).focus();
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}{ArrowDown}');
+    expect(document.activeElement).toBe(cellButton(1, 2));
+    await userEvent.keyboard('{Enter}');
+    expect(onCell).toHaveBeenLastCalledWith(1, 2);
+    await userEvent.keyboard(' ');
+    expect(onCell).toHaveBeenCalledTimes(2);
+    await userEvent.keyboard('{End}');
+    expect(document.activeElement).toBe(cellButton(1, 3));
+    await userEvent.keyboard('{ArrowRight}{ArrowDown}{ArrowDown}');
+    expect(document.activeElement).toBe(cellButton(2, 3));
+    await userEvent.keyboard('{Home}{ArrowLeft}{ArrowUp}{ArrowUp}{ArrowUp}');
+    expect(document.activeElement).toBe(cellButton(0, 0));
+    await userEvent.keyboard('{ArrowDown}{ArrowRight}');
+    const stops = tabStops(container).filter((el) => el.matches('[data-rc]'));
+    expect(stops).toEqual([cellButton(1, 1)]);
+  });
+
+  it('the grid keeps the arrow keys for itself (data-player-keys off, default prevented) so the player does not step', () => {
+    const { container } = render(<CellGrid title="t" rows={2} cols={2} cell={() => ({ text: '1' })} onCell={() => undefined} />);
+    expect(container.querySelector('[data-player-keys="off"]')).not.toBeNull();
+    const seen = vi.fn();
+    window.addEventListener('keydown', seen);
+    cellButton(0, 0).focus();
+    fireEvent.keyDown(cellButton(0, 0), { key: 'ArrowRight' });
+    expect(seen).not.toHaveBeenCalled();
+    window.removeEventListener('keydown', seen);
+    expect(document.activeElement).toBe(cellButton(0, 1));
+  });
+
+  it('isFocusTarget picks the first tab stop; a grid without onCell has no tab stops at all', () => {
+    const { container, unmount } = render(<CellGrid title="t" rows={3} cols={3} cell={() => ({ text: 'x' })} onCell={() => undefined} isFocusTarget={(r, c) => r === 2 && c === 1} />);
+    expect(tabStops(container)).toEqual([cellButton(2, 1)]);
+    unmount();
+    const plain = render(<CellGrid title="t" rows={3} cols={3} cell={() => ({ text: 'x' })} />);
+    expect(plain.container.querySelectorAll('[tabindex]')).toHaveLength(0);
+  });
+
+  it('accessibleTable renders a hidden table of (rows + 1) by (columns + 1) cells with headers and the cell values', () => {
+    const { container } = render(
+      <CellGrid title="t" rows={3} cols={4} cell={(r, c) => ({ text: r === 0 ? '' : `${r}${c}` })}
+        accessibleTable={{ caption: 'My table', rowHeader: (r) => `row head ${r}`, colHeader: (c) => `col head ${c}` }} />,
+    );
+    const table = screen.getByRole('table', { name: 'My table' });
+    expect(container.querySelector('.visually-hidden')).toContainElement(table);
+    expect(table.querySelectorAll('th, td')).toHaveLength((3 + 1) * (4 + 1));
+    expect(table.querySelectorAll('tr')).toHaveLength(4);
+    expect(screen.getByRole('columnheader', { name: 'col head 2' })).toBeInTheDocument();
+    expect(screen.getByRole('rowheader', { name: 'row head 1' })).toBeInTheDocument();
+    expect(table.querySelector('[data-cell="2,3"]')).toHaveTextContent('23');
+    expect(table.querySelector('[data-cell="0,0"]')).toHaveTextContent('empty');
+  });
+});
+
 describe('checkRenderer', () => {
   it('accepts a steady renderer and rejects leaks and moving viewBoxes', () => {
     expect(checkRenderer(Show, trace)).toHaveLength(6);
