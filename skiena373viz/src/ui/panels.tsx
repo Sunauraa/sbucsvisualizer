@@ -1,24 +1,24 @@
 /** The text panels around a stage. */
 import { TONES } from '@core';
 import type { ComplexityClaim, OpCounts, OpDef, Pseudocode, Tone } from '@core';
-import { ScrollX } from './ScrollX';
 
 /** Pseudocode with the frame's anchors lit. Lit lines also get a marker and aria-current. */
 export function PseudocodePanel({ pseudocode, lit }: { readonly pseudocode: Pseudocode; readonly lit: readonly string[] }) {
   return (
     <section className="panel" aria-label="Pseudocode">
       <h3>Pseudocode</h3>
-      <ScrollX label="Pseudocode" className="code-box"><ol className="code" aria-label="Pseudocode lines">
+      <div className="code-box"><ol className="code" aria-label="Pseudocode lines">
         {pseudocode.lines.map((line) => {
           const on = lit.includes(line.anchor);
           return (
             <li key={line.anchor} data-anchor={line.anchor} className={on ? 'lit' : undefined} aria-current={on ? 'step' : undefined}>
               <span className="code-mark" aria-hidden="true">{on ? '▸' : ''}</span>
-              <code style={{ paddingLeft: `${line.indent * 1.4}em` }}>{line.text}</code>
+              {/* Hanging indent: the first line sits at the indent, a wrapped line continues one step further in. */}
+              <code style={{ paddingLeft: `${Number(((line.indent + 1) * 1.4).toFixed(2))}em` }}>{line.text}</code>
             </li>
           );
         })}
-      </ol></ScrollX>
+      </ol></div>
     </section>
   );
 }
@@ -53,8 +53,8 @@ export function ComplexityPanel({ claims }: { readonly claims: readonly Complexi
     <section className="panel" aria-label="Complexity">
       <h3>Complexity</h3>
       <ul className="claims">
-        {claims.map((claim) => (
-          <li key={`${claim.resource} ${claim.when}`}>
+        {claims.map((claim, index) => (
+          <li key={index}>
             <strong>{claim.bound}</strong> {claim.resource}, {claim.when}: <span className="muted">{claim.why}</span>
           </li>
         ))}

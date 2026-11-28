@@ -11,7 +11,6 @@ import { solve } from './algorithms/solver';
 import { FormulaField, useFormula } from './FormulaField';
 import { ReductionPage } from './ReductionPage';
 import { ReductionStage } from './ReductionStage';
-import { SameFormulaLinks } from './SameFormulaLinks';
 import { certificateStage } from './stages';
 import { assignmentFromBits, bitsFromAssignment, coverFromParam, coverToParam, toggleInCover } from './params';
 import css from './reductions.module.css';
@@ -75,7 +74,9 @@ export default function CertificatesView({ params, setParams }: ViewProps) {
               <label key={variable}>
                 <input type="checkbox" checked={assignment[variable] === true}
                   onChange={(event) => setAssignment({ ...assignment, [variable]: event.target.checked })} />
-                {variable} is {assignment[variable] === true ? 'true' : 'false'}
+                {/* A fixed name ("x1 true": checked means true) so a screen reader does not hear a double negative; the value beside it is for the eye. */}
+                <span>{variable} true</span>{' '}
+                <span aria-hidden="true" className="muted">(now {assignment[variable] === true ? 'true' : 'false'})</span>
               </label>
             ))}
             {variables.length === 0 ? <span className="muted">The formula has no variables.</span> : null}
@@ -185,7 +186,6 @@ export default function CertificatesView({ params, setParams }: ViewProps) {
         <>
           {summary}
           {words}
-          <SameFormulaLinks text={input.text} current="certificates" />
         </>
       )}
     />

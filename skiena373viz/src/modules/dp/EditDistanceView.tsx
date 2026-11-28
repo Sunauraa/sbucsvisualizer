@@ -159,7 +159,7 @@ function EditPage({ trace, quizOn, settings }: { readonly trace: ReturnType<type
   const clickable = quizOn
     ? (question?.kind === 'cell' ? guessCell : undefined)
     : (row: number, col: number): void => setSelected((current) => (current && current[0] === row && current[1] === col ? null : [row, col]));
-  const stage: StageActions = { selected: quizOn ? null : selected, ...(clickable ? { onCell: clickable } : {}) };
+  const stage: StageActions = { quizOn, selected: quizOn ? null : selected, ...(clickable ? { onCell: clickable } : {}) };
 
   return (
     <>

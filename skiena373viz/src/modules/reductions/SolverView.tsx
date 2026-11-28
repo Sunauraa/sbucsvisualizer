@@ -7,7 +7,6 @@ import { assignmentToCover } from './algorithms/maps';
 import { solve } from './algorithms/solver';
 import { FormulaField, useFormula } from './FormulaField';
 import { linkedFor, ReductionStage, useSubjectLink } from './ReductionStage';
-import { SameFormulaLinks } from './SameFormulaLinks';
 import { attemptStage } from './stages';
 import { assignmentFromBits, bitsFromAssignment } from './params';
 import css from './reductions.module.css';
@@ -107,14 +106,11 @@ export default function SolverView({ params, setParams }: ViewProps) {
       </section>
       <Legend tones={['target', 'swap', 'done']} labels={{ target: 'in the cover attempt', swap: 'a clause with no true literal, and its three corners (too many)', done: 'true literal or satisfied clause' }} />
 
-      <div className={css['twoCols']}>
-        <section className="panel" aria-label="What stands for what">
-          <h3>What stands for what</h3>
-          <p className={css['words']} aria-live="polite">{linked?.words ?? 'Point at, focus or click anything in the formula or the graph to see what stands for it on the other side.'}</p>
-          {link.selected ? <button type="button" onClick={link.clear}>Clear selection</button> : null}
-        </section>
-        <SameFormulaLinks text={input.text} current="solver" />
-      </div>
+      <section className="panel" aria-label="What stands for what">
+        <h3>What stands for what</h3>
+        <p className={css['words']} aria-live="polite">{linked?.words ?? 'Point at, focus or click anything in the formula or the graph to see what stands for it on the other side.'}</p>
+        {link.selected ? <button type="button" onClick={link.clear}>Clear selection</button> : null}
+      </section>
     </div>
   );
 }

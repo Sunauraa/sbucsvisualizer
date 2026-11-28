@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineAlgorithm, defineOps, definePseudocode, parseGraph, TONE_NAMES, TONES } from '@core';
 import type { GrowthExperiment, Recorder } from '@core';
-import { arrowPoints, CellGrid, CellRow, compactNumber, edgeGeometry, ErrorBoundary, GraphView, GrowthPanel, GrowthPlot, spreadLabels, SvgNode, Workbench } from '.';
+import { arrowPoints, CellGrid, CellRow, compactNumber, edgeGeometry, ErrorBoundary, GraphView, GrowthPanel, GrowthPlot, PseudocodePanel, spreadLabels, SvgNode, TraceNotices, Workbench } from '.';
 import type { RendererProps } from '.';
 import { checkRenderer } from './testing';
 
@@ -97,6 +97,118 @@ describe('Workbench and player', () => {
     view.rerender(<Workbench algorithm={counter} trace={short} Renderer={Show} />);
     expect(value()).toBe('0');
     expect(screen.getByRole('note')).toHaveTextContent('37 steps');
+  });
+});
+
+describe('PseudocodePanel', () => {
+  it('wraps long lines instead of scrolling sideways, with a hanging indent, and marks the lit line', () => {
+    const long = 'else if the graph is undirected and the edge leads back to the parent of the current vertex then skip it';
+    const pseudocode = definePseudocode([['a', 0, 'first()'], ['b', 2, long]]);
+    const { container } = render(<PseudocodePanel pseudocode={pseudocode} lit={['b']} />);
+    expect(container.querySelector('.scroll-x')).toBeNull();
+    expect(container.querySelector('[role="group"]')).toBeNull();
+    expect(container.querySelector('[tabindex]')).toBeNull();
+    const code = container.querySelectorAll('code');
+    expect((code[0] as HTMLElement).style.paddingLeft).toBe('1.4em');
+    expect((code[1] as HTMLElement).style.paddingLeft).toBe('4.2em');
+    expect(screen.getByText(long)).toBeInTheDocument();
+    expect(container.querySelector('li[aria-current="step"]')).toHaveTextContent(long);
+  });
+});
+
+describe('TraceNotices', () => {
+  it('a rejected trace points at the caption instead of repeating its sentence', () => {
+    const refuser = defineAlgorithm({
+      id: 'test-refuse', title: 'Refuse', summary: 'Refuses.',
+      pseudocode: definePseudocode([['start', 0, 'check()']]),
+      ops: defineOps([{ id: 'ticks', label: 'Ticks', counts: 'One per tick.' }]),
+      complexity: [{ resource: 'time', when: 'every case', bound: 'Θ(1)', why: 'one check.' }],
+      presets: [],
+      execute(_n: number, t: Recorder<{ i: number }, 'start', 'ticks'>) {
+        t.step({ lines: ['start'], say: 'Check the input.', state: () => ({ i: 0 }) });
+        return t.reject({ lines: ['start'], say: 'The value 7 is not allowed here.', state: () => ({ i: 1 }), result: null });
+      },
+    });
+    const rejected = refuser.run(1);
+    expect(rejected.status).toBe('rejected');
+    const early = render(<TraceNotices trace={rejected} atEnd={false} />);
+    expect(early.container).toBeEmptyDOMElement();
+    early.unmount();
+    const { container } = render(<TraceNotices trace={rejected} atEnd />);
+    expect(container).toHaveTextContent('This input was refused; the step above says why.');
+    expect(container).not.toHaveTextContent('The value 7 is not allowed here.');
+  });
+});
+
+describe('CellGrid keyboard: one tab stop and an accessible table', () => {
+  const tabStops = (container: HTMLElement): HTMLElement[] => [...container.querySelectorAll<HTMLElement>('[tabindex="0"]')];
+  const cellButton = (r: number, c: number): HTMLElement => screen.getByRole('button', { name: new RegExp(`^row ${r}, column ${c}:`) });
+
+  it('a 13 by 13 grid with onCell has exactly one tab stop, and Tab passes through it in one press', async () => {
+    const onCell = vi.fn();
+    const { container } = render(<><CellGrid title="big" rows={13} cols={13} cell={(r, c) => ({ text: `${r * 13 + c}` })} onCell={onCell} /><button type="button">after</button></>);
+    expect(tabStops(container).filter((el) => el.matches('[data-rc]'))).toHaveLength(1);
+    expect(container.querySelectorAll('[data-rc]')).toHaveLength(169);
+    await userEvent.tab();
+    expect(document.activeElement).toBe(cellButton(0, 0));
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'after' }));
+  });
+
+  it('arrow keys move focus, Home and End go to the row ends, the stop follows the last focused cell, and Enter or Space activate', async () => {
+    const onCell = vi.fn();
+    const { container } = render(<CellGrid title="t" rows={3} cols={4} cell={(r, c) => ({ text: `${r}${c}` })} onCell={onCell} />);
+    cellButton(0, 0).focus();
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}{ArrowDown}');
+    expect(document.activeElement).toBe(cellButton(1, 2));
+    await userEvent.keyboard('{Enter}');
+    expect(onCell).toHaveBeenLastCalledWith(1, 2);
+    await userEvent.keyboard(' ');
+    expect(onCell).toHaveBeenCalledTimes(2);
+    await userEvent.keyboard('{End}');
+    expect(document.activeElement).toBe(cellButton(1, 3));
+    await userEvent.keyboard('{ArrowRight}{ArrowDown}{ArrowDown}');
+    expect(document.activeElement).toBe(cellButton(2, 3));
+    await userEvent.keyboard('{Home}{ArrowLeft}{ArrowUp}{ArrowUp}{ArrowUp}');
+    expect(document.activeElement).toBe(cellButton(0, 0));
+    await userEvent.keyboard('{ArrowDown}{ArrowRight}');
+    const stops = tabStops(container).filter((el) => el.matches('[data-rc]'));
+    expect(stops).toEqual([cellButton(1, 1)]);
+  });
+
+  it('the grid keeps the arrow keys for itself (data-player-keys off, default prevented) so the player does not step', () => {
+    const { container } = render(<CellGrid title="t" rows={2} cols={2} cell={() => ({ text: '1' })} onCell={() => undefined} />);
+    expect(container.querySelector('[data-player-keys="off"]')).not.toBeNull();
+    const seen = vi.fn();
+    window.addEventListener('keydown', seen);
+    cellButton(0, 0).focus();
+    fireEvent.keyDown(cellButton(0, 0), { key: 'ArrowRight' });
+    expect(seen).not.toHaveBeenCalled();
+    window.removeEventListener('keydown', seen);
+    expect(document.activeElement).toBe(cellButton(0, 1));
+  });
+
+  it('isFocusTarget picks the first tab stop; a grid without onCell has no tab stops at all', () => {
+    const { container, unmount } = render(<CellGrid title="t" rows={3} cols={3} cell={() => ({ text: 'x' })} onCell={() => undefined} isFocusTarget={(r, c) => r === 2 && c === 1} />);
+    expect(tabStops(container)).toEqual([cellButton(2, 1)]);
+    unmount();
+    const plain = render(<CellGrid title="t" rows={3} cols={3} cell={() => ({ text: 'x' })} />);
+    expect(plain.container.querySelectorAll('[tabindex]')).toHaveLength(0);
+  });
+
+  it('accessibleTable renders a hidden table of (rows + 1) by (columns + 1) cells with headers and the cell values', () => {
+    const { container } = render(
+      <CellGrid title="t" rows={3} cols={4} cell={(r, c) => ({ text: r === 0 ? '' : `${r}${c}` })}
+        accessibleTable={{ caption: 'My table', rowHeader: (r) => `row head ${r}`, colHeader: (c) => `col head ${c}` }} />,
+    );
+    const table = screen.getByRole('table', { name: 'My table' });
+    expect(container.querySelector('.visually-hidden')).toContainElement(table);
+    expect(table.querySelectorAll('th, td')).toHaveLength((3 + 1) * (4 + 1));
+    expect(table.querySelectorAll('tr')).toHaveLength(4);
+    expect(screen.getByRole('columnheader', { name: 'col head 2' })).toBeInTheDocument();
+    expect(screen.getByRole('rowheader', { name: 'row head 1' })).toBeInTheDocument();
+    expect(table.querySelector('[data-cell="2,3"]')).toHaveTextContent('23');
+    expect(table.querySelector('[data-cell="0,0"]')).toHaveTextContent('empty');
   });
 });
 

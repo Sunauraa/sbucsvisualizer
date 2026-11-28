@@ -15,30 +15,39 @@ export interface StageActions {
   readonly onCell?: (row: number, col: number) => void;
   /** A cell the learner picked to inspect; highlighted with its parents. */
   readonly selected: Cell | null;
+  /**
+   * Quiz mode is on. It only changes which parent marks are hidden while a traceback question may be open, so the stage never shows the
+   * answer; the default is the cautious one.
+   */
+  readonly quizOn: boolean;
 }
 
-export const StageContext = createContext<StageActions>({ selected: null });
+export const StageContext = createContext<StageActions>({ selected: null, quizOn: true });
 
 const same = (a: Cell | null | undefined, r: number, c: number): boolean => a !== null && a !== undefined && a[0] === r && a[1] === c;
 
-/** Parent marks appear when a cell is written, and during the traceback when the traceback leaves it. */
-export function marksVisible(state: EditState, r: number, c: number): boolean {
+/**
+ * Parent marks show on every written inner cell, in every frame. The one exception is quiz mode during the traceback: a "which parent
+ * does the traceback follow?" question is open there, so only cells the traceback has already left show marks. At `done` no question
+ * is asked any more, so every written cell shows its marks again.
+ */
+export function marksVisible(state: EditState, r: number, c: number, quizOn: boolean): boolean {
   if (r === 0 || c === 0 || state.table[r]?.[c] == null) return false;
+  if (!quizOn) return true;
   switch (state.step.kind) {
     case 'trace-start':
       return false;
     case 'trace-move':
-    case 'done':
       return state.moves.some((move) => same(move.from, r, c));
     default:
       return true;
   }
 }
 
-export function cellText(state: EditState, r: number, c: number): string {
+export function cellText(state: EditState, r: number, c: number, quizOn: boolean): string {
   const value = state.table[r]?.[c];
   if (value === null || value === undefined) return '';
-  const marks = marksVisible(state, r, c) ? (state.parents[r]?.[c] ?? []).map((d) => DIR_MARK[d]).join('') : '';
+  const marks = marksVisible(state, r, c, quizOn) ? (state.parents[r]?.[c] ?? []).map((d) => DIR_MARK[d]).join('') : '';
   return `${value}${marks}`;
 }
 
@@ -87,7 +96,7 @@ const headerText = (index: number, ch: string | undefined): string => (index ===
 
 export function EditStage({ frame }: RendererProps<EditState>) {
   const state = frame.state;
-  const { selected, onCell } = useContext(StageContext);
+  const { selected, onCell, quizOn } = useContext(StageContext);
   const m = state.pattern.length;
   const n = state.text.length;
   const compact = Math.max(m, n) > 8;
@@ -107,26 +116,15 @@ export function EditStage({ frame }: RendererProps<EditState>) {
         title={`Edit distance table: ${m + 1} rows for pattern prefixes by ${n + 1} columns for text prefixes`}
         rows={m + 1} cols={n + 1} cellSize={compact ? 42 : 48}
         rowHeader={(r) => headerText(r, state.pattern[r - 1])} colHeader={(c) => headerText(c, state.text[c - 1])}
-        cell={(r, c): CellSpec => ({ text: cellText(state, r, c), tone: cellTone(state, r, c, selected) })}
+        cell={(r, c): CellSpec => ({ text: cellText(state, r, c, quizOn), tone: cellTone(state, r, c, selected) })}
         arrows={stageArrows(state, selected)}
+        accessibleTable={{
+          caption: `Edit distance table, ${m + 1} rows by ${n + 1} columns, as of this step. Cells not written yet are empty.`,
+          rowHeader: (r) => (r === 0 ? 'empty pattern' : `pattern up to ${showChar(state.pattern[r - 1] ?? '')}`),
+          colHeader: (c) => (c === 0 ? 'empty text' : `text up to ${showChar(state.text[c - 1] ?? '')}`),
+        }}
         {...(onCell ? { onCell } : {})}
       />
-      <div className={styles['vh']}>
-      <table>
-        <caption>{`Edit distance table, ${m + 1} rows by ${n + 1} columns, as of this step. Cells not written yet are empty.`}</caption>
-        <thead>
-          <tr><th scope="col">Pattern prefix</th>{Array.from({ length: n + 1 }, (_c, c) => <th key={c} scope="col">{c === 0 ? 'empty text' : `text up to ${showChar(state.text[c - 1] ?? '')}`}</th>)}</tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: m + 1 }, (_r, r) => (
-            <tr key={r}>
-              <th scope="row">{r === 0 ? 'empty pattern' : `pattern up to ${showChar(state.pattern[r - 1] ?? '')}`}</th>
-              {Array.from({ length: n + 1 }, (_c, c) => <td key={c} data-cell={`${r},${c}`}>{cellText(state, r, c) || 'empty'}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      </div>
     </div>
   );
 }

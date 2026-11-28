@@ -33,7 +33,7 @@ export const QUESTIONS: readonly Question[] = [
       },
       {
         id: 'vc-needs-exponential', correct: false, text: 'Vertex Cover cannot be solved in polynomial time.',
-        why: 'A reduction transfers difficulty, it does not create it. Vertex Cover is hard only if 3-SAT is, and nobody has proved that no polynomial-time algorithm exists (that is P versus NP).',
+        why: 'A reduction transfers difficulty; it does not create it. It shows that Vertex Cover is hard if 3-SAT is, and nobody has proved that 3-SAT needs more than polynomial time (that is P versus NP).',
       },
     ],
   },

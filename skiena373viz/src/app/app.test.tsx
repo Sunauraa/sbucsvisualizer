@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { manifestProblems } from '@core';
+import { manifestProblems, SYLLABUS } from '@core';
 import type { ModuleManifest } from '@core';
+import { useModules } from '@ui';
 import { App } from './App';
 import { loadRegistry } from './registry';
 import { formatHash, parseHash, replaceParams } from './route';
@@ -48,7 +51,7 @@ describe('App', () => {
   it('lists all six modules, built or not, and reports failures', async () => {
     render(<App load={load} />);
     expect(await screen.findByText(/graphs module could not load: syntax/)).toBeInTheDocument();
-    expect(screen.getAllByText('Not built yet')).toHaveLength(6);
+    expect(screen.getAllByText('Not built yet')).toHaveLength(5); // the six course modules, minus dp, which loaded
     expect(screen.getByRole('heading', { name: 'Dynamic programming' })).toBeInTheDocument();
   });
   it('opens a view with its URL parameters', async () => {
@@ -79,6 +82,49 @@ describe('App', () => {
   it('rejects a malformed carryParams', () => {
     expect(manifestProblems({ ...manifest, carryParams: [''] }, 'dp')).toEqual(['carryParams must be a list of non-empty URL parameter keys']);
     expect(manifestProblems({ ...manifest, carryParams: ['g', 'p'] }, 'dp')).toEqual([]);
+  });
+  describe('the worked example is not a course module in the UI', () => {
+    const exampleView = { ...manifest.views[0]!, id: 'linear-search', title: 'Linear search', load: () => Promise.resolve({ default: () => <p>example view</p> }) };
+    const example: ModuleManifest = { ...manifest, id: 'example', views: [exampleView] };
+    const seen: string[][] = [];
+    const Probe = () => { seen.push(useModules().map((m) => m.id)); return <p>probe</p>; };
+    const course = SYLLABUS.map((info): ModuleManifest => ({
+      ...manifest, id: info.id,
+      views: [{ ...manifest.views[0]!, load: () => Promise.resolve({ default: Probe }) }],
+    }));
+    const everything = () => Promise.resolve({ modules: [...course, example], failures: [] });
+
+    it('the top navigation has the six course modules and no worked example; the home page keeps one line linking to it', async () => {
+      render(<App load={everything} />);
+      const nav = await screen.findByRole('navigation', { name: 'Modules' });
+      expect(within(nav).getAllByRole('link')).toHaveLength(6);
+      expect(within(nav).queryByText('Worked example')).toBeNull();
+      expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(6);
+      expect(screen.getByRole('link', { name: 'The worked example' })).toHaveAttribute('href', '#/example');
+    });
+
+    it('useModules() never contains the example, so Measured cannot plot it', async () => {
+      window.history.replaceState(null, '', '#/dp');
+      seen.length = 0;
+      render(<App load={everything} />);
+      expect(await screen.findByText('probe')).toBeInTheDocument();
+      expect(seen.length).toBeGreaterThan(0);
+      for (const ids of seen) expect(ids).toEqual(SYLLABUS.map((info) => info.id));
+    });
+
+    it('#/example/linear-search still renders', async () => {
+      window.history.replaceState(null, '', '#/example/linear-search');
+      render(<App load={everything} />);
+      expect(await screen.findByText('example view')).toBeInTheDocument();
+    });
+  });
+  it('the footer links to the shipped licence notices, and the notices are in public/', async () => {
+    render(<App load={load} />);
+    expect(await screen.findByRole('link', { name: 'Licences' })).toHaveAttribute('href', 'THIRD_PARTY_LICENSES.txt');
+    const notices = readFileSync(join(process.cwd(), 'public', 'THIRD_PARTY_LICENSES.txt'), 'utf8');
+    for (const name of ['react ', 'react-dom ', 'd3-force ', 'd3-dispatch ', 'd3-quadtree ', 'd3-timer ']) expect(notices, name).toContain(`\n${name}`);
+    expect(notices).toContain('MIT License');
+    expect(notices).toContain('Permission to use, copy, modify, and/or distribute this software for any purpose');
   });
   it('explains unknown and unbuilt modules', async () => {
     window.history.replaceState(null, '', '#/sorting');

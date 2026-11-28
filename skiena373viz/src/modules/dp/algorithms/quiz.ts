@@ -5,7 +5,7 @@
  */
 import { createRng, fail, ok } from '@core';
 import type { Result, Trace } from '@core';
-import { candidatesAt, cellName, DIR_NAME, showChar } from './editDistance';
+import { candidatesAt, cellName, DIR_NAME, plural, showChar } from './editDistance';
 import type { Cell, Dir, EditResult, EditState } from './editDistance';
 
 export type QuestionKind = 'cell' | 'value' | 'base' | 'move';
@@ -49,7 +49,7 @@ export function questionAt(trace: EditTrace, index: number): Question | null {
     case 'base': {
       const answer = valueAt(next.state, cell);
       if (answer === null) return null;
-      return { kind: 'base', index, cell, answer, why, prompt: `What is ${cellName(i, j)}, and why?` };
+      return { kind: 'base', index, cell, answer, why, prompt: `What value goes into ${cellName(i, j)}?` };
     }
     case 'look': {
       if (here.state.step.kind !== 'base' && here.state.step.kind !== 'write') return null;
@@ -231,12 +231,13 @@ function baseHint(cell: Cell, guess: number, level: 'first' | 'second'): string 
   if (i === 0 && j === 0) return `${guess} is not right. Turning the empty prefix into the empty prefix needs no edits at all.`;
   const row = i === 0;
   const first = row
-    ? `${guess} is not right. ${cellName(i, j)} is the cost of turning the empty pattern prefix into the first ${j} text characters.`
-    : `${guess} is not right. ${cellName(i, j)} is the cost of turning the first ${i} pattern characters into the empty string.`;
+    ? `${guess} is not right. ${cellName(i, j)} is the cost of turning the empty pattern prefix into the first ${plural(j, 'text character')}.`
+    : `${guess} is not right. ${cellName(i, j)} is the cost of turning the first ${plural(i, 'pattern character')} into the empty string.`;
   if (level === 'first') return first;
+  const each = (count: number): string => (count === 1 ? 'that character has' : `every one of those ${count} characters has`);
   return row
-    ? `${first} With nothing to match, every one of those ${j} characters has to be inserted, and an insertion costs 1.`
-    : `${first} With nothing to match, every one of those ${i} characters has to be deleted, and a deletion costs 1.`;
+    ? `${first} With nothing to match, ${each(j)} to be inserted, and an insertion costs 1.`
+    : `${first} With nothing to match, ${each(i)} to be deleted, and a deletion costs 1.`;
 }
 
 function judgeMove(state: EditState, question: Extract<Question, { kind: 'move' }>, guess: Dir, level: 'first' | 'second'): Verdict {

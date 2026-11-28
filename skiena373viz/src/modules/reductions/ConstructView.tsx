@@ -9,7 +9,6 @@ import { formulaVariables } from './algorithms/formula';
 import { FormulaField, useFormula } from './FormulaField';
 import { ReductionPage } from './ReductionPage';
 import { ReductionStage } from './ReductionStage';
-import { SameFormulaLinks } from './SameFormulaLinks';
 import { constructStage } from './stages';
 import css from './reductions.module.css';
 
@@ -59,7 +58,6 @@ export default function ConstructView({ params, setParams }: ViewProps) {
             <p className="small"><strong>Vertices:</strong> {frame.state.nodes.map((node) => (node.kind === 'corner' ? `C${(node.clause ?? 0) + 1}.${(node.position ?? 0) + 1}(${node.label})` : node.label)).join(', ') || 'none'}</p>
             <p className="small"><strong>Edges:</strong> {frame.state.edges.map((edge) => `${edge.source} — ${edge.target}`).join(', ') || 'none'}</p>
           </details>
-          <SameFormulaLinks text={input.text} current="construct" />
         </>
       )}
     >

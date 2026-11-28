@@ -10,6 +10,7 @@ import CertificatesView, { CertificateRenderer } from './CertificatesView';
 import ConstructView, { ConstructRenderer } from './ConstructView';
 import DirectionView from './DirectionView';
 import SolverView from './SolverView';
+import manifest from './index';
 
 afterEach(cleanup);
 
@@ -131,8 +132,18 @@ describe('certificates view', () => {
     expect(screen.getByText('x1 = T, x2 = T, x3 = F')).toBeInTheDocument();
     expect(screen.getByText(/2 of 2 clauses are satisfied/)).toBeInTheDocument();
     expect(screen.getByText(/Exactly k: a vertex cover of the required size/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('checkbox', { name: /x2 is true/ }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'x2 true' }));
     expect(setParams).toHaveBeenLastCalledWith({ a: '100' });
+  });
+
+  it('the variable check boxes keep one fixed name whatever their value, and never say "is false" (R17)', () => {
+    const { rerender } = render(<CertificatesView params={{ f: SAT, a: '110' }} setParams={noop} />);
+    expect(screen.getByRole('checkbox', { name: 'x2 true' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'x3 true' })).not.toBeChecked();
+    rerender(<CertificatesView params={{ f: SAT, a: '001' }} setParams={noop} />);
+    expect(screen.getByRole('checkbox', { name: 'x2 true' })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'x3 true' })).toBeChecked();
+    expect(screen.queryByRole('checkbox', { name: /is false|is true/ })).toBeNull();
   });
 
   it('a wrong assignment fails at a named clause, and the cover attempt is too big', () => {
@@ -207,7 +218,32 @@ describe('solver view', () => {
   });
 });
 
+describe('the formula follows the learner through the shell tabs', () => {
+  it('the manifest carries exactly the formula, not the view-specific keys', () => {
+    expect(manifest.carryParams).toEqual(['f']);
+  });
+
+  it.each([
+    ['construct', ConstructView],
+    ['certificates', CertificatesView],
+    ['solver', SolverView],
+    ['direction', DirectionView],
+  ] as const)('%s no longer renders its own row of "Keep this formula" links', (_id, View) => {
+    render(<View params={{ f: SAT }} setParams={noop} />);
+    expect(screen.queryByText(/Keep this formula/)).toBeNull();
+    expect(screen.queryByRole('navigation', { name: /Same formula/ })).toBeNull();
+  });
+});
+
 describe('direction view', () => {
+  it('says why a fast Vertex Cover algorithm would decide 3-SAT: polynomial construction that keeps the answer', () => {
+    render(<DirectionView params={{}} setParams={noop} />);
+    const paragraph = screen.getByText(/The construction only reads the shape of the formula/);
+    expect(paragraph).toHaveTextContent('polynomial time');
+    expect(paragraph).toHaveTextContent('keeps the yes/no answer');
+    expect(paragraph).not.toHaveTextContent('never asks');
+  });
+
   it('shows three questions; a wrong answer is explained, the right one is confirmed', async () => {
     render(<DirectionView params={{}} setParams={noop} />);
     expect(screen.getAllByRole('group').filter((group) => /Question/.test(group.textContent ?? ''))).toHaveLength(3);

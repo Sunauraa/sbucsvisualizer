@@ -2,8 +2,6 @@ import { useState } from 'react';
 import type { ViewProps } from '@core';
 import { QUESTIONS } from './algorithms/questions';
 import type { Question } from './algorithms/questions';
-import { useFormula } from './FormulaField';
-import { SameFormulaLinks } from './SameFormulaLinks';
 import css from './reductions.module.css';
 
 function QuestionCard({ question, number }: { readonly question: Question; readonly number: number }) {
@@ -34,8 +32,8 @@ function QuestionCard({ question, number }: { readonly question: Question; reado
   );
 }
 
-export default function DirectionView({ params }: ViewProps) {
-  const input = useFormula(params);
+/** Needs no input: the shell's tabs still carry the formula past this view. */
+export default function DirectionView(_props: ViewProps) {
   return (
     <div className={css['page']}>
       <div className={css['prose']}>
@@ -82,14 +80,13 @@ export default function DirectionView({ params }: ViewProps) {
           <li>Carry yes back. A cover of size at most k becomes a satisfying assignment (cover to assignment). Without this half, a graph with a small cover might come from a formula nobody can satisfy.</li>
         </ol>
         <p>
-          The construction never asks whether the formula is satisfiable; it only reads the shape of the formula. That is why a fast Vertex Cover algorithm would decide
-          satisfiability: all the work of finding the answer is left to it.
+          The construction only reads the shape of the formula, so it runs in polynomial time whether or not the formula is satisfiable. Because it also keeps the yes/no
+          answer, a fast Vertex Cover algorithm plus this construction would decide 3-SAT fast.
         </p>
 
         <h3>Check yourself</h3>
         {QUESTIONS.map((question, i) => <QuestionCard key={question.id} question={question} number={i + 1} />)}
       </div>
-      <SameFormulaLinks text={input.text} current="direction" />
     </div>
   );
 }

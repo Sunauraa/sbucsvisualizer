@@ -3,6 +3,8 @@ import type { ModuleManifest } from '@core';
 /** Keep index.ts tiny: no algorithm or component imports, only lazy loaders. */
 const manifest: ModuleManifest = {
   id: 'reductions',
+  // The formula follows the learner between views; view-specific keys (a, s, dir) do not.
+  carryParams: ['f'],
   views: [
     {
       id: 'construct',

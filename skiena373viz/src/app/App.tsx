@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { moduleInfo } from '@core';
+import { isExample, moduleInfo } from '@core';
 import { ErrorBoundary, ModulesContext } from '@ui';
 import { Home } from './Home';
 import { ModulePage } from './ModulePage';
@@ -26,6 +26,8 @@ export function App({ load = loadRegistry }: { readonly load?: () => Promise<Reg
   }, [load]);
 
   const module = registry?.modules.find((m) => m.id === route.moduleId);
+  // The worked example is scaffolding: it stays reachable at #/example, but is not a course module in the nav or in useModules().
+  const courseModules = useMemo(() => (registry?.modules ?? []).filter((m) => !isExample(m.id)), [registry]);
   const title = route.moduleId === null ? null : (moduleInfo(route.moduleId)?.title ?? null);
   useEffect(() => {
     document.title = title ? `${title} · Skiena373Viz` : 'Skiena373Viz';
@@ -40,12 +42,12 @@ export function App({ load = loadRegistry }: { readonly load?: () => Promise<Reg
   }, [place]);
 
   return (
-    <ModulesContext.Provider value={registry?.modules ?? []}>
+    <ModulesContext.Provider value={courseModules}>
       <button type="button" className="skip" onClick={() => main.current?.focus()}>Skip to content</button>
       <header className="topbar">
         <a className="brand" href="#/">Skiena373Viz</a>
         <nav aria-label="Modules">
-          {(registry?.modules ?? []).map((m) => (
+          {courseModules.map((m) => (
             <a key={m.id} href={`#/${m.id}`} aria-current={m.id === route.moduleId ? 'page' : undefined}>{moduleInfo(m.id)?.title ?? m.id}</a>
           ))}
         </nav>
@@ -60,7 +62,8 @@ export function App({ load = loadRegistry }: { readonly load?: () => Promise<Reg
       </main>
       <footer>
         An independent study aid. Not affiliated with, or endorsed by, Stony Brook University or Prof. Steven Skiena. Explanations and
-        pseudocode here are original; the course textbook is <cite>The Algorithm Design Manual</cite> (3rd ed.).
+        pseudocode here are original; the course textbook is <cite>The Algorithm Design Manual</cite> (3rd ed.).{' '}
+        <a href="THIRD_PARTY_LICENSES.txt">Licences</a>
       </footer>
     </ModulesContext.Provider>
   );
