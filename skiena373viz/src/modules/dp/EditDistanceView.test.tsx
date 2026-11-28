@@ -8,7 +8,7 @@ import type { EditInput } from './algorithms/editDistance';
 import { questionAt, quizGates } from './algorithms/quiz';
 import type { EditTrace, Question } from './algorithms/quiz';
 import EditDistanceView from './EditDistanceView';
-import { EditDetails, EditStage } from './EditStage';
+import { cellText, EditDetails, EditStage, marksVisible } from './EditStage';
 import type { RendererProps } from '@ui';
 import type { EditState } from './algorithms/editDistance';
 
@@ -74,6 +74,56 @@ describe('renderers', () => {
       expect(checkRenderer(EditStage, alone)[0]).toBe(stages[g]);
       expect(checkRenderer(EditDetails, alone)[0]).toBe(details[g]);
     }
+  });
+});
+
+describe('parent marks of the finished table (R11)', () => {
+  const kitten = traceOf('kitten', 'sitting');
+  const last = kitten.frames[kitten.frames.length - 1] as (typeof kitten.frames)[number];
+  const MARK = /[↖←↑]/;
+
+  it('with the quiz off, every written inner cell shows its marks in every frame', () => {
+    for (const frame of kitten.frames) {
+      const state = frame.state;
+      for (let r = 1; r < state.table.length; r += 1) {
+        for (let c = 1; c < (state.table[0]?.length ?? 0); c += 1) {
+          const written = state.table[r]?.[c] != null;
+          expect(marksVisible(state, r, c, false), `frame ${frame.index} D[${r}][${c}]`).toBe(written);
+        }
+      }
+    }
+  });
+
+  it('the final frame shows marks on an off-path cell, D[1][2] of kitten/sitting, with the quiz off and with it on', () => {
+    expect(last.state.step.kind).toBe('done');
+    expect(last.state.path.some((p) => p[0] === 1 && p[1] === 2)).toBe(false);
+    for (const quizOn of [false, true]) {
+      expect(cellText(last.state, 1, 2, quizOn), `quiz ${quizOn ? 'on' : 'off'}`).toMatch(MARK);
+    }
+  });
+
+  it('with the quiz on, a traceback frame still hides the marks of every cell the traceback has not left (and all of them at trace-start)', () => {
+    let checked = 0;
+    for (const frame of kitten.frames) {
+      const state = frame.state;
+      for (let r = 1; r < state.table.length; r += 1) {
+        for (let c = 1; c < (state.table[0]?.length ?? 0); c += 1) {
+          const visible = marksVisible(state, r, c, true);
+          if (state.step.kind === 'trace-start') expect(visible).toBe(false);
+          if (state.step.kind === 'trace-move') {
+            expect(visible, `frame ${frame.index} D[${r}][${c}]`).toBe(state.moves.some((m) => m.from[0] === r && m.from[1] === c));
+            checked += 1;
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+
+  it('the page, quiz off, final frame: an off-path cell has marks in the visible table text', () => {
+    open({ p: 'kitten', t: 'sitting' });
+    click('End');
+    expect(cellAt(1, 2)).toMatch(MARK);
   });
 });
 
@@ -296,6 +346,8 @@ describe('quiz mode', () => {
     click('End');
     expect(position()).toBe(trace.frames.length - 1);
     expect(screen.getByLabelText('Quiz')).toHaveTextContent(`Quiz complete: ${gates.length} of ${gates.length} right on the first try`);
+    // No question is asked after the final frame, so every written cell shows its marks again (R11).
+    expect(cellAt(1, 2)).toMatch(/[↖←↑]/);
     click('Retake');
     expect(position()).toBe(0);
     click('End');
