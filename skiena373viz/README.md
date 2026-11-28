@@ -31,6 +31,6 @@ are manual. The parent repository's Vercel site ignores this folder (`.vercelign
 
 ## Third-party licences
 
-Shipped in the build: React and React DOM (MIT); d3-force, d3-dispatch, d3-quadtree, d3-timer (ISC). Build and test only: Vite,
+Shipped in the build: React, React DOM and scheduler (MIT); d3-force, d3-dispatch, d3-quadtree, d3-timer (ISC). Their notices are in `public/THIRD_PARTY_LICENSES.txt`, which Vite copies into `dist/`; the footer links to it as "Licences". Build and test only: Vite,
 Vitest, ESLint, typescript-eslint, jsdom, Testing Library, DefinitelyTyped types (MIT); TypeScript (Apache-2.0); Lightning CSS, used by
 Vite (MPL-2.0).

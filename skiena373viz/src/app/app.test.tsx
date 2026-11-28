@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { manifestProblems, SYLLABUS } from '@core';
@@ -115,6 +117,14 @@ describe('App', () => {
       render(<App load={everything} />);
       expect(await screen.findByText('example view')).toBeInTheDocument();
     });
+  });
+  it('the footer links to the shipped licence notices, and the notices are in public/', async () => {
+    render(<App load={load} />);
+    expect(await screen.findByRole('link', { name: 'Licences' })).toHaveAttribute('href', 'THIRD_PARTY_LICENSES.txt');
+    const notices = readFileSync(join(process.cwd(), 'public', 'THIRD_PARTY_LICENSES.txt'), 'utf8');
+    for (const name of ['react ', 'react-dom ', 'd3-force ', 'd3-dispatch ', 'd3-quadtree ', 'd3-timer ']) expect(notices, name).toContain(`\n${name}`);
+    expect(notices).toContain('MIT License');
+    expect(notices).toContain('Permission to use, copy, modify, and/or distribute this software for any purpose');
   });
   it('explains unknown and unbuilt modules', async () => {
     window.history.replaceState(null, '', '#/sorting');

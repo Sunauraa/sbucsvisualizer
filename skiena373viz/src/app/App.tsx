@@ -62,7 +62,8 @@ export function App({ load = loadRegistry }: { readonly load?: () => Promise<Reg
       </main>
       <footer>
         An independent study aid. Not affiliated with, or endorsed by, Stony Brook University or Prof. Steven Skiena. Explanations and
-        pseudocode here are original; the course textbook is <cite>The Algorithm Design Manual</cite> (3rd ed.).
+        pseudocode here are original; the course textbook is <cite>The Algorithm Design Manual</cite> (3rd ed.).{' '}
+        <a href="THIRD_PARTY_LICENSES.txt">Licences</a>
       </footer>
     </ModulesContext.Provider>
   );
