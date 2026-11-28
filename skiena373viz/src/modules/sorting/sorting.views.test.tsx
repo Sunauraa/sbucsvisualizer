@@ -68,6 +68,27 @@ describe('the manifest', () => {
   });
 });
 
+describe('the list follows the learner between views (R2)', () => {
+  it('the manifest asks the shell to carry exactly the list and pivot keys', () => {
+    expect(manifest.carryParams).toEqual(['a', 'kind', 'n', 'seed', 'pv', 'ps']);
+  });
+  it.each([
+    ['heapsort', HeapsortView], ['mergesort', MergesortView], ['quicksort', QuicksortView], ['recursion tree', RecursionTreeView], ['race', RaceView],
+  ])('%s reads a typed list and a generated list from the same keys', (_name, View) => {
+    const typed = render(<View params={{ a: '9, 8, 7' }} setParams={noop} />);
+    expect(screen.getByLabelText('Items')).toHaveValue('9, 8, 7');
+    typed.unmount();
+    const generated = render(<View params={{ kind: 'sorted', n: '6', seed: '4', pv: 'random', ps: '8' }} setParams={noop} />);
+    expect(screen.getByLabelText('Items')).toHaveValue('1, 2, 3, 4, 5, 6');
+    generated.unmount();
+  });
+  it('the pivot rule and its seed arrive in the quicksort view from the carried keys', () => {
+    render(<QuicksortView params={{ a: '3, 1, 2', pv: 'random', ps: '8' }} setParams={noop} />);
+    expect(screen.getByLabelText('Quicksort pivot')).toHaveValue('random');
+    expect(screen.getByRole('button', { name: 'New pivot seed (8)' })).toBeInTheDocument();
+  });
+});
+
 describe.each([
   ['heapsort', HeapsortView], ['mergesort', MergesortView], ['quicksort', QuicksortView], ['recursion tree', RecursionTreeView], ['race', RaceView],
 ])('%s view', (_name, View) => {
