@@ -205,23 +205,7 @@ export function GraphEditor({ input, onChange, presets, usesStart, needs }: Grap
       </div>
       <p className={styles['needs']}>{needs}</p>
       <div id={panelId} className={styles['editor']} hidden={!open}>
-        <div className={styles['canvasCol']}>
-          <fieldset className={styles['modes']}>
-            <legend>Editing mode</legend>
-            {MODES.map((m) => (
-              <label key={m.id} className={styles['mode']}>
-                <input type="radio" name={modeName} value={m.id} checked={mode === m.id} onChange={() => { setMode(m.id); setPending(null); }} />
-                <span>{m.label}</span>
-              </label>
-            ))}
-          </fieldset>
-          <GraphCanvas graph={shown} title="Graph editor canvas" vertices={vertices} edges={edges}
-            onVertex={onVertex} onEdge={onEdge} onBackground={onBackground}
-            onVertexPointerDown={mode === 'select' ? onVertexPointerDown : undefined} onVertexKeyDown={onVertexKeyDown}
-            emptyText="Empty: choose Add vertex, then click here" />
-          <p className={styles['hint']}>{hint}</p>
-          <p className={styles['message']} role="status" aria-live="polite">{message}</p>
-        </div>
+        {/* The text field, the switches and the buttons come first in tab order; the grid keeps the drawing on the left. */}
         <div className={styles['sideCol']}>
           <div className={styles['switches']}>
             <label><input type="checkbox" checked={graph.directed} onChange={(e) => apply({ type: 'set-directed', directed: e.target.checked })} />Directed</label>
@@ -286,6 +270,23 @@ export function GraphEditor({ input, onChange, presets, usesStart, needs }: Grap
                 onBlur={() => { setDraft(null); setTextError(null); }} />
             )}
           </Field>
+        </div>
+        <div className={styles['canvasCol']}>
+          <fieldset className={styles['modes']}>
+            <legend>Editing mode</legend>
+            {MODES.map((m) => (
+              <label key={m.id} className={styles['mode']}>
+                <input type="radio" name={modeName} value={m.id} checked={mode === m.id} onChange={() => { setMode(m.id); setPending(null); }} />
+                <span>{m.label}</span>
+              </label>
+            ))}
+          </fieldset>
+          <GraphCanvas graph={shown} title="Graph editor canvas" vertices={vertices} edges={edges}
+            onVertex={onVertex} onEdge={onEdge} onBackground={onBackground}
+            onVertexPointerDown={mode === 'select' ? onVertexPointerDown : undefined} onVertexKeyDown={onVertexKeyDown}
+            emptyText="Empty: choose Add vertex, then click here" />
+          <p className={styles['hint']}>{hint}</p>
+          <p className={styles['message']} role="status" aria-live="polite">{message}</p>
         </div>
       </div>
     </section>

@@ -107,6 +107,18 @@ describe('the graph page', () => {
     expect(screen.queryByText('Same graph in:')).toBeNull();
   });
 
+  it('the text field and the mode buttons come before the first vertex in tab order, so a keyboard user reaches them first', () => {
+    render(<BfsView params={{ g: 'A-B, B-C' }} setParams={noop} />);
+    const stops = [...document.querySelectorAll('[tabindex], textarea, input, button, select')];
+    const textarea = stops.indexOf(text());
+    const firstVertex = stops.indexOf(vertexButton('A'));
+    const firstMode = stops.indexOf(screen.getByRole('radio', { name: 'Select / move' }));
+    expect(textarea).toBeGreaterThanOrEqual(0);
+    expect(firstVertex).toBeGreaterThan(textarea);
+    expect(firstVertex).toBeGreaterThan(firstMode);
+    expect(firstVertex).toBeGreaterThan(stops.indexOf(screen.getByRole('checkbox', { name: 'Directed' })));
+  });
+
   it('topological sort on an undirected graph is refused up front, explained, and one button fixes it', () => {
     render(<TopologicalSortView params={{ g: 'A-B, B-C' }} setParams={noop} />);
     expect(screen.getByText(/This run is refused/)).toBeInTheDocument();
