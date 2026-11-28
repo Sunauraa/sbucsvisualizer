@@ -132,8 +132,18 @@ describe('certificates view', () => {
     expect(screen.getByText('x1 = T, x2 = T, x3 = F')).toBeInTheDocument();
     expect(screen.getByText(/2 of 2 clauses are satisfied/)).toBeInTheDocument();
     expect(screen.getByText(/Exactly k: a vertex cover of the required size/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('checkbox', { name: /x2 is true/ }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'x2 true' }));
     expect(setParams).toHaveBeenLastCalledWith({ a: '100' });
+  });
+
+  it('the variable check boxes keep one fixed name whatever their value, and never say "is false" (R17)', () => {
+    const { rerender } = render(<CertificatesView params={{ f: SAT, a: '110' }} setParams={noop} />);
+    expect(screen.getByRole('checkbox', { name: 'x2 true' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'x3 true' })).not.toBeChecked();
+    rerender(<CertificatesView params={{ f: SAT, a: '001' }} setParams={noop} />);
+    expect(screen.getByRole('checkbox', { name: 'x2 true' })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'x3 true' })).toBeChecked();
+    expect(screen.queryByRole('checkbox', { name: /is false|is true/ })).toBeNull();
   });
 
   it('a wrong assignment fails at a named clause, and the cover attempt is too big', () => {
