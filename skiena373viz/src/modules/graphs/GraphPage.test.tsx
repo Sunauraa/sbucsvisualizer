@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import BfsView from './BfsView';
 import DfsView from './DfsView';
 import DijkstraView from './DijkstraView';
 import PrimView from './PrimView';
 import TopologicalSortView from './TopologicalSortView';
-import { carriedPatch, resetCarried } from './useGraphModel';
+import manifest from './index';
 
 const noop = (): void => undefined;
 const text = (): HTMLTextAreaElement => screen.getByLabelText('Graph as text');
@@ -14,7 +14,6 @@ const stageTable = (): HTMLElement => screen.getByRole('table');
 const rowLabels = (): string[] => within(stageTable()).getAllByRole('row').slice(1).map((r) => within(r).getAllByRole('rowheader')[0]?.textContent ?? '');
 const vertexButton = (label: string): HTMLElement => screen.getByRole('button', { name: `vertex ${label}` });
 
-beforeEach(resetCarried);
 afterEach(cleanup);
 
 describe('the graph page', () => {
@@ -66,23 +65,34 @@ describe('the graph page', () => {
     expect(last['p']).toBe('A.112.112_B.300.100');
   });
 
-  it('writes the graph, switches and start vertex to the URL after a short pause, and keeps a copy for the next view', async () => {
+  it('writes the graph, switches and start vertex to the URL after a short pause, so the shell view tabs can carry them', async () => {
     const setParams = vi.fn();
     render(<DijkstraView params={{ g: 'A>B:2', d: '1', w: '1' }} setParams={setParams} />);
     fireEvent.change(screen.getByLabelText('Start vertex'), { target: { value: 'B' } });
     await waitFor(() => expect(setParams).toHaveBeenCalled());
     const patch = setParams.mock.calls[setParams.mock.calls.length - 1]?.[0] as Record<string, string | null>;
     expect(patch).toMatchObject({ g: 'A>B:2', d: '1', w: '1', s: 'B' });
-    expect(carriedPatch()).toMatchObject({ g: 'A>B:2', s: 'B' });
   });
 
-  it('carries the graph to another view even when the shell link drops the parameters', () => {
+  it("the manifest asks the shell to carry exactly the graph keys between views", () => {
+    expect(manifest.carryParams).toEqual(['g', 'd', 'w', 's', 'p']);
+  });
+
+  it('a graph that arrives by link and is never edited is shown as it is, in every view, with no module state', () => {
+    for (const View of [BfsView, DfsView, DijkstraView]) {
+      const r = render(<View params={{ g: 'P-Q, Q-R' }} setParams={noop} />);
+      expect(text().value).toBe('P-Q, Q-R');
+      expect(rowLabels()).toEqual(['P', 'Q', 'R']);
+      r.unmount();
+    }
+  });
+
+  it('nothing is carried behind the link: a view opened with no graph shows its own example, not an earlier edit', () => {
     const first = render(<BfsView params={{ g: '' }} setParams={noop} />);
     fireEvent.change(text(), { target: { value: 'X-Y, Y-Z' } });
     first.unmount();
     render(<DfsView params={{}} setParams={noop} />);
-    expect(text().value).toBe('X-Y, Y-Z');
-    expect(rowLabels()).toEqual(['X', 'Y', 'Z']);
+    expect(text().value).not.toBe('X-Y, Y-Z');
   });
 
   it('a damaged link says so and shows an example instead of crashing', () => {
@@ -91,12 +101,10 @@ describe('the graph page', () => {
     expect(rowLabels().length).toBeGreaterThan(0);
   });
 
-  it('every view offers the other five with the current graph in the link', () => {
+  it('has no second row of view links: the shell tabs are the only ones', () => {
     render(<BfsView params={{ g: 'A-B' }} setParams={noop} />);
-    const nav = screen.getByRole('navigation', { name: 'Run this graph with another algorithm' });
-    const links = within(nav).getAllByRole('link');
-    expect(links.map((l) => l.textContent)).toEqual(['BFS', 'DFS', 'Topological sort', 'Prim', 'Kruskal', 'Dijkstra']);
-    expect(links[1]?.getAttribute('href')).toMatch(/^#\/graphs\/dfs\?g=A-B&p=A\./);
+    expect(screen.queryByRole('navigation', { name: 'Run this graph with another algorithm' })).toBeNull();
+    expect(screen.queryByText('Same graph in:')).toBeNull();
   });
 
   it('topological sort on an undirected graph is refused up front, explained, and one button fixes it', () => {

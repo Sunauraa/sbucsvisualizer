@@ -5,12 +5,11 @@ import type { ViewProps } from '@core';
 import { GrowthPanel, Notice, Workbench } from '@ui';
 import { applyEdit } from './algorithms/editor';
 import type { EditAction } from './algorithms/editor';
-import { encodeModel } from './algorithms/graphUrl';
 import type { AlgoKind, GraphInput } from './algorithms/types';
 import { GraphEditor } from './GraphEditor';
 import { GraphLegend } from './GraphLegend';
 import { GraphRenderer } from './GraphRenderer';
-import { growthFor, KINDS, VIEW_LINKS } from './kinds';
+import { growthFor, KINDS } from './kinds';
 import { slotsFor, StructurePanel } from './StructurePanel';
 import { useGraphModel } from './useGraphModel';
 import styles from './graphs.module.css';
@@ -24,7 +23,6 @@ export default function GraphPage({ kind, params, setParams }: ViewProps & { rea
   const trace = useMemo(() => config.algorithm.run(model), [config, model]);
   const slots = useMemo(() => slotsFor(trace.frames), [trace]);
   const experiments = useMemo(() => growthFor(kind), [kind]);
-  const query = useMemo(() => new URLSearchParams(Object.entries(encodeModel(model)).filter((e): e is [string, string] => e[1] !== null)).toString(), [model]);
   const refused = trace.status === 'rejected';
   const fixes = refused ? config.fixes(model) : [];
   const reason = refused ? frameAt(trace.frames, trace.frames.length - 1).explanation : '';
@@ -38,12 +36,6 @@ export default function GraphPage({ kind, params, setParams }: ViewProps & { rea
       legend={<GraphLegend config={config} />}
       inputs={
         <>
-          <nav className={styles['nav']} aria-label="Run this graph with another algorithm">
-            <span>Same graph in:</span>
-            {VIEW_LINKS.map((view) => (
-              <a key={view.id} href={`#/graphs/${view.id}${query === '' ? '' : `?${query}`}`} aria-current={view.id === kind ? 'page' : undefined}>{view.title}</a>
-            ))}
-          </nav>
           {linkError ? <Notice tone="warning">{linkError} Showing the last graph that could be read.</Notice> : null}
           {refused ? (
             <Notice tone="warning">
