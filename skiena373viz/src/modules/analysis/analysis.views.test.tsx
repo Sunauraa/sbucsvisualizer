@@ -30,6 +30,13 @@ describe('binary search renderer', () => {
   });
 });
 
+describe('halving view', () => {
+  it('says that the order check is only a guard, and that binary search trusts its precondition (R3)', () => {
+    render(<HalvingView params={{}} setParams={noop} />);
+    expect(screen.getByText('The order check costs n − 1 comparisons and is here only to refuse unsorted input; binary search itself trusts its precondition.')).toBeInTheDocument();
+  });
+});
+
 describe('growth rates view', () => {
   it('shows every table without raw Infinity or NaN, at hostile settings too', () => {
     const cases: Record<string, string>[] = [

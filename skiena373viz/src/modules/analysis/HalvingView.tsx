@@ -52,6 +52,7 @@ function HalvingPanel({ n, comparisons, total, remaining }: { readonly n: number
         {chain.length === 0 ? 'There is nothing to search.' : `That is ${halvings} ${halvings === 1 ? 'halving' : 'halvings'}, which is ⌊lg ${n}⌋, so binary search makes at most ⌊lg n⌋ + 1 = ${worstComparisons(n)} ${worstComparisons(n) === 1 ? 'comparison' : 'comparisons'}.`}
       </p>
       <p className={css['stateLine']}>This run: {comparisons} of {total} comparisons so far; {remaining} {remaining === 1 ? 'candidate' : 'candidates'} left.</p>
+      <p className={css['stateLine']}>The order check costs n − 1 comparisons and is here only to refuse unsorted input; binary search itself trusts its precondition.</p>
       <details>
         <summary>The bound for larger n</summary>
         <table>
