@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createRng } from '@core';
 import type { Algorithm } from '@core';
 import { checkAlgorithm, describeProblems, unlitAnchors } from '@core/testing';
+import { edgeList, makeCtx } from './common';
 import { inputOf, randomGraph } from './fixtures';
 import { kruskal } from './kruskal';
 import { prim } from './prim';
@@ -30,6 +31,13 @@ describe.each(BOTH)('graphs-%s: check sentences stay short', (_name, algorithm) 
     expect(check?.explanation).toContain('and 27 more');
     expect(trace.frames.every((f) => f.explanation.length <= 260)).toBe(true);
   });
+  it('even with three-character labels and long decimal weights the sentence stays within 260 characters', () => {
+    const labels = ['abc', 'bcd', 'cde', 'def', 'efg'];
+    const text = labels.flatMap((a, i) => labels.slice(i + 1).map((b) => `${a}-${b}:-123456.654321`)).join(', ');
+    const check = checkAlgorithm(algorithm, weighted(text)).frames.find((f) => f.lines.includes('check'));
+    expect(check?.explanation.length).toBeLessThanOrEqual(260);
+    expect(check?.explanation).toMatch(/\d+ more|\d+ edges/);
+  });
   it('with exactly three negative edges all three are listed and nothing is hidden', () => {
     const check = checkAlgorithm(algorithm, manyNegative(3)).frames.find((f) => f.lines.includes('check'));
     expect(check?.explanation).not.toContain('more');
@@ -39,6 +47,15 @@ describe.each(BOTH)('graphs-%s: check sentences stay short', (_name, algorithm) 
     const check = checkAlgorithm(algorithm, manyNegative(4)).frames.find((f) => f.lines.includes('check'));
     expect(check?.explanation).toContain('and 1 more');
   });
+});
+
+it('edgeList names at most three edges inside its character budget, and falls back to a count when even one does not fit', () => {
+  const ctx = makeCtx(weighted('A-B:-1, C-D:-2'));
+  const edges = ctx.graph.edges;
+  expect(edgeList(ctx, edges)).toBe('A-B: -1, C-D: -2');
+  expect(edgeList(ctx, edges, 1)).toBe('A-B: -1, and 1 more');
+  expect(edgeList(ctx, edges, 3, 16)).toBe('A-B: -1, C-D: -2');
+  expect(edgeList(ctx, edges, 3, 15)).toBe('2 edges');
 });
 
 describe.each(BOTH)('graphs-%s: shared edge cases', (_name, algorithm) => {

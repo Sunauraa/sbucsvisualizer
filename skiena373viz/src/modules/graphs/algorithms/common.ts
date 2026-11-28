@@ -123,8 +123,16 @@ export const names = (ctx: Ctx, ids: readonly string[]): string => ids.map((id) 
 
 export const countsText = (ctx: Ctx): string => `${plural(ctx.ids.length, 'vertex', 'vertices')} and ${plural(ctx.graph.edges.length, 'edge')}`;
 
-/** At most three edges with their weights, then "and N more": a check sentence stays short however many edges qualify. */
-export function edgeList(ctx: Ctx, edges: readonly GraphEdge[], shown = 3): string {
-  const head = edges.slice(0, shown).map((e) => `${ctx.edgeName(e.id)}: ${fmt(e.weight)}`);
-  return edges.length > shown ? `${head.join(', ')}, and ${edges.length - shown} more` : head.join(', ');
+/**
+ * At most three edges with their weights, then "and N more", and never more than `budget` characters, so a check sentence
+ * stays under the 260-character rule whatever the labels are. If not even one edge fits, only the count is said.
+ */
+export function edgeList(ctx: Ctx, edges: readonly GraphEdge[], shown = 3, budget = 90): string {
+  const items = edges.slice(0, shown).map((e) => `${ctx.edgeName(e.id)}: ${fmt(e.weight)}`);
+  const text = (count: number): string => {
+    const head = items.slice(0, count).join(', ');
+    return count < edges.length ? `${head}, and ${edges.length - count} more` : head;
+  };
+  for (let count = items.length; count >= 1; count -= 1) if (text(count).length <= budget) return text(count);
+  return plural(edges.length, 'edge');
 }
