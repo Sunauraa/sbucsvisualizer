@@ -1,0 +1,13 @@
+.page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); min-width: 0; }
+.twoCol { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gap); align-items: start; }
+.panelBody { display: grid; gap: 10px; min-width: 0; }
+.range { width: min(100%, 320px); }
+.lead { margin: 0; max-width: 75ch; }
+.notes { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 0.92rem; }
+.table th[scope='row'] { text-align: left; }
+.leaves { margin: 0; padding-left: 20px; min-height: 3.2em; font-size: 0.92rem; }
+.groupHead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0; }
+.groupHead h3 { margin: 0; }
+.chain { font-family: var(--mono); font-size: 0.95rem; margin: 0; }
+.stateLine { margin: 0 0 4px; font-size: 0.9rem; }
+@media (max-width: 900px) { .twoCol { grid-template-columns: minmax(0, 1fr); } }
