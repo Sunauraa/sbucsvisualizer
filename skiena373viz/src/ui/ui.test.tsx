@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineAlgorithm, defineOps, definePseudocode, parseGraph, TONE_NAMES, TONES } from '@core';
 import type { GrowthExperiment, Recorder } from '@core';
-import { arrowPoints, CellGrid, CellRow, compactNumber, edgeGeometry, ErrorBoundary, GraphView, GrowthPanel, GrowthPlot, spreadLabels, SvgNode, Workbench } from '.';
+import { arrowPoints, CellGrid, CellRow, compactNumber, edgeGeometry, ErrorBoundary, GraphView, GrowthPanel, GrowthPlot, PseudocodePanel, spreadLabels, SvgNode, TraceNotices, Workbench } from '.';
 import type { RendererProps } from '.';
 import { checkRenderer } from './testing';
 
@@ -97,6 +97,46 @@ describe('Workbench and player', () => {
     view.rerender(<Workbench algorithm={counter} trace={short} Renderer={Show} />);
     expect(value()).toBe('0');
     expect(screen.getByRole('note')).toHaveTextContent('37 steps');
+  });
+});
+
+describe('PseudocodePanel', () => {
+  it('wraps long lines instead of scrolling sideways, with a hanging indent, and marks the lit line', () => {
+    const long = 'else if the graph is undirected and the edge leads back to the parent of the current vertex then skip it';
+    const pseudocode = definePseudocode([['a', 0, 'first()'], ['b', 2, long]]);
+    const { container } = render(<PseudocodePanel pseudocode={pseudocode} lit={['b']} />);
+    expect(container.querySelector('.scroll-x')).toBeNull();
+    expect(container.querySelector('[role="group"]')).toBeNull();
+    expect(container.querySelector('[tabindex]')).toBeNull();
+    const code = container.querySelectorAll('code');
+    expect((code[0] as HTMLElement).style.paddingLeft).toBe('1.4em');
+    expect((code[1] as HTMLElement).style.paddingLeft).toBe('4.2em');
+    expect(screen.getByText(long)).toBeInTheDocument();
+    expect(container.querySelector('li[aria-current="step"]')).toHaveTextContent(long);
+  });
+});
+
+describe('TraceNotices', () => {
+  it('a rejected trace points at the caption instead of repeating its sentence', () => {
+    const refuser = defineAlgorithm({
+      id: 'test-refuse', title: 'Refuse', summary: 'Refuses.',
+      pseudocode: definePseudocode([['start', 0, 'check()']]),
+      ops: defineOps([{ id: 'ticks', label: 'Ticks', counts: 'One per tick.' }]),
+      complexity: [{ resource: 'time', when: 'every case', bound: 'Θ(1)', why: 'one check.' }],
+      presets: [],
+      execute(_n: number, t: Recorder<{ i: number }, 'start', 'ticks'>) {
+        t.step({ lines: ['start'], say: 'Check the input.', state: () => ({ i: 0 }) });
+        return t.reject({ lines: ['start'], say: 'The value 7 is not allowed here.', state: () => ({ i: 1 }), result: null });
+      },
+    });
+    const rejected = refuser.run(1);
+    expect(rejected.status).toBe('rejected');
+    const early = render(<TraceNotices trace={rejected} atEnd={false} />);
+    expect(early.container).toBeEmptyDOMElement();
+    early.unmount();
+    const { container } = render(<TraceNotices trace={rejected} atEnd />);
+    expect(container).toHaveTextContent('This input was refused; the step above says why.');
+    expect(container).not.toHaveTextContent('The value 7 is not allowed here.');
   });
 });
 

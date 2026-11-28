@@ -73,7 +73,7 @@ export function Workbench<I, S, R>({
   );
 }
 
-/** Truncation and rejection messages. Use it in custom layouts too (race, side-by-side). */
+/** Truncation and rejection messages. The rejection notice points at the caption; it does not repeat it. Use it in custom layouts too (race, side-by-side). */
 export function TraceNotices<S, R>({ trace, atEnd }: { readonly trace: Trace<S, R>; readonly atEnd: boolean }) {
   return (
     <>
@@ -82,7 +82,8 @@ export function TraceNotices<S, R>({ trace, atEnd }: { readonly trace: Trace<S, 
           This run is long, so {trace.droppedFrames} steps just before the last one are not shown. The final step and the final counts are exact.
         </Notice>
       ) : null}
-      {trace.status === 'rejected' && atEnd ? <Notice tone="warning">{frameAt(trace.frames, trace.frames.length - 1).explanation}</Notice> : null}
+      {/* The caption already shows the refusal sentence on the last frame; repeating it would be announced twice. */}
+      {trace.status === 'rejected' && atEnd ? <Notice tone="warning">This input was refused; the step above says why.</Notice> : null}
     </>
   );
 }
