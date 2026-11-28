@@ -1,7 +1,7 @@
 /** Prim's minimum spanning tree with a lazy-deletion priority queue. Grows one tree from the start vertex. */
 import { defineAlgorithm, defineOps, definePseudocode } from '@core';
 import type { AnchorOf, Finished, OpOf, Recorder } from '@core';
-import { buildState, countsText, fmt, makeCtx, makeRows, names, plural, rowOf, startNote, startOf } from './common';
+import { buildState, countsText, edgeList, fmt, makeCtx, makeRows, names, plural, rowOf, startNote, startOf } from './common';
 import { ComparisonMeter, newQueue, pqContainer, tiedAtFront } from './pq';
 import { presetsFor } from './presets';
 import type { EdgeRole, GraphInput, GraphState } from './types';
@@ -104,7 +104,7 @@ export const prim = defineAlgorithm({
     t.step({
       lines: ['check'],
       say: negative.length > 0
-        ? `The graph is undirected and weighted, and its negative weights (${negative.map((e) => `${ctx.edgeName(e.id)}: ${fmt(e.weight)}`).join(', ')}) are fine here because Prim only compares single edges and never adds up paths.`
+        ? `The graph is undirected and weighted, and its negative weights (${edgeList(ctx, negative)}) are fine here because Prim only compares single edges and never adds up paths.`
         : 'The graph is undirected and every edge has a weight, so Prim can run.',
       state,
     });

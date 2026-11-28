@@ -16,6 +16,31 @@ const lastSentence = (trace: { frames: readonly { explanation: string }[] }): st
 type SpanningAlgorithm = Algorithm<GraphInput, GraphState, { readonly weight: number; readonly edges: readonly string[] }>;
 const BOTH: readonly (readonly [string, SpanningAlgorithm])[] = [['prim', prim], ['kruskal', kruskal]];
 
+describe.each(BOTH)('graphs-%s: check sentences stay short', (_name, algorithm) => {
+  const manyNegative = (edgeCount: number): GraphInput => {
+    const labels = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i));
+    const pairs = labels.flatMap((a, i) => labels.slice(i + 1).map((b) => `${a}-${b}:-${1 + ((i * 7 + labels.indexOf(b)) % 99)}`));
+    return weighted([...labels.slice(0, 1), ...pairs.slice(0, edgeCount)].join(', '));
+  };
+  it('a 12-vertex graph with 30 negative edges passes validateTrace, and the check names three edges then "and 27 more"', () => {
+    const trace = checkAlgorithm(algorithm, manyNegative(30));
+    expect(trace.status).toBe('completed');
+    const check = trace.frames.find((f) => f.lines.includes('check'));
+    expect(check?.explanation.length).toBeLessThanOrEqual(260);
+    expect(check?.explanation).toContain('and 27 more');
+    expect(trace.frames.every((f) => f.explanation.length <= 260)).toBe(true);
+  });
+  it('with exactly three negative edges all three are listed and nothing is hidden', () => {
+    const check = checkAlgorithm(algorithm, manyNegative(3)).frames.find((f) => f.lines.includes('check'));
+    expect(check?.explanation).not.toContain('more');
+    expect(check?.explanation.match(/: -\d+/g)).toHaveLength(3);
+  });
+  it('with four negative edges the fourth is counted as "and 1 more"', () => {
+    const check = checkAlgorithm(algorithm, manyNegative(4)).frames.find((f) => f.lines.includes('check'));
+    expect(check?.explanation).toContain('and 1 more');
+  });
+});
+
 describe.each(BOTH)('graphs-%s: shared edge cases', (_name, algorithm) => {
   const run = (input: GraphInput) => checkAlgorithm(algorithm, input);
   it('describes itself correctly', () => {
