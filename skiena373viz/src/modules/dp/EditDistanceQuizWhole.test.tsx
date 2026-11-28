@@ -33,12 +33,13 @@ describe('quiz mode: the whole table, and nothing leaks at any gate', () => {
     expect(screen.getByLabelText('Quiz')).toHaveTextContent('0 of 0 answered');
   });
 
+  // "ab" to "ba" is small (every gate is checked, so cost grows with gates) and has ties, so a traceback question with two right answers is covered.
   it('nothing on the page reveals the answer at any gated frame (text, accessible names, titles)', async () => {
     const user = userEvent.setup({ delay: null });
-    const trace = traceOf('abc', 'abd');
+    const trace = traceOf('ab', 'ba');
     const gates = quizGates(trace, { every: 1, seed: 3 });
-    open(quizParams('abc', 'abd', 1, { qs: '3' }));
-    expect(gates.length).toBeGreaterThan(15);
+    open(quizParams('ab', 'ba', 1, { qs: '3' }));
+    expect(gates.length).toBeGreaterThan(8);
     const kinds = new Set<string>();
     for (const g of gates) {
       click('End');
