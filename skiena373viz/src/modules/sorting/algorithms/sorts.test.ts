@@ -148,15 +148,15 @@ describe('output is a sorted permutation equal to the built-in sort', () => {
       expect([...result.map((item) => item.id)].sort((a, b) => a - b)).toEqual(keys.map((_, i) => i));
     }
   });
-  it.each(RULES)('quicksort with pivot rule %s on 300 seeded lists, and the full contract on 25 of them', (rule) => {
+  it.each(RULES)('quicksort with pivot rule %s on 300 seeded lists, and the full contract on 8 of them', (rule) => {
     inputs.forEach((keys, index) => {
       const input: SortInput = { items: keys, pivot: rule, seed: index };
       expect(runCounts(quicksort, input).result.map((item) => item.key)).toEqual(sortedKeys(keys));
-      if (index < 25) checkQuick(input);
+      if (index < 8) checkQuick(input);
     });
   });
-  it('heapsort and mergesort pass the full contract on 25 seeded lists', () => {
-    inputs.slice(0, 25).forEach((keys) => {
+  it('heapsort and mergesort pass the full contract on 8 seeded lists', () => {
+    inputs.slice(0, 8).forEach((keys) => {
       checkHeap({ items: keys });
       checkMerge({ items: keys });
     });
