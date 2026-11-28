@@ -1,7 +1,7 @@
 import type { ViewProps } from '@core';
-import { Legend, ScrollX } from '@ui';
+import { Legend, Notice, ScrollX } from '@ui';
 import { heapExperiment } from './algorithms/experiments';
-import { heap } from './algorithms/heap';
+import { firstViolation, heap } from './algorithms/heap';
 import type { HeapInput, HeapOperation, HeapResult, HeapState } from './algorithms/heap';
 import { parseHeapOperations } from './algorithms/inputs';
 import { formatKeys, formatOperations } from './algorithms/operations';
@@ -34,6 +34,15 @@ function Contrast({ input }: { readonly input: HeapInput }) {
   );
 }
 
+/** True when an insert or extract comes before any build or rebuild while the starting array is not a heap: it will be refused. */
+export function refusalAhead(input: HeapInput): boolean {
+  if (firstViolation(input.start) < 0) return false;
+  const first = input.operations.findIndex((op) => op.kind === 'insert' || op.kind === 'extract');
+  if (first < 0) return false;
+  const builds = input.operations.findIndex((op) => op.kind === 'build' || op.kind === 'rebuild');
+  return builds < 0 || builds > first;
+}
+
 const CONFIG: StructureConfig<HeapInput, HeapState, HeapResult, HeapOperation> = {
   algorithm: heap,
   Renderer: HeapRenderer,
@@ -58,6 +67,13 @@ const CONFIG: StructureConfig<HeapInput, HeapState, HeapResult, HeapOperation> =
   random: randomHeap,
   startLabel: 'Starting array',
   startHint: 'Taken exactly as written, at most 16 keys; it need not be a heap yet',
+  startNote: (start) => (firstViolation(start) >= 0 ? 'Not a heap yet.' : null),
+  notice: (input, fix) => (refusalAhead(input) ? (
+    <Notice tone="warning">
+      The starting array is not a min-heap, so insert and extract will be refused until a build runs.{' '}
+      <button type="button" onClick={() => fix.prependOperation('build')}>Add build first</button>
+    </Notice>
+  ) : null),
   footer: (input) => <Contrast input={input} />,
 };
 

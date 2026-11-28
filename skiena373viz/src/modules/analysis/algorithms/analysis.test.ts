@@ -21,6 +21,15 @@ describe('binary search', () => {
     const traces = binarySearch.presets.map((p) => checkAlgorithm(binarySearch, p.input));
     expect(unlitAnchors(binarySearch, traces)).toEqual([]);
   });
+  it('names the order check as an input guard, and says the time claims count comparisons in the search loop (R3)', () => {
+    const line = binarySearch.pseudocode.lines.find((l) => l.anchor === 'check');
+    expect(line?.text).toContain('guard');
+    expect(line?.text).toContain('Θ(n)');
+    expect(line?.text).toContain('real binary search assumes it');
+    const time = binarySearch.complexity.filter((c) => c.resource === 'time');
+    expect(time).toHaveLength(2);
+    for (const claim of time) expect(claim.why).toContain('search loop');
+  });
   it('empty array', () => {
     const trace = run([], 4);
     expect(trace.result).toBeNull();

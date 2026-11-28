@@ -3,6 +3,8 @@ import type { ModuleManifest } from '@core';
 /** Keep index.ts tiny: no algorithm or component imports, only lazy loaders. */
 const manifest: ModuleManifest = {
   id: 'sorting',
+  // The list (typed or generated) and the quicksort pivot settings follow the learner between views.
+  carryParams: ['a', 'kind', 'n', 'seed', 'pv', 'ps'],
   views: [
     {
       id: 'race',

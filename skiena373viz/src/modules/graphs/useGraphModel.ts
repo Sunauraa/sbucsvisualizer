@@ -1,24 +1,13 @@
 /**
  * The graph the six views share. The model is local state, so rapid edits never read a stale copy; the URL
  * follows it a moment later (short parameters g, d, w, s, p), and a change to the URL from outside replaces it.
- * A copy of the latest parameters is kept for the session, so the shell's plain view links carry the graph over too.
+ * The shell's view tabs copy these parameters (the manifest's carryParams), so the graph follows the learner between views.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { decodeModel, encodeModel, GRAPH_KEYS, hasGraphParams } from './algorithms/graphUrl';
+import { decodeModel, encodeModel, GRAPH_KEYS } from './algorithms/graphUrl';
 import type { GraphInput } from './algorithms/types';
 
 type Patch = ReturnType<typeof encodeModel>;
-
-let carried: Patch | null = null;
-
-/** Forget the carried graph (tests start from a clean slate). */
-export function resetCarried(): void {
-  carried = null;
-}
-
-export function carriedPatch(): Patch | null {
-  return carried;
-}
 
 const NONE = '\u0000';
 const keyOf = (get: (key: (typeof GRAPH_KEYS)[number]) => string | null | undefined): string => GRAPH_KEYS.map((k) => get(k) ?? NONE).join('\u0001');
@@ -44,13 +33,9 @@ export function useGraphModel(
   const key = paramsKey(params);
   const [initial] = useState(() => {
     const decoded = decodeModel(params);
-    if (decoded.ok && decoded.value) return { model: decoded.value, error: null, restore: false };
-    if (!decoded.ok) return { model: fallback, error: decoded.message, restore: false };
-    // No graph in the link: the one carried from another view, else this view's example.
-    const patch = carried;
-    const restored = patch ? decodeModel(Object.fromEntries(Object.entries(patch).filter((e): e is [string, string] => e[1] !== null))) : null;
-    if (restored?.ok && restored.value) return { model: restored.value, error: null, restore: true };
-    return { model: fallback, error: null, restore: false };
+    if (decoded.ok && decoded.value) return { model: decoded.value, error: null };
+    if (!decoded.ok) return { model: fallback, error: decoded.message };
+    return { model: fallback, error: null };
   });
   const [model, setModelState] = useState<GraphInput>(initial.model);
   const [linkError, setLinkError] = useState<string | null>(initial.error);
@@ -75,20 +60,9 @@ export function useGraphModel(
 
   const write = (next: GraphInput): void => {
     const patch = encodeModel(next);
-    carried = patch;
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setParams(patch), WRITE_DELAY);
   };
-
-  // A graph carried from another view is written into this view's link, so the link can be shared.
-  const restoring = initial.restore;
-  useEffect(() => {
-    if (restoring && !hasGraphParams(params)) {
-      setParams(encodeModel(initial.model));
-    }
-    // Runs once, on arrival.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- arrival only: later URL changes are handled above
-  }, []);
 
   useEffect(() => () => clearTimeout(timer.current), []);
 

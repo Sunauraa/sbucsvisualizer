@@ -25,7 +25,7 @@ export interface BinarySearchState {
 
 const PSEUDOCODE = definePseudocode([
   ['signature', 0, 'binary-search(A[0..n-1], target)    A must be sorted'],
-  ['check', 1, 'for each i: require A[i] <= A[i+1], else refuse'],
+  ['check', 1, 'check A is sorted (input guard for this page, Θ(n): real binary search assumes it)'],
   ['init', 1, 'lo = 0;  hi = n - 1'],
   ['loop', 1, 'while lo <= hi:'],
   ['mid', 2, 'mid = ⌊(lo + hi) / 2⌋'],
@@ -49,8 +49,8 @@ export const binarySearch = defineAlgorithm({
   pseudocode: PSEUDOCODE,
   ops: OPS,
   complexity: [
-    { resource: 'time', when: 'best case', bound: 'Θ(1)', why: 'the target is the first middle item, so one comparison is enough.' },
-    { resource: 'time', when: 'worst case', bound: 'Θ(log n)', why: 'each comparison halves the candidates, so at most ⌊lg n⌋ + 1 comparisons are needed.' },
+    { resource: 'time', when: 'best case', bound: 'Θ(1)', why: 'the target is the first middle item, so one comparison in the search loop is enough.' },
+    { resource: 'time', when: 'worst case', bound: 'Θ(log n)', why: 'each comparison in the search loop halves the candidates, so at most ⌊lg n⌋ + 1 comparisons in the search loop are needed.' },
     { resource: 'space', when: 'every case', bound: 'Θ(1)', why: 'only lo, hi and mid are kept.' },
   ],
   presets: [

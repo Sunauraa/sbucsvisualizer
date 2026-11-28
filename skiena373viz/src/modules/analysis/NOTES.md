@@ -21,6 +21,13 @@
   cut at the exact crossing point, named above the chart, and listed under it with the n where it leaves and the value it would reach.
 * The "how big an n" table uses 10⁹ steps per second and a selectable budget. For one year (3.15 × 10¹⁶ steps) floating-point precision limits the boundary to roughly 15 digits.
 
+## Phase 4 changes
+
+* **Binary search guard (R3).** The `check` line reads "check A is sorted (input guard for this page, Θ(n): real binary search assumes it)". Both time claims say "comparisons in the search loop".
+  The Halving view says that the order check costs n − 1 comparisons and is there only to refuse unsorted input.
+* **Growth rates (R8).** The dominance list says "grows slowest", "grows fastest" and "grows faster than the one before it".
+* **Measured and the worked example (R14).** Measured will stop counting the worked example once the shell filters it out of `useModules()` (packet F, `App.tsx`). No change is needed in this module.
+
 ## Not done (stretch)
 
 Big-O explorer with draggable c and n0.

@@ -29,6 +29,10 @@ export interface StructureConfig<I, S extends { readonly log: OperationLog }, R,
   readonly startLabel: string;
   readonly startHint: string;
   readonly withSize?: boolean;
+  /** A short warning about the starting keys, shown beside the start field (for example "Not a heap yet"). */
+  readonly startNote?: (start: readonly number[]) => string | null;
+  /** A notice above the stage about the current valid input, with a way to fix the operation list. */
+  readonly notice?: (input: I, fix: { readonly prependOperation: (text: string) => void }) => ReactNode;
   /** Extra panels in the side column, above the pseudocode. */
   readonly aside?: (frame: Frame<S>) => ReactNode;
   /** Extra content under the stage and the side column, above the growth plot. */
@@ -66,6 +70,11 @@ export function StructureView<I, S extends { readonly log: OperationLog }, R, O>
     const base = opsText.trim().replace(/[,;\s]+$/, '');
     setParams({ o: base === '' ? text : `${base}, ${text}` });
   };
+  const prependOperation = (text: string): void => {
+    const rest = opsText.trim().replace(/^[,;\s]+/, '');
+    setParams({ o: rest === '' ? text : `${text}, ${rest}` });
+  };
+  const startNote = start.ok ? config.startNote?.(start.value) ?? null : null;
   const key = parseKey(keyText.trim(), 'the key box');
   const keyError = keyText.trim() === '' ? null : key.ok ? null : key.message;
 
@@ -77,8 +86,9 @@ export function StructureView<I, S extends { readonly log: OperationLog }, R, O>
       legend={config.legend}
       inputs={
         <div className={css['stack']}>
+          {parsed !== null ? config.notice?.(parsed, { prependOperation }) : null}
           <div className="field-row">
-            <Field label={config.startLabel} error={start.ok ? null : start.message} hint={config.startHint}>
+            <Field label={config.startLabel} error={start.ok ? null : start.message} hint={startNote ? `${startNote} ${config.startHint}` : config.startHint}>
               {(props) => <input {...props} type="text" value={startText} onChange={(event) => setParams({ s: event.target.value })} />}
             </Field>
             {config.withSize ? (

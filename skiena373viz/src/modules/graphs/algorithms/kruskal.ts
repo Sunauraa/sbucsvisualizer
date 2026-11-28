@@ -1,7 +1,7 @@
 /** Kruskal's minimum spanning forest: sort the edges, then keep each edge that joins two different sets. */
 import { compareLabels, defineAlgorithm, defineOps, definePseudocode } from '@core';
 import type { AnchorOf, Finished, GraphEdge, OpOf, Recorder } from '@core';
-import { buildState, countsText, fmt, makeCtx, makeRows, plural, rowOf } from './common';
+import { buildState, countsText, edgeList, fmt, makeCtx, makeRows, plural, rowOf } from './common';
 import type { Ctx, Row } from './common';
 import { presetsFor } from './presets';
 import type { ContainerItem, EdgeRole, GraphInput, GraphState } from './types';
@@ -150,7 +150,7 @@ export const kruskal = defineAlgorithm({
     t.step({
       lines: ['check'],
       say: negative.length > 0
-        ? `The graph is undirected and weighted, and its negative weights (${negative.map((e) => `${ctx.edgeName(e.id)}: ${fmt(e.weight)}`).join(', ')}) are fine here because Kruskal only ranks single edges and never adds up paths.`
+        ? `The graph is undirected and weighted, and its negative weights (${edgeList(ctx, negative)}) are fine here because Kruskal only ranks single edges and never adds up paths.`
         : 'The graph is undirected and every edge has a weight, so Kruskal can run.',
       state,
     });

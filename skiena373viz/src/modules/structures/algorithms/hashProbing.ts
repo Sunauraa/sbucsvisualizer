@@ -68,7 +68,7 @@ export const hashProbing = defineAlgorithm({
   pseudocode: PSEUDOCODE,
   ops: OPS,
   complexity: [
-    { resource: 'time', when: 'expected, assuming uniform hashing, used load (keys plus tombstones) at most ½', bound: 'Θ(1)', why: 'an unsuccessful search expects about ½(1 + 1/(1−α)²) probes, which is 2.5 at α = ½; tombstones count toward α because they still block probing.' },
+    { resource: 'time', when: "expected, assuming each key's home slot is uniformly random and independent (linear probing), used load at most ½", bound: 'Θ(1)', why: 'an unsuccessful search expects about ½(1 + 1/(1−α)²) probes, which is 2.5 at α = ½; tombstones count toward α because they still block probing.' },
     { resource: 'time', when: 'worst case', bound: 'Θ(n)', why: 'if every key hashes to the same slot, one operation can probe all n keys, and at most m slots in any case.' },
     { resource: 'space', when: 'every case', bound: 'Θ(m)', why: 'one table of m slots, tombstones included.' },
   ],

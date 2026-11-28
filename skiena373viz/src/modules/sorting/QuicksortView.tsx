@@ -33,6 +33,7 @@ export function QuicksortNotes() {
         <li>With the last item as pivot on a sorted list, the pivot is the largest key, so nothing lands on its right and all n - 1 others land on its left.</li>
         <li>The next call then has n - 1 items and the same problem, so the partitions cost n - 1, n - 2, ..., 1 comparisons: n(n - 1)/2 in all, which is Θ(n²).</li>
         <li>A random pivot or the median of three breaks this pattern on sorted input; the recursion tree view shows the difference.</li>
+        <li>With this partition, keys equal to the pivot go right, so a list of equal keys is also Θ(n²) for every pivot rule. Three-way partitioning fixes that.</li>
       </ul>
     </section>
   );

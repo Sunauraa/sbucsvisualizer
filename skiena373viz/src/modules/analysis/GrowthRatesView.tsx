@@ -144,7 +144,7 @@ export default function GrowthRatesView({ params, setParams }: ViewProps) {
         <div className={css['panelBody']}>
           <p className={css['lead']}>{DOMINANCE_WORDS}</p>
           <ul className={css['notes']}>
-            {RATE_IDS.map((id) => <li key={id}><strong>{RATE_LABEL[id]}</strong>: {WORDS[id]}; {id === '1' ? 'the slowest here' : id === '2^n' ? 'the fastest here' : 'faster than the one before it'}.</li>)}
+            {RATE_IDS.map((id) => <li key={id}><strong>{RATE_LABEL[id]}</strong>: {WORDS[id]}; {id === '1' ? 'grows slowest' : id === '2^n' ? 'grows fastest' : 'grows faster than the one before it'}.</li>)}
           </ul>
           <details>
             <summary>From which n does each curve stay above the one before it?</summary>

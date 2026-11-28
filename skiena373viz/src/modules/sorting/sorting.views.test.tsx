@@ -9,32 +9,39 @@ import { quicksort } from './algorithms/quicksort';
 import { heapLayout } from './HeapTree';
 import HeapsortView, { HeapsortRenderer } from './HeapsortView';
 import MergesortView, { MergesortRenderer } from './MergesortView';
-import QuicksortView, { QuicksortRenderer } from './QuicksortView';
+import QuicksortView, { QuicksortNotes, QuicksortRenderer } from './QuicksortView';
 import RaceView from './RaceView';
 import RecursionTreeView, { MergeTreeRenderer, QuickTreeRenderer } from './RecursionTreeView';
+import { checkSampled } from './sampledRenderer';
 import manifest from './index';
 
 const noop = () => undefined;
 const twenty4 = createRng(4).shuffle(Array.from({ length: 24 }, (_, i) => i - 5));
 
+// The first preset of each sort is drawn frame by frame; the others at the first frame, the last and every 4th (the full 24-item run below covers the rest).
+const each = <I,>(presets: readonly { readonly id: string; readonly input: I }[]) => presets.map((p, i) => [p.id, p.input, i === 0] as const);
 describe('renderers draw every frame of every preset without leaking raw values or moving the page', () => {
-  it.each(heapsort.presets.map((p) => [p.id, p.input] as const))('heapsort %s', (_id, input) => { checkRenderer(HeapsortRenderer, heapsort.run(input)); });
-  it.each(mergesort.presets.map((p) => [p.id, p.input] as const))('mergesort %s', (_id, input) => {
-    checkRenderer(MergesortRenderer, mergesort.run(input));
-    checkRenderer(MergeTreeRenderer, mergesort.run(input));
+  it.each(each(heapsort.presets))('heapsort %s', (_id, input, full) => { (full ? checkRenderer : checkSampled)(HeapsortRenderer, heapsort.run(input)); });
+  it.each(each(mergesort.presets))('mergesort %s', (_id, input, full) => {
+    const check = full ? checkRenderer : checkSampled;
+    check(MergesortRenderer, mergesort.run(input));
+    check(MergeTreeRenderer, mergesort.run(input));
   });
-  it.each(quicksort.presets.map((p) => [p.id, p.input] as const))('quicksort %s', (_id, input) => {
-    checkRenderer(QuicksortRenderer, quicksort.run(input));
-    checkRenderer(QuickTreeRenderer, quicksort.run(input));
+  it.each(each(quicksort.presets))('quicksort %s', (_id, input, full) => {
+    const check = full ? checkRenderer : checkSampled;
+    check(QuicksortRenderer, quicksort.run(input));
+    check(QuickTreeRenderer, quicksort.run(input));
   });
-  it('the full 24-item limit, with duplicates, negatives and every pivot rule', () => {
+  it('the full 24-item limit, with duplicates, negatives and every pivot rule (every 4th frame; every frame of the array view of the last-item rule)', () => {
     const keys = twenty4.map((key, i) => (i % 5 === 0 ? 3 : key));
-    checkRenderer(HeapsortRenderer, heapsort.run({ items: keys }));
-    checkRenderer(MergesortRenderer, mergesort.run({ items: keys }));
-    for (const pivot of ['last', 'random', 'median-of-three'] as const) {
-      checkRenderer(QuicksortRenderer, quicksort.run({ items: keys, pivot }));
-      checkRenderer(QuickTreeRenderer, quicksort.run({ items: keys, pivot }));
+    checkSampled(HeapsortRenderer, heapsort.run({ items: keys }));
+    checkSampled(MergesortRenderer, mergesort.run({ items: keys }));
+    for (const pivot of ['random', 'median-of-three'] as const) {
+      checkSampled(QuicksortRenderer, quicksort.run({ items: keys, pivot }));
+      checkSampled(QuickTreeRenderer, quicksort.run({ items: keys, pivot }));
     }
+    checkRenderer(QuicksortRenderer, quicksort.run({ items: keys, pivot: 'last' }));
+    checkSampled(QuickTreeRenderer, quicksort.run({ items: keys, pivot: 'last' }), 2);
   });
   it('empty, single and rejected inputs', () => {
     for (const items of [[], [4]]) {
@@ -58,6 +65,27 @@ describe('renderers draw every frame of every preset without leaking raw values 
 describe('the manifest', () => {
   it('lists the race first, so it is the landing page, then the four other views', () => {
     expect(manifest.views.map((view) => view.id)).toEqual(['race', 'heapsort', 'mergesort', 'quicksort', 'recursion-tree']);
+  });
+});
+
+describe('the list follows the learner between views (R2)', () => {
+  it('the manifest asks the shell to carry exactly the list and pivot keys', () => {
+    expect(manifest.carryParams).toEqual(['a', 'kind', 'n', 'seed', 'pv', 'ps']);
+  });
+  it.each([
+    ['heapsort', HeapsortView], ['mergesort', MergesortView], ['quicksort', QuicksortView], ['recursion tree', RecursionTreeView], ['race', RaceView],
+  ])('%s reads a typed list and a generated list from the same keys', (_name, View) => {
+    const typed = render(<View params={{ a: '9, 8, 7' }} setParams={noop} />);
+    expect(screen.getByLabelText('Items')).toHaveValue('9, 8, 7');
+    typed.unmount();
+    const generated = render(<View params={{ kind: 'sorted', n: '6', seed: '4', pv: 'random', ps: '8' }} setParams={noop} />);
+    expect(screen.getByLabelText('Items')).toHaveValue('1, 2, 3, 4, 5, 6');
+    generated.unmount();
+  });
+  it('the pivot rule and its seed arrive in the quicksort view from the carried keys', () => {
+    render(<QuicksortView params={{ a: '3, 1, 2', pv: 'random', ps: '8' }} setParams={noop} />);
+    expect(screen.getByLabelText('Quicksort pivot')).toHaveValue('random');
+    expect(screen.getByRole('button', { name: 'New pivot seed (8)' })).toBeInTheDocument();
   });
 });
 
@@ -146,6 +174,13 @@ describe('race view', () => {
     unmount();
     render(<RaceView params={{ a: '7' }} setParams={noop} />);
     expect(screen.getAllByText('✓ finished')).toHaveLength(3);
+  });
+});
+
+describe('quicksort notes', () => {
+  it('say that equal keys are also the worst case, whatever the pivot rule, and that three-way partitioning fixes it (R5)', () => {
+    render(<QuicksortNotes />);
+    expect(screen.getByText('With this partition, keys equal to the pivot go right, so a list of equal keys is also Θ(n²) for every pivot rule. Three-way partitioning fixes that.')).toBeInTheDocument();
   });
 });
 

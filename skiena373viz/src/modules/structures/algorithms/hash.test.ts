@@ -8,6 +8,7 @@ import { hashArithmetic, hashStep } from './hashing';
 import type { HashInput, HashOperation } from './hashing';
 import { hashProbing } from './hashProbing';
 import type { ProbingResult, ProbingState } from './hashProbing';
+import { probingExperiment } from './experiments';
 import { parseHashOperations } from './inputs';
 import { keyChangeProblem, settledFrames } from './testHelpers';
 
@@ -321,5 +322,18 @@ describe('hash table with linear probing and tombstones', () => {
   it('stays within the frame cap at the interface limits', () => {
     const operations = Array.from({ length: 24 }, (_, i) => ({ kind: i % 2 === 0 ? 'insert' : 'delete', key: i * 13 }) as const);
     expect(hashProbing.run({ size: 13, start: [0, 13, 26, 39, 52, 65, 78, 91, 104, 117, 130, 143], operations }).truncated).toBe(false);
+  });
+});
+
+describe('linear probing: the expected-time claim names the right assumption (R6)', () => {
+  const claim = hashProbing.complexity.find((c) => c.resource === 'time' && c.when.startsWith('expected'));
+  it("states that each key's home slot is uniformly random and independent, with load at most ½, and not \"uniform hashing\"", () => {
+    expect(claim?.when).toBe("expected, assuming each key's home slot is uniformly random and independent (linear probing), used load at most ½");
+    expect(claim?.when).not.toMatch(/uniform hashing/);
+    expect(claim?.why).toContain('½(1 + 1/(1−α)²)');
+  });
+  it('the growth experiment does not say "uniform hashing" for probing either; chaining keeps the textbook "simple uniform hashing"', () => {
+    for (const c of probingExperiment.cases) expect(c.claim.when).not.toMatch(/uniform hashing/);
+    expect(hashChaining.complexity.some((c) => /simple uniform hashing/.test(c.when))).toBe(true);
   });
 });

@@ -3,6 +3,8 @@ import type { ModuleManifest } from '@core';
 /** Keep index.ts tiny: no algorithm or component imports, only lazy loaders. */
 const manifest: ModuleManifest = {
   id: 'graphs',
+  // The graph, its two switches, the start vertex and the vertex positions follow the learner between views.
+  carryParams: ['g', 'd', 'w', 's', 'p'],
   views: [
     {
       id: 'bfs',

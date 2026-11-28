@@ -18,8 +18,6 @@ export function encodeModel(input: GraphInput): Record<(typeof GRAPH_KEYS)[numbe
   };
 }
 
-export const hasGraphParams = (params: Readonly<Record<string, string>>): boolean => params['g'] !== undefined;
-
 /** null in a successful result means the link carries no graph, so the caller uses its default. */
 export function decodeModel(params: Readonly<Record<string, string>>): Result<GraphInput | null> {
   const text = params['g'];
