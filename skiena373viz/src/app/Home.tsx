@@ -1,4 +1,4 @@
-import { EXAMPLE_MODULE, lectureLabel, SYLLABUS } from '@core';
+import { EXAMPLE_MODULE, isExample, lectureLabel, SYLLABUS } from '@core';
 import type { ModuleManifest } from '@core';
 import { Notice } from '@ui';
 import type { ModuleFailure } from './registry';
@@ -32,9 +32,11 @@ export function Home({ modules, failures }: { readonly modules: readonly ModuleM
         {SYLLABUS.map((info) => <Card key={info.id} info={info} module={modules.find((m) => m.id === info.id)} />)}
       </ul>
       <h2>How it fits together</h2>
-      <ul className="cards">
-        <Card info={EXAMPLE_MODULE} module={modules.find((m) => m.id === EXAMPLE_MODULE.id)} />
-      </ul>
+      {modules.some((m) => isExample(m.id)) ? (
+        <p>
+          Every module records a run, then plays it. <a href={viewHref(EXAMPLE_MODULE.id)}>The worked example</a> shows that in the smallest module.
+        </p>
+      ) : null}
     </>
   );
 }
