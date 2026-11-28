@@ -9,7 +9,7 @@ import { quicksort } from './algorithms/quicksort';
 import { heapLayout } from './HeapTree';
 import HeapsortView, { HeapsortRenderer } from './HeapsortView';
 import MergesortView, { MergesortRenderer } from './MergesortView';
-import QuicksortView, { QuicksortRenderer } from './QuicksortView';
+import QuicksortView, { QuicksortNotes, QuicksortRenderer } from './QuicksortView';
 import RaceView from './RaceView';
 import RecursionTreeView, { MergeTreeRenderer, QuickTreeRenderer } from './RecursionTreeView';
 import { checkSampled } from './sampledRenderer';
@@ -153,6 +153,13 @@ describe('race view', () => {
     unmount();
     render(<RaceView params={{ a: '7' }} setParams={noop} />);
     expect(screen.getAllByText('✓ finished')).toHaveLength(3);
+  });
+});
+
+describe('quicksort notes', () => {
+  it('say that equal keys are also the worst case, whatever the pivot rule, and that three-way partitioning fixes it (R5)', () => {
+    render(<QuicksortNotes />);
+    expect(screen.getByText('With this partition, keys equal to the pivot go right, so a list of equal keys is also Θ(n²) for every pivot rule. Three-way partitioning fixes that.')).toBeInTheDocument();
   });
 });
 

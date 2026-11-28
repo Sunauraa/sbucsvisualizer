@@ -8,6 +8,7 @@ import { heapsort } from './heapsort';
 import type { HeapsortState } from './heapsort';
 import { mergesort } from './mergesort';
 import type { MergesortState } from './mergesort';
+import { quicksortExperiment } from './experiments';
 import { quicksort } from './quicksort';
 import type { QuicksortState } from './quicksort';
 
@@ -257,6 +258,27 @@ describe('quicksort', () => {
   });
   it('last pivot on a reversed list also makes exactly n(n−1)/2 comparisons', () => {
     expect(runCounts(quicksort, { items: [6, 5, 4, 3, 2, 1] }).totals['comparisons']).toBe(15);
+  });
+  it('a list of 24 equal keys is also the worst case: 276 = n(n−1)/2 comparisons with the last and the random pivot (R5)', () => {
+    for (const pivot of ['last', 'random'] as const) {
+      expect(runCounts(quicksort, { items: Array.from({ length: 24 }, () => 4), pivot, seed: 7 }).totals['comparisons']).toBe(276);
+    }
+  });
+  it('median of three does not help on 24 equal keys: its partitions still cost 276, and its own choices add 44, so 320 in all (R5)', () => {
+    const { totals } = runCounts(quicksort, { items: Array.from({ length: 24 }, () => 4), pivot: 'median-of-three' });
+    expect(totals['comparisons']).toBe(320);
+    expect(totals['comparisons']! - 276).toBe(2 * 22);
+  });
+  it('the reversed-input claim says every pivot is the smallest or largest key of its range, not "always the smallest" (R4)', () => {
+    const reversed = quicksortExperiment.cases.find((c) => c.id === 'reversed');
+    expect(reversed?.claim.when).toContain('every pivot is the smallest or largest key of its range');
+    expect(reversed?.claim.when).not.toMatch(/always the smallest/);
+    for (const c of quicksortExperiment.cases) expect(c.claim.when).not.toMatch(/always the smallest/);
+  });
+  it('reversed input really does alternate between the smallest and the largest pivot (the fact behind the wording)', () => {
+    const trace = quicksort.run({ items: [5, 4, 3, 2, 1] });
+    const firstPivots = trace.frames.filter((f) => f.lines.includes('init')).map((f) => f.state.items.find((item) => item.id === f.state.pivot)!.key);
+    expect(firstPivots.slice(0, 2)).toEqual([1, 5]);
   });
   it('a sorted list with the last pivot makes the call tree a path', () => {
     const trace = quicksort.run({ items: [1, 2, 3, 4, 5, 6] });

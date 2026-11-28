@@ -58,7 +58,7 @@ export const quicksortExperiment = experimentFor(quicksort, {
   cases: [
     { id: 'random', label: 'Random order', claim: nlogn('on average over random orders') },
     { id: 'sorted', label: 'Already sorted', claim: { symbol: 'Θ', fn: 'n²', when: 'worst case: the last item is always the largest, so one side is always empty' } },
-    { id: 'reversed', label: 'Reversed', claim: { symbol: 'Θ', fn: 'n²', when: 'worst case: the last item is always the smallest' } },
+    { id: 'reversed', label: 'Reversed', claim: { symbol: 'Θ', fn: 'n²', when: 'worst case: every pivot is the smallest or largest key of its range, so one side is always empty' } },
     { id: 'sorted-random-pivot', label: 'Already sorted, random pivot', claim: nlogn('expected, random pivot') },
     { id: 'sorted-median', label: 'Already sorted, median of three', claim: nlogn('for this sorted input (other inputs can still defeat median of three)') },
   ],
