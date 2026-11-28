@@ -28,6 +28,15 @@ None. Everything needed was in `@core` and `@ui`.
 * The recursion-tree view's per-level table counts comparisons made by each call's *own* work (a merge or a partition), so the levels add up to the total.
 * A non-finite key (NaN, Infinity) cannot be typed in the UI, but `run()` rejects it with a sentence instead of throwing.
 
+## Phase 4 changes
+
+* **`carryParams`** is `a`, `kind`, `n`, `seed`, `pv`, `ps`. Every view reads them through `useSortSetup`, so a list typed or generated in one view is the list in the next (R2).
+* **Wording (R4, R5).** The reversed-input claim says every pivot is the smallest or largest key of its range (the last-item pivot alternates between the two on `[5,4,3,2,1]`).
+  The quicksort notes say that keys equal to the pivot go right, so equal keys are Θ(n²) for every pivot rule. Measured at n = 24: last and random pivot 276 comparisons;
+  median of three 320 (276 plus 2 per range of three or more items, 44 in all, for choosing the median), so it does not help.
+* **Test speed (R21).** `sampledRenderer.tsx` is a test helper that draws the first frame, the last and every 4th. The views test draws one preset per sort in full and the rest sampled,
+  and the 24-item test draws every frame of the last-item array view. `sorts.test.ts` runs the contract check on 8 lists instead of 25 (the 300-list loops already use `counts` mode).
+
 ## Not done (stretch)
 
 Bucket sort lane; big-O explorer with draggable c and n0.

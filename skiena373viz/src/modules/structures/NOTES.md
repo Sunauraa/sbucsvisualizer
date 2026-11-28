@@ -17,6 +17,14 @@ None. Everything needed was in `@core` and `@ui`.
 * **Probing table layout** wraps at 7 slots per row (so 13 slots fit a phone); the picture says "home" under the first slot probed and numbers the probe path.
 * **Mobile check.** At 390 px I used Chrome DevTools device emulation (`Emulation.setDeviceMetricsOverride`, 390 wide) rather than an iframe, because it reproduces the same viewport width.
 
+## Phase 4 changes
+
+* **Heap refusal (R13).** `StructureView` has two optional config hooks: `startNote` (text added to the start field's hint) and `notice` (a notice above the fields, with
+  `prependOperation`). The heap uses them: when the start is not a heap and an insert or extract comes before any build or rebuild, the page says so and "Add build first"
+  puts `build, ` in front of the operations. The algorithm is unchanged.
+* **Probing claim (R6).** The expected-time claim now names its real assumption: each key's home slot is uniformly random and independent (the linear-probing analysis), not "uniform hashing".
+* **No `carryParams`.** BST, heap and hashing read `s` and `o` with different grammars, so carrying them between views would produce errors.
+
 ## Stretch
 
 Not done: double hashing, successor/predecessor queries, AVL rotation preview.
