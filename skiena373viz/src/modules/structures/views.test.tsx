@@ -110,6 +110,43 @@ describe('hash views', () => {
   });
 });
 
+describe('heap view: a way forward from the refusal (R13)', () => {
+  const NOTICE = /The starting array is not a min-heap, so insert and extract will be refused/;
+  it('warns for start 3 1 2 with insert 9, and says "Not a heap yet" beside the start field', () => {
+    render(<HeapView params={{ s: '3 1 2', o: 'insert 9' }} setParams={() => undefined} />);
+    expect(screen.getByText(NOTICE)).toBeInTheDocument();
+    expect(screen.getByLabelText('Starting array')).toHaveAccessibleDescription(/Not a heap yet\./);
+  });
+  it('the button puts build first in the operation list, through the URL', () => {
+    const setParams = vi.fn();
+    render(<HeapView params={{ s: '3 1 2', o: 'insert 9' }} setParams={setParams} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Add build first' }));
+    expect(setParams).toHaveBeenCalledWith({ o: 'build, insert 9' });
+  });
+  it('after the change the first operation is build, and the notice is gone', () => {
+    const { rerender } = render(<HeapView params={{ s: '3 1 2', o: 'insert 9' }} setParams={() => undefined} />);
+    rerender(<HeapView params={{ s: '3 1 2', o: 'build, insert 9' }} setParams={() => undefined} />);
+    expect(screen.queryByText(NOTICE)).toBeNull();
+    expect((screen.getByRole('textbox', { name: 'Operations' }) as HTMLTextAreaElement).value.startsWith('build')).toBe(true);
+  });
+  it('is silent for a valid heap, for a build that comes first, and when no insert or extract is listed', () => {
+    for (const params of [{ s: '1 2 3', o: 'insert 9' }, { s: '3 1 2', o: 'build, insert 9' }, { s: '3 1 2', o: 'rebuild, extract' }, { s: '3 1 2', o: '' }, { s: '3 1 2', o: 'build' }]) {
+      const { unmount } = render(<HeapView params={params} setParams={() => undefined} />);
+      expect(screen.queryByText(NOTICE), JSON.stringify(params)).toBeNull();
+      unmount();
+    }
+    render(<HeapView params={{ s: '1 2 3' }} setParams={() => undefined} />);
+    expect(screen.getByLabelText('Starting array')).not.toHaveAccessibleDescription(/Not a heap yet/);
+  });
+  it('still warns when an extract comes before the build, and keeps working with an empty operation prefix', () => {
+    const setParams = vi.fn();
+    render(<HeapView params={{ s: '3 1 2', o: 'extract, build' }} setParams={setParams} />);
+    expect(screen.getByText(NOTICE)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add build first' }));
+    expect(setParams).toHaveBeenCalledWith({ o: 'build, extract, build' });
+  });
+});
+
 describe('heap view', () => {
   it('compares the two ways to build the starting keys', () => {
     render(<HeapView params={{ s: '5, 4, 3, 2, 1', o: 'build' }} setParams={() => undefined} />);
