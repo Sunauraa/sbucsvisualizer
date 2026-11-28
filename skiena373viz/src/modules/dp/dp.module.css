@@ -18,7 +18,7 @@
 
 .align { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
 .alignScroll { overflow-x: auto; max-width: 100%; }
-.alignTable { border-collapse: separate; border-spacing: 4px 3px; font-family: var(--mono); font-size: 1rem; margin-left: auto; }
+.alignTable { border-collapse: separate; border-spacing: 4px 3px; font-family: var(--mono); font-size: 1rem; }
 .alignTable th { text-align: left; font-family: var(--sans); font-size: 0.8rem; font-weight: 700; color: var(--muted); border: 0; padding: 0 6px 0 0; white-space: nowrap; position: sticky; left: 0; background: var(--panel); }
 .alignTable td { border: 2px solid var(--line); border-radius: 5px; padding: 2px 0; min-width: 2.1em; text-align: center; font-weight: 700; }
 .alignTable td.word { font-family: var(--sans); font-size: 0.68rem; font-weight: 700; border-width: 2px; }
