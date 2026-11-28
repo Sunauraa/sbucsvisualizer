@@ -4,7 +4,18 @@ import { Notice } from '@ui';
 import type { ModuleFailure } from './registry';
 import { formatHash } from './route';
 
-export const viewHref = (moduleId: string, viewId: string | null = null): string => formatHash({ moduleId, viewId, params: {} });
+export const viewHref = (moduleId: string, viewId: string | null = null, params: Readonly<Record<string, string>> = {}): string =>
+  formatHash({ moduleId, viewId, params });
+
+/** The subset of `params` named by `keys`, in the order of `keys`. */
+export function pickParams(params: Readonly<Record<string, string>>, keys: readonly string[] = []): Record<string, string> {
+  const picked: Record<string, string> = {};
+  for (const key of keys) {
+    const value = params[key];
+    if (value !== undefined) picked[key] = value;
+  }
+  return picked;
+}
 
 export function Home({ modules, failures }: { readonly modules: readonly ModuleManifest[]; readonly failures: readonly ModuleFailure[] }) {
   return (

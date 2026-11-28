@@ -27,6 +27,12 @@ export interface ModuleManifest {
   readonly views: readonly ViewManifest[];
   /** Optional growth experiments, plotted by this module's GrowthPanel and by the analysis module. */
   readonly loadExperiments?: () => Promise<{ readonly experiments: readonly GrowthExperiment[] }>;
+  /**
+   * URL parameter keys that mean the same thing in every view of this module (a graph, a formula, a list of keys).
+   * The shell's view tabs copy these keys from the current URL, so the input follows the learner between views.
+   * Keys not listed here are dropped when switching views.
+   */
+  readonly carryParams?: readonly string[];
 }
 
 /** The worked example is not part of the syllabus, so it carries its own description. */
@@ -48,6 +54,9 @@ export function manifestProblems(manifest: unknown, folder: string): string[] {
   const problems: string[] = [];
   if (m.id !== folder) problems.push(`id is "${String(m.id)}" but the folder is "${folder}"`);
   if (!moduleInfo(folder)) problems.push(`"${folder}" is not a module in src/core/syllabus.ts`);
+  if (m.carryParams !== undefined && (!Array.isArray(m.carryParams) || m.carryParams.some((key) => typeof key !== 'string' || key === ''))) {
+    problems.push('carryParams must be a list of non-empty URL parameter keys');
+  }
   if (!Array.isArray(m.views) || m.views.length === 0) return [...problems, 'views must be a non-empty array'];
   const ids = new Set<string>();
   for (const view of m.views as readonly ViewManifest[]) {

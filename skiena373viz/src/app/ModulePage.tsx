@@ -3,13 +3,15 @@ import type { ComponentType } from 'react';
 import { lectureLabel, moduleInfo } from '@core';
 import type { ModuleManifest, ViewManifest, ViewProps } from '@core';
 import { ErrorBoundary } from '@ui';
-import { viewHref } from './Home';
+import { pickParams, viewHref } from './Home';
 import { replaceParams } from './route';
 import type { Route } from './route';
 
 export function ModulePage({ module, route }: { readonly module: ModuleManifest; readonly route: Route }) {
   const info = moduleInfo(module.id);
   const view = module.views.find((v) => v.id === route.viewId) ?? (route.viewId === null ? module.views[0] : undefined);
+  // The module's shared input (a graph, a formula) follows the learner between views.
+  const carried = pickParams(route.params, module.carryParams);
   return (
     <>
       <p className="eyebrow">{info && info.unit > 0 ? `Unit ${info.unit} · ` : ''}{info?.unitTitle}</p>
@@ -17,7 +19,7 @@ export function ModulePage({ module, route }: { readonly module: ModuleManifest;
       {module.views.length > 1 ? (
         <nav className="views" aria-label={`${info?.title ?? module.id} views`}>
           {module.views.map((v) => (
-            <a key={v.id} href={viewHref(module.id, v.id)} aria-current={v.id === view?.id ? 'page' : undefined}>{v.title}</a>
+            <a key={v.id} href={viewHref(module.id, v.id, carried)} aria-current={v.id === view?.id ? 'page' : undefined}>{v.title}</a>
           ))}
         </nav>
       ) : null}

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { manifestProblems } from '@core';
 import type { ModuleManifest } from '@core';
 import { App } from './App';
 import { loadRegistry } from './registry';
@@ -55,6 +56,29 @@ describe('App', () => {
     render(<App load={load} />);
     expect(await screen.findByText('param 42')).toBeInTheDocument();
     expect(document.title).toBe('Dynamic programming · Skiena373Viz');
+  });
+  it('view tabs carry only the keys the module lists in carryParams', async () => {
+    const twoViews: ModuleManifest = {
+      ...manifest,
+      carryParams: ['q'],
+      views: [...manifest.views, { ...manifest.views[0]!, id: 'other', title: 'Other view' }],
+    };
+    window.history.replaceState(null, '', '#/dp/demo?q=42&x=1');
+    render(<App load={() => Promise.resolve({ modules: [twoViews], failures: [] })} />);
+    expect(await screen.findByText('param 42')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Other view' })).toHaveAttribute('href', '#/dp/other?q=42');
+    expect(screen.getByRole('link', { name: 'Demo view' })).toHaveAttribute('href', '#/dp/demo?q=42');
+  });
+  it('view tabs carry nothing when the module lists no carryParams', async () => {
+    const twoViews: ModuleManifest = { ...manifest, views: [...manifest.views, { ...manifest.views[0]!, id: 'other', title: 'Other view' }] };
+    window.history.replaceState(null, '', '#/dp/demo?q=42');
+    render(<App load={() => Promise.resolve({ modules: [twoViews], failures: [] })} />);
+    expect(await screen.findByText('param 42')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Other view' })).toHaveAttribute('href', '#/dp/other');
+  });
+  it('rejects a malformed carryParams', () => {
+    expect(manifestProblems({ ...manifest, carryParams: [''] }, 'dp')).toEqual(['carryParams must be a list of non-empty URL parameter keys']);
+    expect(manifestProblems({ ...manifest, carryParams: ['g', 'p'] }, 'dp')).toEqual([]);
   });
   it('explains unknown and unbuilt modules', async () => {
     window.history.replaceState(null, '', '#/sorting');
